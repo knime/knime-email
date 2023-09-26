@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature id="org.knime.features.email" version="0.0.0">
+       <category name="knime-ap-repository-template" />
+   </feature>
+   <category-def name="knime-email" label="Build artifacts from knime-email">
+       <description>Build artifacts from knime-email</description>
+   </category-def>
+</site>

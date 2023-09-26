@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: KNIME EMail Processing (IMAP/POP3)
+Bundle-SymbolicName: org.knime.email;singleton:=true
+Bundle-Version: 5.2.0.qualifier
+Bundle-ClassPath: .
+Bundle-Vendor: KNIME AG, Zurich, Switzerland
+Require-Bundle: org.knime.base;bundle-version="[5.2.0,6.0.0)",
+ org.knime.core.ui;bundle-version="[5.2.0,6.0.0)"
+Bundle-RequiredExecutionEnvironment: JavaSE-17
+Bundle-ActivationPolicy: lazy
+Eclipse-BundleShape: jar
+Automatic-Module-Name: org.knime.email

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?eclipse version="3.0"?>
+<plugin>
+   <extension
+         point="org.knime.workbench.repository.categories">
+      <category
+            icon="icons/email.png"
+            level-id="email"
+            locked="true"
+            name="EMail Processing"
+            path="/toolintegration/">
+      </category>
+   </extension>
+   <extension point="org.knime.workbench.repository.nodes">
+      <node
+            category-path="/email"
+            deprecated="false"
+            factory-class="org.knime.email.fake.NoopNodeFactory"
+            hidden="false">
+      </node>
+   </extension>
+   <extension
+         point="org.knime.core.PortType">
+   </extension>
+</plugin>
