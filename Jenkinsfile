@@ -35,6 +35,7 @@ try {
                 "knime-email",
                 "knime-reporting2",
                 "knime-rest",
+                "knime-scripting-editor",
                 "knime-xml"
             ],
             ius: [
