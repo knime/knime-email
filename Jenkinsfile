@@ -26,6 +26,7 @@ try {
                 "knime-json",
                 "knime-kerberos",
                 "knime-email",
+                "knime-reporting2",
                 "knime-rest",
                 "knime-xml"
             ]
