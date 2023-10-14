@@ -18,8 +18,8 @@ try {
 	workflowTests.runTests(
         dependencies: [
     		repositories: [
-    		"knime-credentials-base",
-    		"knime-gateway",
+                "knime-credentials-base",
+                "knime-gateway",
                 "knime-base", 
                 "knime-base-views",
                 "knime-cef",
@@ -33,6 +33,19 @@ try {
                 "knime-reporting2",
                 "knime-rest",
                 "knime-xml"
+            ],
+            ius: [
+                "org.knime.features.reporting2.feature.group", 
+                "org.knime.features.core.feature.group",
+                "org.knime.features.base.feature.group",
+                "org.knime.features.base.views.feature.group",
+                "org.knime.features.browser.chromium.feature.group",
+                "org.knime.features.browser.cef.feature.group",
+                "org.knime.features.quickform.legacy.feature.group",
+                "org.knime.features.ensembles.feature.group",
+                "org.knime.features.distmatrix.feature.group",
+                "org.knime.features.xml.feature.group",
+                "org.knime.features.gateway.feature.group"
             ]
         ]
 	)
