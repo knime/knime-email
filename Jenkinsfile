@@ -23,6 +23,7 @@ try {
                 "knime-base", 
                 "knime-base-views",
                 "knime-cef",
+                "knime-chromium",
                 "knime-core",
                 "knime-core-ui",
                 "knime-gateway",
