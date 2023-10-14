@@ -12,14 +12,23 @@
       </category>
    </extension>
    <extension point="org.knime.workbench.repository.nodes">
-      <node
-            category-path="/email"
-            deprecated="false"
-            factory-class="org.knime.email.fake.NoopNodeFactory"
-            hidden="false">
-      </node>
+      <node category-path="/toolintegration/email"
+            factory-class="org.knime.email.nodes.get.GetEmailNodeFactory"/>
+      <node category-path="/toolintegration/email"
+            factory-class="org.knime.email.nodes.connector.EmailConnectorNodeFactory" />
+      <node category-path="/toolintegration/email"
+            factory-class="org.knime.email.nodes.move.MoveEmailNodeFactory" />
    </extension>
    <extension
          point="org.knime.core.PortType">
+      <portType
+            color="#7A9E9F"
+            hidden="false"
+            name="Email Session"
+            objectClass="org.knime.email.port.EmailSessionPortObject"
+            objectSerializer="org.knime.email.port.EmailSessionPortObject$Serializer"
+            specClass="org.knime.email.port.EmailSessionPortObjectSpec"
+            specSerializer="org.knime.email.port.EmailSessionPortObjectSpec$Serializer">
+      </portType>
    </extension>
 </plugin>

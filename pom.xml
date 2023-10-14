@@ -23,7 +23,10 @@
 	</properties>
 
 	<modules>
+		<module>org.knime.email/lib/fetch_jars</module>
 		<module>org.knime.email</module>
+		<module>org.knime.email.tests/lib/fetch_jars</module>
+		<module>org.knime.email.tests</module>
 		<module>org.knime.features.email</module>
 		<module>org.knime.update.email</module>
 	</modules>
@@ -45,35 +48,80 @@
 			<layout>p2</layout>
 			<url>${knime.base.p2}</url>
 		</repository>
+        <repository>
+            <id>p2-knime-chromium</id>
+            <layout>p2</layout>
+            <url>${knime.chromium.p2}</url>
+        </repository>
+        <repository>
+            <id>p2-knime-credentials-base</id>
+            <layout>p2</layout>
+            <url>${knime.credentials.base.p2}</url>
+        </repository>
+        <repository>
+            <id>p2-knime-cef</id>
+            <layout>p2</layout>
+            <url>${knime.cef.p2}</url>
+        </repository>
 		<repository>
 			<id>p2-knime-expressions</id>
 			<layout>p2</layout>
 			<url>${knime.expressions.p2}</url>
 		</repository>
+        <repository>
+            <id>p2-knime-gateway</id>
+            <layout>p2</layout>
+            <url>${knime.gateway.p2}</url>
+        </repository>
 		<repository>
 			<id>p2-knime-javasnippet</id>
 			<layout>p2</layout>
 			<url>${knime.javasnippet.p2}</url>
 		</repository>
 		<repository>
+            <id>p2-knime-js-core</id>
+            <layout>p2</layout>
+            <url>${knime.js.core.p2}</url>
+        </repository>
+		<repository>
 			<id>p2-knime-json</id>
 			<layout>p2</layout>
 			<url>${knime.json.p2}</url>
 		</repository>
-		<repository>
-			<id>p2-knime-workbench</id>
-			<layout>p2</layout>
-			<url>${knime.workbench.p2}</url>
-		</repository>
+        <repository>
+            <id>p2-knime-kerberos</id>
+            <layout>p2</layout>
+            <url>${knime.kerberos.p2}</url>
+        </repository>
+        <repository>
+            <id>p2-knime-office365</id>
+            <layout>p2</layout>
+            <url>${knime.office365.p2}</url>
+        </repository>
+        <repository>
+            <id>p2-knime-reporting2</id>
+            <layout>p2</layout>
+            <url>${knime.reporting2.p2}</url>
+        </repository>
 		<repository>
 			<id>p2-knime-shared</id>
 			<layout>p2</layout>
 			<url>${knime.shared.p2}</url>
 		</repository>
+	    <repository>
+            <id>p2-knime-svg</id>
+            <layout>p2</layout>
+            <url>${knime.svg.p2}</url>
+        </repository>
 		<repository>
 			<id>p2-knime-tp</id>
 			<layout>p2</layout>
 			<url>${knime.tp.p2}</url>
+		</repository>
+		<repository>
+			<id>p2-knime-workbench</id>
+			<layout>p2</layout>
+			<url>${knime.workbench.p2}</url>
 		</repository>
 	</repositories>
 

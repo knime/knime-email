@@ -46,11 +46,12 @@
  * History
  *   21 Oct 2022 (jasper): created
  */
-package org.knime.email.fake;
+package org.knime.email.nodes.move;
 
 import org.knime.core.node.NodeFactory;
 import org.knime.core.webui.node.impl.WebUINodeConfiguration;
 import org.knime.core.webui.node.impl.WebUINodeFactory;
+import org.knime.email.port.EmailSessionPortObject;
 
 /**
  * {@link NodeFactory} for the Value Lookup node, which looks up values in a dictionary table and adds them to an input
@@ -59,23 +60,25 @@ import org.knime.core.webui.node.impl.WebUINodeFactory;
  * @author Jasper Krauter, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction") // New Node UI is not yet API
-public final class NoopNodeFactory extends WebUINodeFactory<NoopNodeModel> {
+public final class MoveEmailNodeFactory extends WebUINodeFactory<MoveEmailNodeModel> {
 
     private static final WebUINodeConfiguration CONFIG = WebUINodeConfiguration.builder()//
-        .name("EMail Noop")//
+        .name("Move Email")//
         .icon("./email.png")//
-        .shortDescription("Noop - does nothing")//
-        .fullDescription("Noop - does nothing")//
-        .modelSettingsClass(NoopNodeSettings.class)//
-        .addInputTable("Data Table", "Noop - does nothing")//
-        .addOutputTable("Data Table", "Noop - does nothing")//
+        .shortDescription("Move email from a provided session to a folder.")//
+        .fullDescription("""
+                Move email from a provided session to a folder.
+                """)//
+        .modelSettingsClass(MoveEmailNodeSettings.class)//
+        .addInputPort("Email Session", EmailSessionPortObject.TYPE, "The email session.")//
+        .addInputTable("Emails", "A table containing the emails to be moved.")//
         .sinceVersion(5, 2, 0)
         .build();
 
     /**
      * Create a new factory instance (need this constructor for ser/de)
      */
-    public NoopNodeFactory() {
+    public MoveEmailNodeFactory() {
         super(CONFIG);
     }
 
@@ -84,7 +87,7 @@ public final class NoopNodeFactory extends WebUINodeFactory<NoopNodeModel> {
      *
      * @param configuration
      */
-    protected NoopNodeFactory(final WebUINodeConfiguration configuration) {
+    protected MoveEmailNodeFactory(final WebUINodeConfiguration configuration) {
         super(configuration);
     }
 
@@ -92,8 +95,8 @@ public final class NoopNodeFactory extends WebUINodeFactory<NoopNodeModel> {
      * {@inheritDoc}
      */
     @Override
-    public NoopNodeModel createNodeModel() {
-        return new NoopNodeModel(CONFIG, NoopNodeSettings.class);
+    public MoveEmailNodeModel createNodeModel() {
+        return new MoveEmailNodeModel(CONFIG, MoveEmailNodeSettings.class);
     }
 
 }

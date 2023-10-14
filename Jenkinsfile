@@ -22,6 +22,7 @@ try {
     		"knime-gateway",
                 "knime-base", 
                 "knime-core",
+                "knime-gateway",
                 "knime-json",
                 "knime-kerberos",
                 "knime-email",

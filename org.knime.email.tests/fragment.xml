@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<fragment>
+   <extension
+         point="org.knime.testing.TestcaseCollector">
+      <TestcaseCollector
+            TestcaseCollector="org.knime.email.EmailTestcaseCollector">
+      </TestcaseCollector>
+   </extension>
+   <extension
+         point="org.knime.testing.TestrunJanitor">
+      <TestrunJanitor
+            class="org.knime.email.janitor.EmailServerJanitor">
+      </TestrunJanitor>
+   </extension>
+
+</fragment>

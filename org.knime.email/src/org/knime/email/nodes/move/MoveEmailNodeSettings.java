@@ -44,54 +44,36 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   21 Oct 2022 (jasper): created
+ *   21 Dec 2022 (jasper): created
  */
-package org.knime.email.fake;
+package org.knime.email.nodes.move;
 
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.webui.node.impl.WebUINodeConfiguration;
-import org.knime.core.webui.node.impl.WebUINodeModel;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.email.util.UIChoices.FolderProvider;
+import org.knime.email.util.UIChoices.MessageIDColumnChoicesProvider;
 
 /**
+ * Node Settings for the Value Lookup Node
+ *
+ * @author Jasper Krauter, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction") // New Node UI is not yet API
-public class NoopNodeModel extends WebUINodeModel<NoopNodeSettings> {
+public final class MoveEmailNodeSettings implements DefaultNodeSettings {
 
-    private NoopNodeSettings m_settings;
+    /** The name of the lookup column in the data table */
+    @Widget(title = "Message-IDs", description = "column containing the Message-ID of the Emails")
+    @ChoicesWidget(choices = MessageIDColumnChoicesProvider.class)
+    String m_messageIds;
 
-    static final NodeLogger LOGGER = NodeLogger.getLogger(NoopNodeModel.class);
+    /** The name of the lookup column in the data table */
+    @Widget(title = "Source folder name", description = "e.g. 'INBOX' or Folder/Subfolder")
+    @ChoicesWidget(choices = FolderProvider.class)
+    String m_sourceFolder;
 
-    /**
-     * Instantiate a new Value Lookup Node
-     *
-     * @param configuration node description
-     * @param modelSettingsClass a reference to {@link NoopNodeSettings}
-     */
-    NoopNodeModel(final WebUINodeConfiguration configuration,
-        final Class<NoopNodeSettings> modelSettingsClass) {
-        super(configuration, modelSettingsClass);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs, final NoopNodeSettings modelSettings)
-        throws InvalidSettingsException {
-        return new DataTableSpec[]{inSpecs[0]};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec,
-        final NoopNodeSettings modelSettings) throws Exception {
-        return new BufferedDataTable[]{inData[0]};
-    }
-
+    /** The name of the lookup column in the data table */
+    @Widget(title = "Target folder name", description = "e.g. 'INBOX' or Folder/Subfolder")
+    @ChoicesWidget(choices = FolderProvider.class)
+    String m_targetFolder;
 }
