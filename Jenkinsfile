@@ -26,6 +26,8 @@ try {
                 "knime-chromium",
                 "knime-core",
                 "knime-core-ui",
+                "knime-distance",
+                "knime-ensembles",
                 "knime-gateway",
                 "knime-js-base",
                 "knime-json",
