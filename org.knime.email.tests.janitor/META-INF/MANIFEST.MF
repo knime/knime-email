@@ -4,16 +4,15 @@ Bundle-Name: KNIME EMail Test Janitor
 Bundle-SymbolicName: org.knime.email.tests.janitor;singleton:=true
 Bundle-Version: 5.2.0.qualifier
 Bundle-ClassPath: .,
- lib/angus-activation-2.0.1.jar,
  lib/greenmail-2.1.0-alpha-2.jar,
  lib/jakarta.activation-api-2.1.2.jar,
  lib/jakarta.mail-2.0.2.jar,
  lib/jakarta.mail-api-2.1.2.jar,
  lib/junit-4.13.2.jar,
- lib/slf4j-api-1.7.36.jar
+ lib/slf4j-api-1.7.36.jar,
+ lib/angus-activation-2.0.1.jar
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Require-Bundle: org.knime.core;bundle-version="[5.2.0,6.0.0)",
- org.knime.email;bundle-version="[5.2.0,6.0.0)",
  org.knime.testing;bundle-version="[5.2.0,6.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-ActivationPolicy: lazy
