@@ -3,7 +3,7 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.knime</groupId>
-	<artifactId>org.knime.email.fetch-jars</artifactId>
+	<artifactId>org.knime.email.tests.janitor.fetch-jars</artifactId>
 	<version>${revision}</version>
 	<packaging>pom</packaging>
 
