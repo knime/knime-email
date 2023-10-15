@@ -479,7 +479,7 @@ public class GetEmailNodeProcessorTest {
                     if (gold.name().endsWith("html")) {
                         //somehow on Windows the html attachment uses \r\n and on Linux it uses only \n for line endings
                         final String html = new String(attachment.file(), StandardCharsets.UTF_8).replace("\r", "");
-                        final String goldHtml = new String(gold.file(), StandardCharsets.UTF_8);
+                        final String goldHtml = new String(gold.file(), StandardCharsets.UTF_8).replace("\r", "");
                         if (!html.equals(goldHtml)) {
                             return false;
                         }

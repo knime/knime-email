@@ -27,8 +27,6 @@
 		<module>org.knime.email</module>
 		<module>org.knime.email.tests/lib/fetch_jars</module>
 		<module>org.knime.email.tests</module>
-		<module>org.knime.email.tests.janitor/lib/fetch_jars</module>
-        <module>org.knime.email.tests.janitor</module>
 		<module>org.knime.features.email</module>
 		<module>org.knime.update.email</module>
 	</modules>
