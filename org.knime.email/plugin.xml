@@ -12,11 +12,11 @@
       </category>
    </extension>
    <extension point="org.knime.workbench.repository.nodes">
-      <node category-path="/toolintegration/email"
+      <node category-path="/labs/email"
             factory-class="org.knime.email.nodes.get.GetEmailNodeFactory"/>
-      <node category-path="/toolintegration/email"
+      <node category-path="/labs/email"
             factory-class="org.knime.email.nodes.connector.EmailConnectorNodeFactory" />
-      <node category-path="/toolintegration/email"
+      <node category-path="/labs/email"
             factory-class="org.knime.email.nodes.move.MoveEmailNodeFactory" />
    </extension>
    <extension
