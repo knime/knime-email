@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="org.knime.features.email"
-      label="KNIME EMail Processing (IMAP/POP)"
+      label="KNIME Email Processing"
       version="5.2.0.qualifier"
       provider-name="KNIME AG, Zurich, Switzerland"
       plugin="org.knime.email">
 
    <description>
-      Contributes nodes to connect to EMail Servers to retrieve emails.
+      Contributes nodes to connect to Email Servers to retrieve emails.
    </description>
 
    <copyright>
