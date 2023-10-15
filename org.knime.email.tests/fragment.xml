@@ -7,11 +7,5 @@
             TestcaseCollector="org.knime.email.EmailTestcaseCollector">
       </TestcaseCollector>
    </extension>
-   <extension
-         point="org.knime.testing.TestrunJanitor">
-      <TestrunJanitor
-            class="org.knime.email.janitor.EmailServerJanitor">
-      </TestrunJanitor>
-   </extension>
 
 </fragment>

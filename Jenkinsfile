@@ -39,6 +39,7 @@ try {
                 "knime-xml"
             ],
             ius: [
+                "org.knime.email.tests.janitor",
                 "org.knime.features.reporting2.feature.group", 
                 "org.knime.features.core.feature.group",
                 "org.knime.features.base.feature.group",

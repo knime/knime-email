@@ -45,12 +45,6 @@
 
 package org.knime.email.janitor;
 
-import static org.knime.email.TestUtil.PWD1;
-import static org.knime.email.TestUtil.PWD2;
-import static org.knime.email.TestUtil.PWD3;
-import static org.knime.email.TestUtil.USER1;
-import static org.knime.email.TestUtil.USER2;
-import static org.knime.email.TestUtil.USER3;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,9 +52,9 @@ import java.util.List;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.workflow.CredentialsStore;
 import org.knime.core.node.workflow.FlowVariable;
-import org.knime.email.TestUtil;
 import org.knime.testing.core.TestrunJanitor;
 
+import com.icegreen.greenmail.configuration.GreenMailConfiguration;
 import com.icegreen.greenmail.imap.ImapServer;
 import com.icegreen.greenmail.util.GreenMail;
 import com.icegreen.greenmail.util.ServerSetup;
@@ -71,6 +65,33 @@ import com.icegreen.greenmail.util.ServerSetup;
  * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
  */
 public class EmailServerJanitor extends TestrunJanitor {
+
+
+    /** First email user. */
+    public static final String USER1 = "knime-1@localhost";
+
+    /** First email user password. */
+    public static final String PWD1 = "knime1234";
+
+    /** Second email user. */
+    public static final String USER2 = "knime-2@localhost";
+
+    /** Second email login. */
+    public static final String PWD2 = "knime1234";
+
+    /** Second email user. */
+    public static final String USER3 = "knime-3@localhost";
+
+    /** Second email login. */
+    public static final String PWD3 = "knime1234";
+
+    /** {@link GreenMailConfiguration} with the two test users. */
+    public static final GreenMailConfiguration CONFIG =
+            new GreenMailConfiguration().withUser(USER1, PWD1).withUser(USER2, PWD2).withUser(USER3, PWD3);
+
+    /** {@link ServerSetup} for SMTP and IMAP tests. */
+    public static final ServerSetup[] SETUP = new ServerSetup[]{ServerSetup.SMTP.dynamicPort().setVerbose(true),
+        ServerSetup.IMAP.dynamicPort().setVerbose(true)};
 
     private static final String VAR_PREFIX = "email-";
 
@@ -92,8 +113,8 @@ public class EmailServerJanitor extends TestrunJanitor {
     @Override
     public void before() throws Exception {
 
-        m_mail = new GreenMail(TestUtil.SETUP);
-        m_mail.withConfiguration(TestUtil.CONFIG);
+        m_mail = new GreenMail(SETUP);
+        m_mail.withConfiguration(CONFIG);
         m_mail.start();
         final ImapServer imap = m_mail.getImap();
         final ServerSetup serverSetup = imap.getServerSetup();

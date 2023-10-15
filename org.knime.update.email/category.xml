@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
    <feature id="org.knime.features.email" version="0.0.0">
-       <category name="knime-ap-repository-template" />
+       <category name="knime-email" />
    </feature>
+   <bundle id="org.knime.email.tests.janitor">
+      <category name="knime-email"/>
+   </bundle>
    <category-def name="knime-email" label="Build artifacts from knime-email">
        <description>Build artifacts from knime-email</description>
    </category-def>
