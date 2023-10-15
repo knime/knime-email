@@ -8,7 +8,7 @@
             level-id="email"
             locked="true"
             name="EMail Processing"
-            path="/toolintegration/">
+            path="/labs/">
       </category>
    </extension>
    <extension point="org.knime.workbench.repository.nodes">
