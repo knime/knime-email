@@ -53,6 +53,7 @@ import java.util.Optional;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.StringValue;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings.DefaultNodeSettingsContext;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.AsyncChoicesProvider;
@@ -95,6 +96,8 @@ public final class UIChoices {
      */
     public static final class FolderProvider implements ChoicesProvider, AsyncChoicesProvider {
 
+        private static final NodeLogger LOGGER = NodeLogger.getLogger(UIChoices.FolderProvider.class);
+
         @Override
         public IdAndText[] choicesWithIdAndText(final DefaultNodeSettingsContext context) {
             try {
@@ -109,6 +112,7 @@ public final class UIChoices {
                         .toArray(new IdAndText[0]);
                 }
             } catch (final Exception e) { // NOSONAR catch all exceptions here
+                LOGGER.debug("Error fetching email folders", e);
                 throw new WidgetHandlerException("Unable to retrieve email folders: " + e.getMessage());
             }
         }
