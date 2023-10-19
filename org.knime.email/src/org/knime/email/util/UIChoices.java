@@ -59,6 +59,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.AsyncChoicesProvide
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ColumnChoicesProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.IdAndText;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.handler.WidgetHandlerException;
 import org.knime.email.port.EmailSessionPortObjectSpec;
 import org.knime.email.session.EmailSessionKey;
 
@@ -92,7 +93,7 @@ public final class UIChoices {
      * A choices provider to select folders from an email session. The email session port is expected to be connected to
      * the first port (1).
      */
-    public static final class FolderProvider implements ChoicesProvider {
+    public static final class FolderProvider implements ChoicesProvider, AsyncChoicesProvider {
 
         @Override
         public IdAndText[] choicesWithIdAndText(final DefaultNodeSettingsContext context) {
@@ -108,7 +109,7 @@ public final class UIChoices {
                         .toArray(new IdAndText[0]);
                 }
             } catch (final Exception e) { // NOSONAR catch all exceptions here
-                throw new IllegalStateException("Unable to retrieve email folders: " + e.getMessage(), e);
+                throw new WidgetHandlerException("Unable to retrieve email folders: " + e.getMessage());
             }
         }
     }
