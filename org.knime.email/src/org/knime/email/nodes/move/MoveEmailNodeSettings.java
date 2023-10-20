@@ -63,17 +63,19 @@ import org.knime.email.util.UIChoices.MessageIDColumnChoicesProvider;
 public final class MoveEmailNodeSettings implements DefaultNodeSettings {
 
     /** The name of the lookup column in the data table */
-    @Widget(title = "Message-IDs", description = "column containing the Message-ID of the Emails")
+    @Widget(title = "Message-IDs column", description = "Column containing the Message-ID of the emails")
     @ChoicesWidget(choices = MessageIDColumnChoicesProvider.class)
     String m_messageIds;
 
     /** The name of the lookup column in the data table */
-    @Widget(title = "Source folder name", description = "e.g. 'INBOX' or Folder/Subfolder")
+    @Widget(title = "Source folder name", description =
+            "The full path of the email source folder to remove the emails from e.g. 'INBOX' or Folder.Subfolder")
     @ChoicesWidget(choices = FolderProvider.class)
     String m_sourceFolder;
 
     /** The name of the lookup column in the data table */
-    @Widget(title = "Target folder name", description = "e.g. 'INBOX' or Folder/Subfolder")
+    @Widget(title = "Target folder name", description =
+            "The full path of the email target folder to move the emails to e.g. 'TRASH' or Folder.Subfolder")
     @ChoicesWidget(choices = FolderProvider.class)
     String m_targetFolder;
 }

@@ -77,10 +77,10 @@ import org.xml.sax.SAXException;
  * {@link NodeFactory} for the Get Email node, which retrieves emails.
  */
 @SuppressWarnings("restriction") // New Node UI is not yet API
-public final class GetEmailNodeFactory extends ConfigurableNodeFactory<GetEmailNodeModel>
-implements NodeDialogFactory {
+public final class GetEmailNodeFactory extends ConfigurableNodeFactory<GetEmailNodeModel> implements NodeDialogFactory {
 
     static final String OUTPUT_ATTACH_PORT_GROUP = "Attachments";
+
     static final String OUTPUT_HEADER_PORT_GROUP = "Headers";
 
     final class GetEmailModifier implements OnApplyNodeModifier {
@@ -127,10 +127,13 @@ implements NodeDialogFactory {
         .modelSettingsClass(GetEmailNodeSettings.class)//
         .addInputPort("Email Session", EmailSessionPortObject.TYPE, "The email session.")//
         .addOutputTable("Email Data", "The email data in a table, one row per email.")//
-        .addOutputTable("Email Attachments", "The email attachments in a table.")//
-        .addOutputTable("Email Header", "The email header in a table.")//
-        .sinceVersion(5, 2, 0)
-        .build();
+        .addOutputTable("Email Attachments",
+            "The email attachments in a table, one row per attachment. Can be joined with the original message via the "
+                + GetEmailNodeProcessor.COL_MESSAGE_ID + " column.")//
+        .addOutputTable("Email Header",
+            "The email header in a table, one row per header. Can be joined with the original message via the "
+                + GetEmailNodeProcessor.COL_MESSAGE_ID + " column.")//
+        .sinceVersion(5, 2, 0).build();
 
     @Override
     protected NodeDescription createNodeDescription() throws SAXException, IOException, XmlException {
@@ -142,6 +145,7 @@ implements NodeDialogFactory {
     protected GetEmailNodeModel createNodeModel(final NodeCreationConfiguration creationConfig) {
         return new GetEmailNodeModel(CONFIG, GetEmailNodeSettings.class, creationConfig.getPortConfig().get());
     }
+
     @Override
     public NodeDialog createNodeDialog() {
         return new DefaultNodeDialog(SettingsType.MODEL, GetEmailNodeSettings.class, new GetEmailModifier());
@@ -169,6 +173,7 @@ implements NodeDialogFactory {
         //not used
         return false;
     }
+
     @Override
     protected NodeDialogPane createNodeDialogPane(final NodeCreationConfiguration creationConfig) {
         //not used

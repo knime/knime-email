@@ -73,62 +73,39 @@ import org.knime.email.util.UIChoices.FolderProvider;
 public final class GetEmailNodeSettings implements DefaultNodeSettings {
 
     /** The name of the lookup column in the data table */
-    @Widget(title = "Folder name", description = "e.g. 'INBOX' or Folder/Subfolder")
+    @Widget(title = "Folder name",
+        description = "The full path to the email folder to read from e.g. 'INBOX' or Folder.Subfolder")
     @ChoicesWidget(choices = FolderProvider.class, showSearch = true)
     String m_folder;
 
     @Widget(title = "Mark loaded messages as read",
-            description = "If not selected, the node will reset the SEEN flag of all loaded messages to false after "
-                + "downloading their content.",
-                advanced = true)
+        description = "If not selected, the node will reset the SEEN flag of all loaded messages to false after "
+            + "downloading their content.",
+        advanced = true)
     boolean m_markAsRead = true;
 
     @Section(title = "Filtering")
-    interface FilteringSection {}
+    interface FilteringSection {
+    }
 
     @Widget(title = "Retrieve only",
-            description = "Defines if only unseen, seen or all messages are retrieved from the server.")
+        description = "Defines if only unseen, seen or all messages are retrieved from the server.")
     @Layout(FilteringSection.class)
     @ValueSwitchWidget
     MessageSeenStatus m_messageSeenStatus = MessageSeenStatus.Unseen;
 
-
     @Widget(title = "Retrieve only",
-            description = "Defines if only unanswered, answered or all messages are retrieved from the server.")
+        description = "Defines if only unanswered, answered or all messages are retrieved from the server.")
     @Layout(FilteringSection.class)
     @ValueSwitchWidget
     MessageAnswerStatus m_messageAnsweredStatus = MessageAnswerStatus.Unanswered;
 
-
-    @Section(title = "Additional information", advanced = true)
-    interface AdditionalInfo {}
-
-    @Widget(title = "Retrieve email flags",
-            description = "If checked, the node will append an additional flags column to the message table. "
-                + "Flags indicate the status of a message e.g. read, deleted, answered.",
-                advanced = true)
-    @Layout(value = AdditionalInfo.class)
-    boolean m_retrieveFlags = false;
-
-    @Widget(title = "Retrieve email attachments",
-            description = "If checked, the node will provide all email attachments in an additional output table. "
-                + "The table can be joined with the original email table via the " + COL_MESSAGE_ID + " column.",
-                advanced = true)
-    @Layout(value = AdditionalInfo.class)
-    boolean m_retrieveAttachments = false;
-
-    @Widget(title = "Retrieve email header",
-            description = "If checked, the node will provide all email header in an additional output table. "
-                + "The table can be joined with the original email table via the " + COL_MESSAGE_ID + " column.",
-                advanced = true)
-    @Layout(value = AdditionalInfo.class)
-    boolean m_retrieveHeaders = false;
-
     @Section(title = "Message count")
-    interface LimitMessages {}
+    interface LimitMessages {
+    }
 
     @Widget(title = "Limit number of messages",
-            description = "If checked, the number of messages retrieved from the server is capped.")
+        description = "If checked, the number of messages retrieved from the server is capped.")
     @Signal(id = LimitMessages.class, condition = TrueCondition.class)
     @Layout(value = LimitMessages.class)
     boolean m_limitMessages = true;
@@ -145,31 +122,49 @@ public final class GetEmailNodeSettings implements DefaultNodeSettings {
     @ValueSwitchWidget
     MessageSelector m_messageSelector = MessageSelector.Oldest;
 
-
-    public enum MessageSeenStatus {
-        @Label(value = "Unseen")
-        Unseen,
-        @Label(value = "Seen")
-        Seen,
-        @Label(value = "All")
-        All
+    @Section(title = "Additional information", advanced = true)
+    interface AdditionalInfo {
     }
 
+    @Widget(title = "Retrieve email flags",
+        description = "If checked, the node will append an additional flags column to the message table. "
+            + "Flags indicate the status of a message e.g. read, deleted, answered.",
+        advanced = true)
+    @Layout(value = AdditionalInfo.class)
+    boolean m_retrieveFlags = false;
+
+    @Widget(title = "Retrieve email attachments",
+        description = "If checked, the node will provide all email attachments in an additional output table. "
+            + "The table can be joined with the original email table via the " + COL_MESSAGE_ID + " column.",
+        advanced = true)
+    @Layout(value = AdditionalInfo.class)
+    boolean m_retrieveAttachments = false;
+
+    @Widget(title = "Retrieve email header",
+        description = "If checked, the node will provide all email header in an additional output table. "
+            + "The table can be joined with the original email table via the " + COL_MESSAGE_ID + " column.",
+        advanced = true)
+    @Layout(value = AdditionalInfo.class)
+    boolean m_retrieveHeaders = false;
+
+    public enum MessageSeenStatus {
+            @Label(value = "Unseen")
+            Unseen, @Label(value = "Seen")
+            Seen, @Label(value = "All")
+            All
+    }
 
     public enum MessageAnswerStatus {
-        @Label(value = "Unanswered")
-        Unanswered,
-        @Label(value = "Answered")
-        Answered,
-        @Label(value = "All")
-        All
+            @Label(value = "Unanswered")
+            Unanswered, @Label(value = "Answered")
+            Answered, @Label(value = "All")
+            All
     }
 
     public enum MessageSelector {
-        @Label(value = "Oldest")
-        Oldest,
-        @Label(value = "Newest")
-        Newest
+            @Label(value = "Oldest")
+            Oldest, @Label(value = "Newest")
+            Newest
     }
 
 }

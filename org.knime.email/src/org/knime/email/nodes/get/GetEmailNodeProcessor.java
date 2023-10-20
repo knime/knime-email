@@ -146,14 +146,14 @@ public final class GetEmailNodeProcessor {
 
     static final DataTableSpec ATTACH_TABLE_SPEC = new DataTableSpecCreator() //
         .addColumns(new DataColumnSpecCreator(COL_MESSAGE_ID, StringCell.TYPE).createSpec()) //
-        .addColumns(new DataColumnSpecCreator("File name", StringCell.TYPE).createSpec()) //
+        .addColumns(new DataColumnSpecCreator("File Name", StringCell.TYPE).createSpec()) //
         .addColumns(new DataColumnSpecCreator("Attachment", BinaryObjectDataCell.TYPE).createSpec()) //
         .createSpec();
 
     static final DataTableSpec HEADER_TABLE_SPEC = new DataTableSpecCreator() //
         .addColumns(new DataColumnSpecCreator(COL_MESSAGE_ID, StringCell.TYPE).createSpec()) //
-        .addColumns(new DataColumnSpecCreator("Header name", StringCell.TYPE).createSpec()) //
-        .addColumns(new DataColumnSpecCreator("Header value", StringCell.TYPE).createSpec()) //
+        .addColumns(new DataColumnSpecCreator("Header Name", StringCell.TYPE).createSpec()) //
+        .addColumns(new DataColumnSpecCreator("Header Value", StringCell.TYPE).createSpec()) //
         .createSpec();
 
     private final EmailSessionKey m_mailSessionKey;

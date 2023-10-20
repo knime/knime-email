@@ -80,7 +80,7 @@ public class EmailConnectorSettings extends UsernamePasswordSettings {
 //    public EmailProtocol m_protocol = EmailProtocol.IMAP;
 
     /** The name of the lookup column in the data table */
-    @Widget(title = "Email Server", description = "The address of the email server.") //
+    @Widget(title = "Email server", description = "The address of the email server.") //
     @TextInputWidget(pattern = "[^ ]+")
     String m_server;
 
@@ -98,7 +98,7 @@ public class EmailConnectorSettings extends UsernamePasswordSettings {
 
     /**The email protocol.*/
     @Widget(title = "Use secure protocol",
-                 description = "Choose whether to use an encrpyted or unencrpyted connection.")
+                 description = "Choose whether to use an encrypted or unencrypted connection.")
     @ValueSwitchWidget()
     public Security m_useSecureProtocol = Security.YES;
 
