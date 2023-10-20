@@ -118,9 +118,9 @@ public final class GetEmailNodeFactory extends ConfigurableNodeFactory<GetEmailN
     }
 
     private static final WebUINodeConfiguration CONFIG = WebUINodeConfiguration.builder()//
-        .name("Get Email")//
+        .name("Email Reader")//
         .icon("./email.png")//
-        .shortDescription("Reads email from the provided email session.")//
+        .shortDescription("Reads email from the provided email session and folder.")//
         .fullDescription("""
                 Reads email from the provided email session and folder.
                 """)//

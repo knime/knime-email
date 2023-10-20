@@ -63,11 +63,11 @@ import org.knime.email.port.EmailSessionPortObject;
 public final class MoveEmailNodeFactory extends WebUINodeFactory<MoveEmailNodeModel> {
 
     private static final WebUINodeConfiguration CONFIG = WebUINodeConfiguration.builder()//
-        .name("Move Email")//
+        .name("Email Mover")//
         .icon("./email.png")//
-        .shortDescription("Move email from a provided session to a folder.")//
+        .shortDescription("Moves email from on email folder to another email folder using the provided session.")//
         .fullDescription("""
-                Move email from a provided session to a folder.
+                Moves email from on email folder to another email folder using the provided session.
                 """)//
         .modelSettingsClass(MoveEmailNodeSettings.class)//
         .addInputPort("Email Session", EmailSessionPortObject.TYPE, "The email session.")//
