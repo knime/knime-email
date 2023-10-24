@@ -1,5 +1,5 @@
 #!groovy
-def BN = (BRANCH_NAME == 'master' || BRANCH_NAME.startsWith('releases/')) ? BRANCH_NAME : 'releases/2023-10'
+def BN = (BRANCH_NAME == 'master' || BRANCH_NAME.startsWith('releases/')) ? BRANCH_NAME : 'releases/2023-12'
 
 library "knime-pipeline@$BN"
 
@@ -15,15 +15,14 @@ properties([
 try {
     knimetools.defaultTychoBuild('org.knime.update.email')
 
-	workflowTests.runTests(
+    workflowTests.runTests(
         dependencies: [
-    		repositories: [
+            repositories: [
                 "knime-credentials-base",
                 "knime-gateway",
                 "knime-base", 
                 "knime-base-views",
                 "knime-cef",
-                "knime-chromium",
                 "knime-core",
                 "knime-core-ui",
                 "knime-distance",
@@ -41,26 +40,16 @@ try {
             ius: [
                 "org.knime.email.tests",
                 "org.knime.features.reporting2.feature.group", 
-                "org.knime.features.core.feature.group",
-                "org.knime.features.base.feature.group",
-                "org.knime.features.base.views.feature.group",
-                "org.knime.features.browser.chromium.feature.group",
                 "org.knime.features.browser.cef.feature.group",
-                "org.knime.features.quickform.legacy.feature.group",
-                "org.knime.features.ensembles.feature.group",
-                "org.knime.features.distmatrix.feature.group",
-                "org.knime.features.xml.feature.group",
-                "org.knime.features.gateway.feature.group"
             ]
         ]
-	)
+    )
 
-/*
-	stage('Sonarqube analysis') {
-		env.lastStage = env.STAGE_NAME
-		workflowTests.runSonar()
-	}
-*/
+    stage('Sonarqube analysis') {
+        env.lastStage = env.STAGE_NAME
+        workflowTests.runSonar()
+    }
+
 } catch (ex) {
     currentBuild.result = 'FAILURE'
     throw ex
