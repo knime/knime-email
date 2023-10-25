@@ -52,20 +52,20 @@ import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.HorizontalLayout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
+import org.knime.core.webui.node.dialog.defaultdialog.setting.credentials.Credentials;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.NumberInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
-import org.knime.credentials.base.node.UsernamePasswordSettings;
 
 /**
  * Settings class.
  * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction")
-public class EmailConnectorSettings extends UsernamePasswordSettings {
+public class EmailConnectorSettings implements DefaultNodeSettings {
 
     enum EmailProtocol {
         @Label("IMAP(4)")
@@ -85,9 +85,14 @@ public class EmailConnectorSettings extends UsernamePasswordSettings {
     String m_server;
 
     /** The name of the lookup column in the data table */
-    @Widget(title = "Port", description = "Server port (e.g. 993).") //
+    @Widget(title = "Port", description = "The port of the email server (e.g. 993).") //
     @NumberInputWidget(min = 1, max = 0xFFFF) // 65635
     int m_port = 993;
+
+    /**The email server login.*/
+    @Widget(title = "Login",
+            description = "The email server login.")
+    public Credentials m_login;
 
     enum Security {
         @Label("Yes")

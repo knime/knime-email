@@ -60,7 +60,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.webui.node.impl.WebUINodeConfiguration;
 import org.knime.core.webui.node.impl.WebUINodeModel;
 import org.knime.email.nodes.connector.EmailConnectorSettings.ConnectionProperties;
@@ -95,7 +94,7 @@ public class EmailConnectorNodeModel extends WebUINodeModel<EmailConnectorSettin
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs, final EmailConnectorSettings modelSettings)
         throws InvalidSettingsException {
-        CheckUtils.checkSettingNotNull(modelSettings.m_flowVariable, "No configuration available.");
+        CheckUtils.checkSettingNotNull(modelSettings.m_login, "No login available.");
         CheckUtils.checkSettingNotNull(modelSettings.m_server, "No server set.");
 //        CheckUtils.checkSettingNotNull(modelSettings.m_protocol, "No protocol set.");
         return new PortObjectSpec[]{new EmailSessionPortObjectSpec()};
@@ -104,7 +103,7 @@ public class EmailConnectorNodeModel extends WebUINodeModel<EmailConnectorSettin
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec,
         final EmailConnectorSettings modelSettings) throws Exception {
-        final var mailSessionKey = createKey(getCredentialsProvider(), modelSettings);
+        final var mailSessionKey = createKey(modelSettings);
         try (final var mailSession = mailSessionKey.connect()) {
             // try connect
         }
@@ -112,11 +111,10 @@ public class EmailConnectorNodeModel extends WebUINodeModel<EmailConnectorSettin
         return new PortObject[]{new EmailSessionPortObject(m_cacheId)};
     }
 
-    private static final EmailSessionKey createKey(final CredentialsProvider credentialsProvider,
-        final EmailConnectorSettings settings) throws MessagingException {
+    private static final EmailSessionKey createKey(final EmailConnectorSettings settings) throws MessagingException {
         return EmailSessionKey.builder() //
             .host(settings.m_server, settings.m_port) //
-            .user(settings.login(credentialsProvider), settings.secret(credentialsProvider)) //
+            .user(settings.m_login.getUsername(), settings.m_login.getPassword()) //
             .protocol(EmailProtocol.IMAP.toString().toLowerCase(), Security.YES == settings.m_useSecureProtocol) //
             .properties(extractProperties(settings.m_properties)) //
             .build();
