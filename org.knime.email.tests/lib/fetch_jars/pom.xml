@@ -68,7 +68,8 @@
                         <id>copy-sources</id>
                         <configuration>
                             <classifier>sources</classifier>
-                            <includeScope>runtime</includeScope>
+                            <includeScope>compile</includeScope>
+                            <includeGroupIds>com.icegreen</includeGroupIds>
                             <outputDirectory>../</outputDirectory>
                         </configuration>
                         <phase>package</phase>
@@ -79,7 +80,8 @@
                     <execution>
                         <id>copy-dependencies</id>
                         <configuration>
-                            <includeScope>runtime</includeScope>
+                            <includeScope>compile</includeScope>
+                            <includeGroupIds>com.icegreen</includeGroupIds>
                             <outputDirectory>../</outputDirectory>
                         </configuration>
                         <phase>package</phase>

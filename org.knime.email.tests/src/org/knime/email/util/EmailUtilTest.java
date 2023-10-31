@@ -45,9 +45,10 @@
 
 package org.knime.email.util;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.knime.email.TestUtil.CONFIG;
 import static org.knime.email.TestUtil.SETUP;
 import static org.knime.email.TestUtil.USER1;
@@ -68,7 +69,7 @@ import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
-public class EmailUtilTest {
+class EmailUtilTest {
     @RegisterExtension
     static GreenMailExtension greenMail = new GreenMailExtension(SETUP).withConfiguration(CONFIG);
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>org.knime.email.tests.janitor</name>
+	<name>org.knime.email.libs</name>
 	<comment></comment>
 	<projects>
 	</projects>

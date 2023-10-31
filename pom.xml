@@ -23,7 +23,8 @@
     </properties>
 
     <modules>
-        <module>org.knime.email/lib/fetch_jars</module>
+        <module>org.knime.email.libs/lib/fetch_jars</module>
+        <module>org.knime.email.libs</module>
         <module>org.knime.email</module>
         <module>org.knime.email.tests/lib/fetch_jars</module>
         <module>org.knime.email.tests</module>

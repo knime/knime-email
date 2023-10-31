@@ -1,0 +1,32 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: KNIME EMail processing libraries
+Bundle-SymbolicName: org.knime.email.libs;singleton:=true
+Bundle-Version: 5.2.0.qualifier
+Bundle-ClassPath: .,
+ lib/angus-activation-2.0.1.jar,
+ lib/jakarta.activation-api-2.1.2.jar,
+ lib/jakarta.mail-api-2.1.2.jar,
+ lib/jakarta.mail-2.0.2.jar
+Bundle-Vendor: KNIME AG, Zurich, Switzerland
+Bundle-RequiredExecutionEnvironment: JavaSE-17
+Bundle-ActivationPolicy: lazy
+Eclipse-BundleShape: jar
+Export-Package: jakarta.activation,
+ jakarta.activation.spi,
+ jakarta.mail,
+ jakarta.mail.event,
+ jakarta.mail.internet,
+ jakarta.mail.search,
+ jakarta.mail.util,
+ org.eclipse.angus.mail.auth,
+ org.eclipse.angus.mail.handlers,
+ org.eclipse.angus.mail.iap,
+ org.eclipse.angus.mail.imap,
+ org.eclipse.angus.mail.imap.protocol,
+ org.eclipse.angus.mail.nativeimage,
+ org.eclipse.angus.mail.pop3,
+ org.eclipse.angus.mail.smtp,
+ org.eclipse.angus.mail.util,
+ org.eclipse.angus.mail.util.logging
+Automatic-Module-Name: org.knime.email
