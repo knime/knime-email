@@ -46,9 +46,9 @@
  * History
  *   21 Dec 2022 (jasper): created
  */
-package org.knime.email.nodes.get;
+package org.knime.email.nodes.reader;
 
-import static org.knime.email.nodes.get.GetEmailNodeProcessor.COL_MESSAGE_ID;
+import static org.knime.email.nodes.reader.EmailReaderNodeProcessor.COL_MESSAGE_ID;
 
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
@@ -70,7 +70,7 @@ import org.knime.email.util.UIChoices.FolderProvider;
  * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction") // New Node UI is not yet API
-public final class GetEmailNodeSettings implements DefaultNodeSettings {
+public final class EmailReaderNodeSettings implements DefaultNodeSettings {
 
     /** The name of the lookup column in the data table */
     @Widget(title = "Folder name",

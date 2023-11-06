@@ -44,59 +44,61 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   21 Oct 2022 (jasper): created
+ *   Sep 27, 2023 (wiswedel): created
  */
-package org.knime.email.nodes.move;
+package org.knime.email.nodes.mover;
 
-import org.knime.core.node.NodeFactory;
-import org.knime.core.webui.node.impl.WebUINodeConfiguration;
-import org.knime.core.webui.node.impl.WebUINodeFactory;
-import org.knime.email.port.EmailSessionPortObject;
+import org.eclipse.angus.mail.imap.IMAPFolder;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.email.session.EmailSession;
+import org.knime.email.session.EmailSessionKey;
+import org.knime.email.util.EmailUtil;
+
+import jakarta.mail.Flags.Flag;
 
 /**
- * {@link NodeFactory} for the Value Lookup node, which looks up values in a dictionary table and adds them to an input
- * table
  *
- * @author Jasper Krauter, KNIME GmbH, Konstanz, Germany
+ * @author wiswedel
  */
-@SuppressWarnings("restriction") // New Node UI is not yet API
-public final class MoveEmailNodeFactory extends WebUINodeFactory<MoveEmailNodeModel> {
+final class EmailMoverNodeProcessor {
 
-    private static final WebUINodeConfiguration CONFIG = WebUINodeConfiguration.builder()//
-        .name("Email Mover")//
-        .icon("./email.png")//
-        .shortDescription("Moves email from on email folder to another email folder using the provided session.")//
-        .fullDescription("""
-                Moves email from on email folder to another email folder using the provided session.
-                """)//
-        .modelSettingsClass(MoveEmailNodeSettings.class)//
-        .addInputPort("Email Session", EmailSessionPortObject.TYPE, "The email session.")//
-        .addInputTable("Emails", "A table containing the emails to be moved.")//
-        .sinceVersion(5, 2, 0)
-        .build();
+    private final EmailSessionKey m_mailSessionKey;
+    private EmailMoverNodeSettings m_settings;
 
-    /**
-     * Create a new factory instance (need this constructor for ser/de)
-     */
-    public MoveEmailNodeFactory() {
-        super(CONFIG);
+
+
+    EmailMoverNodeProcessor(final EmailSessionKey mailSessionKey, final EmailMoverNodeSettings settings) {
+        m_mailSessionKey = mailSessionKey;
+        m_settings = settings;
     }
 
-    /**
-     * Create a new factory instance provided a node configuration
-     *
-     * @param configuration
-     */
-    protected MoveEmailNodeFactory(final WebUINodeConfiguration configuration) {
-        super(configuration);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public MoveEmailNodeModel createNodeModel() {
-        return new MoveEmailNodeModel(CONFIG, MoveEmailNodeSettings.class);
+    void moveMessages(final ExecutionMonitor exec, final BufferedDataTable idTable) throws Exception {
+        final int idIdx = idTable.getSpec().findColumnIndex(m_settings.m_messageIds);
+        try (EmailSession session = m_mailSessionKey.connect();
+                final var sourceFolder = session.openFolderForWriting(m_settings.m_sourceFolder);
+             final var targetFolder = session.openFolder(m_settings.m_targetFolder);
+             ){
+            exec.setMessage("Processing input table..");
+            final var messages = EmailUtil.findMessages(exec.createSubProgress(0.7), sourceFolder, idTable, idIdx);
+            if (sourceFolder instanceof IMAPFolder imapfolder) {
+                exec.checkCanceled();
+                exec.setProgress(0.8,
+                    "Moving " + messages.length + " messages to target folder: " + m_settings.m_targetFolder);
+                imapfolder.moveMessages(messages, targetFolder);
+            } else {
+                // copy messages over and delete them
+                exec.checkCanceled();
+                exec.setProgress(0.8,
+                    "Copying " + messages.length + " messages to target folder: " + m_settings.m_targetFolder);
+                sourceFolder.copyMessages(messages, targetFolder);
+                exec.setProgress(0.9,
+                    "Deleting " + messages.length + " messages from source folder: " + m_settings.m_sourceFolder);
+                EmailUtil.flagMessages(sourceFolder, messages, Flag.DELETED, true);
+                sourceFolder.expunge();
+            }
+        }
+        exec.setProgress(1);
     }
 
 }

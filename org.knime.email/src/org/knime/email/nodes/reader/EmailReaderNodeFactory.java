@@ -46,7 +46,7 @@
  * History
  *   21 Oct 2022 (jasper): created
  */
-package org.knime.email.nodes.get;
+package org.knime.email.nodes.reader;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -77,7 +77,7 @@ import org.xml.sax.SAXException;
  * {@link NodeFactory} for the Get Email node, which retrieves emails.
  */
 @SuppressWarnings("restriction") // New Node UI is not yet API
-public final class GetEmailNodeFactory extends ConfigurableNodeFactory<GetEmailNodeModel> implements NodeDialogFactory {
+public final class EmailReaderNodeFactory extends ConfigurableNodeFactory<EmailReaderNodeModel> implements NodeDialogFactory {
 
     static final String OUTPUT_ATTACH_PORT_GROUP = "Attachments";
 
@@ -119,20 +119,20 @@ public final class GetEmailNodeFactory extends ConfigurableNodeFactory<GetEmailN
 
     private static final WebUINodeConfiguration CONFIG = WebUINodeConfiguration.builder()//
         .name("Email Reader")//
-        .icon("./email.png")//
+        .icon("./emailReader.png")//
         .shortDescription("Reads email from the provided email session and folder.")//
         .fullDescription("""
                 Reads email from the provided email session and folder.
                 """)//
-        .modelSettingsClass(GetEmailNodeSettings.class)//
+        .modelSettingsClass(EmailReaderNodeSettings.class)//
         .addInputPort("Email Session", EmailSessionPortObject.TYPE, "The email session.")//
         .addOutputTable("Email Data", "The email data in a table, one row per email.")//
         .addOutputTable("Email Attachments",
             "The email attachments in a table, one row per attachment. Can be joined with the original message via the "
-                + GetEmailNodeProcessor.COL_MESSAGE_ID + " column.")//
+                + EmailReaderNodeProcessor.COL_MESSAGE_ID + " column.")//
         .addOutputTable("Email Header",
             "The email header in a table, one row per header. Can be joined with the original message via the "
-                + GetEmailNodeProcessor.COL_MESSAGE_ID + " column.")//
+                + EmailReaderNodeProcessor.COL_MESSAGE_ID + " column.")//
         .sinceVersion(5, 2, 0).build();
 
     @Override
@@ -142,13 +142,13 @@ public final class GetEmailNodeFactory extends ConfigurableNodeFactory<GetEmailN
     }
 
     @Override
-    protected GetEmailNodeModel createNodeModel(final NodeCreationConfiguration creationConfig) {
-        return new GetEmailNodeModel(CONFIG, GetEmailNodeSettings.class, creationConfig.getPortConfig().get());
+    protected EmailReaderNodeModel createNodeModel(final NodeCreationConfiguration creationConfig) {
+        return new EmailReaderNodeModel(CONFIG, EmailReaderNodeSettings.class, creationConfig.getPortConfig().get());
     }
 
     @Override
     public NodeDialog createNodeDialog() {
-        return new DefaultNodeDialog(SettingsType.MODEL, GetEmailNodeSettings.class, new GetEmailModifier());
+        return new DefaultNodeDialog(SettingsType.MODEL, EmailReaderNodeSettings.class, new GetEmailModifier());
     }
 
     @Override
@@ -181,7 +181,7 @@ public final class GetEmailNodeFactory extends ConfigurableNodeFactory<GetEmailN
     }
 
     @Override
-    public NodeView<GetEmailNodeModel> createNodeView(final int viewIndex, final GetEmailNodeModel nodeModel) {
+    public NodeView<EmailReaderNodeModel> createNodeView(final int viewIndex, final EmailReaderNodeModel nodeModel) {
         return null;
     }
 }

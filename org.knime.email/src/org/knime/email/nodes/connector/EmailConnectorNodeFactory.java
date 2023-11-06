@@ -61,7 +61,7 @@ public class EmailConnectorNodeFactory extends WebUINodeFactory<EmailConnectorNo
 
     private static final WebUINodeConfiguration CONFIG = WebUINodeConfiguration.builder()//
             .name("Email Connector")//
-            .icon("./email.png")//
+            .icon("./emailConnector.png")//
             .shortDescription("Connects to an email account using the IMAP protocol.")//
             .fullDescription("Connects to an email account using the IMAP protocol.")//
             .modelSettingsClass(EmailConnectorSettings.class)//

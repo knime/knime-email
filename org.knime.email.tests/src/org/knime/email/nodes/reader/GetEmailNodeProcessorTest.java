@@ -43,7 +43,7 @@
  * ------------------------------------------------------------------------
  */
 
-package org.knime.email.nodes.get;
+package org.knime.email.nodes.reader;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -86,9 +86,11 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.util.Pair;
 import org.knime.email.TestUtil;
-import org.knime.email.nodes.get.GetEmailNodeSettings.MessageAnswerStatus;
-import org.knime.email.nodes.get.GetEmailNodeSettings.MessageSeenStatus;
-import org.knime.email.nodes.get.GetEmailNodeSettings.MessageSelector;
+import org.knime.email.nodes.reader.EmailReaderNodeProcessor;
+import org.knime.email.nodes.reader.EmailReaderNodeSettings;
+import org.knime.email.nodes.reader.EmailReaderNodeSettings.MessageAnswerStatus;
+import org.knime.email.nodes.reader.EmailReaderNodeSettings.MessageSeenStatus;
+import org.knime.email.nodes.reader.EmailReaderNodeSettings.MessageSelector;
 import org.knime.email.session.EmailSessionKey;
 import org.knime.email.util.Attachment;
 import org.knime.email.util.EmailUtil;
@@ -129,12 +131,12 @@ public class GetEmailNodeProcessorTest {
 
     @Test
     public void testProcessor_withHTML(final ExecutionContext exec) throws Exception {
-        final GetEmailNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
+        final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
         settings.m_retrieveFlags = true;
         final List<Message> content = setupTestHTMLMails();
         final var mailSessionKey = TestUtil.getSessionKeyUser1(greenMail);
 
-        final GetEmailNodeProcessor processor = new GetEmailNodeProcessor(mailSessionKey, settings);
+        final EmailReaderNodeProcessor processor = new EmailReaderNodeProcessor(mailSessionKey, settings);
         processor.readEmailsAndFillTable(exec);
         final BufferedDataTable table = processor.getMsgTable();
         checkMsgTable(content, table, settings.m_markAsRead);
@@ -142,17 +144,17 @@ public class GetEmailNodeProcessorTest {
 
     @Test
     public void testProcessor_withCC(final ExecutionContext exec) throws Exception {
-        final GetEmailNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
+        final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
         settings.m_retrieveFlags = false;
         final List<Message> content = setupTestCCMails();
 
         var mailSessionKey = TestUtil.getSessionKeyUser1(greenMail);
-        GetEmailNodeProcessor processor;
+        EmailReaderNodeProcessor processor;
         BufferedDataTable table = getMessagesTable(exec, settings, mailSessionKey);
         final List<Message> msgs = extractMessages(table, false, null, false);
 
         mailSessionKey = TestUtil.getSessionKey(greenMail, TestUtil.USER3, TestUtil.PWD3);
-        processor = new GetEmailNodeProcessor(mailSessionKey, settings);
+        processor = new EmailReaderNodeProcessor(mailSessionKey, settings);
         processor.readEmailsAndFillTable(exec);
         table = processor.getMsgTable();
         msgs.addAll(extractMessages(table, false, null, false));
@@ -162,7 +164,7 @@ public class GetEmailNodeProcessorTest {
 
     @Test
     public void testProcessor_withFlagsRead(final ExecutionContext exec) throws Exception {
-        final GetEmailNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
+        final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
         settings.m_retrieveFlags = true;
         settings.m_markAsRead = true;
         final List<Message> content = setupTestMails();
@@ -174,7 +176,7 @@ public class GetEmailNodeProcessorTest {
 
     @Test
     public void testProcessor_withFlagsUnRead(final ExecutionContext exec) throws Exception {
-        final GetEmailNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
+        final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
         settings.m_retrieveFlags = true;
         settings.m_markAsRead = false;
         final List<Message> content = setupTestMails();
@@ -186,7 +188,7 @@ public class GetEmailNodeProcessorTest {
 
     @Test
     public void testProcessor_withFlagsOnlyUnseen(final ExecutionContext exec) throws Exception {
-        final GetEmailNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
+        final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
         settings.m_retrieveFlags = true;
         settings.m_markAsRead = true;
         settings.m_messageSeenStatus = MessageSeenStatus.Unseen;
@@ -203,7 +205,7 @@ public class GetEmailNodeProcessorTest {
 
     @Test
     public void testProcessor_withFlagsOnlySeen(final ExecutionContext exec) throws Exception {
-        final GetEmailNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
+        final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
         settings.m_retrieveFlags = true;
         settings.m_markAsRead = true;
         settings.m_messageSeenStatus = MessageSeenStatus.Seen;
@@ -217,7 +219,7 @@ public class GetEmailNodeProcessorTest {
 
     @Test
     public void testProcessor_withFlagsSeenUnseen(final ExecutionContext exec) throws Exception {
-        final GetEmailNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
+        final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
         settings.m_retrieveFlags = true;
         settings.m_markAsRead = true;
         settings.m_messageSeenStatus = MessageSeenStatus.All;
@@ -234,7 +236,7 @@ public class GetEmailNodeProcessorTest {
 
     @Test
     public void testProcessor_withFlagsOnlyUnanswered(final ExecutionContext exec) throws Exception {
-        final GetEmailNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
+        final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
         settings.m_retrieveFlags = true;
         settings.m_markAsRead = true;
         settings.m_messageSeenStatus = MessageSeenStatus.All;
@@ -258,7 +260,7 @@ public class GetEmailNodeProcessorTest {
 
     @Test
     public void testProcessor_withFlagsOnlyAnswered(final ExecutionContext exec) throws Exception {
-        final GetEmailNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
+        final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
         settings.m_retrieveFlags = true;
         settings.m_markAsRead = true;
         settings.m_messageSeenStatus = MessageSeenStatus.All;
@@ -284,7 +286,7 @@ public class GetEmailNodeProcessorTest {
 
     @Test
     public void testProcessor_withFlagsAnsweredUnanswered(final ExecutionContext exec) throws Exception {
-        final GetEmailNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
+        final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
         settings.m_retrieveFlags = true;
         settings.m_markAsRead = true;
         settings.m_messageSeenStatus = MessageSeenStatus.All;
@@ -307,7 +309,7 @@ public class GetEmailNodeProcessorTest {
 
     @Test
     public void testProcessor_withFlagsReadAnswered(final ExecutionContext exec) throws Exception {
-        final GetEmailNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
+        final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
         settings.m_retrieveFlags = true;
         settings.m_markAsRead = true;
         settings.m_messageSeenStatus = MessageSeenStatus.Seen;
@@ -341,7 +343,7 @@ public class GetEmailNodeProcessorTest {
 
     @Test
     public void testProcessor_withFolder(final ExecutionContext exec) throws Exception {
-        final GetEmailNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
+        final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
         settings.m_retrieveFlags = true;
         settings.m_markAsRead = true;
         final List<Message> content = setupTestMails();
@@ -359,7 +361,7 @@ public class GetEmailNodeProcessorTest {
 
     @Test
     public void testProcessor_withLimit(final ExecutionContext exec) throws Exception {
-        final GetEmailNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
+        final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
         settings.m_retrieveFlags = true;
         settings.m_limitMessages = true;
         settings.m_limitMessagesCount = 1;
@@ -385,13 +387,13 @@ public class GetEmailNodeProcessorTest {
 
     @Test
     public void testProcessor_withHeaders(final ExecutionContext exec) throws Exception {
-        final GetEmailNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
+        final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
         settings.m_messageSeenStatus = MessageSeenStatus.All;
         final List<Message> content = setupTestMails();
         final var mailSessionKey = TestUtil.getSessionKeyUser1(greenMail);
 
         settings.m_retrieveHeaders = true;
-        GetEmailNodeProcessor processor = new GetEmailNodeProcessor(mailSessionKey, settings);
+        EmailReaderNodeProcessor processor = new EmailReaderNodeProcessor(mailSessionKey, settings);
         processor.readEmailsAndFillTable(exec);
         //email table should always be returned
         BufferedDataTable table = processor.getMsgTable();
@@ -412,7 +414,7 @@ public class GetEmailNodeProcessorTest {
 
 
         settings.m_retrieveHeaders = false;
-        processor = new GetEmailNodeProcessor(mailSessionKey, settings);
+        processor = new EmailReaderNodeProcessor(mailSessionKey, settings);
         processor.readEmailsAndFillTable(exec);
         //should contain messages
         table = processor.getMsgTable();
@@ -424,7 +426,7 @@ public class GetEmailNodeProcessorTest {
 
     @Test
     public void testProcessor_withAttachement(final ExecutionContext exec) throws Exception {
-        final GetEmailNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
+        final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
         settings.m_messageSeenStatus = MessageSeenStatus.All;
         final Pair<List<Message>, List<Attachment>> contentAttachments = setupTestMailsWithAttachment();
         final List<Message> content = contentAttachments.getFirst();
@@ -432,7 +434,7 @@ public class GetEmailNodeProcessorTest {
         final var mailSessionKey = TestUtil.getSessionKeyUser1(greenMail);
 
         settings.m_retrieveAttachments = true;
-        GetEmailNodeProcessor processor = new GetEmailNodeProcessor(mailSessionKey, settings);
+        EmailReaderNodeProcessor processor = new EmailReaderNodeProcessor(mailSessionKey, settings);
         processor.readEmailsAndFillTable(exec);
         //email table should always be returned
         BufferedDataTable table = processor.getMsgTable();
@@ -454,7 +456,7 @@ public class GetEmailNodeProcessorTest {
 
 
         settings.m_retrieveAttachments = false;
-        processor = new GetEmailNodeProcessor(mailSessionKey, settings);
+        processor = new EmailReaderNodeProcessor(mailSessionKey, settings);
         processor.readEmailsAndFillTable(exec);
         //should contain messages
         table = processor.getMsgTable();
@@ -613,20 +615,20 @@ public class GetEmailNodeProcessorTest {
         return matches.get(0);
     }
 
-    public static GetEmailNodeSettings createSettings(final String folder) {
-        final GetEmailNodeSettings settings = new GetEmailNodeSettings();
+    public static EmailReaderNodeSettings createSettings(final String folder) {
+        final EmailReaderNodeSettings settings = new EmailReaderNodeSettings();
         settings.m_folder = folder;
         return settings;
     }
 
-    public static BufferedDataTable getMessagesTable(final ExecutionContext exec, final GetEmailNodeSettings settings)
+    public static BufferedDataTable getMessagesTable(final ExecutionContext exec, final EmailReaderNodeSettings settings)
             throws Exception {
         return getMessagesTable(exec, settings, TestUtil.getSessionKeyUser1(greenMail));
     }
 
-    public static BufferedDataTable getMessagesTable(final ExecutionContext exec, final GetEmailNodeSettings settings,
+    public static BufferedDataTable getMessagesTable(final ExecutionContext exec, final EmailReaderNodeSettings settings,
         final EmailSessionKey mailSessionKey) throws Exception {
-        final GetEmailNodeProcessor processor = new GetEmailNodeProcessor(mailSessionKey, settings);
+        final EmailReaderNodeProcessor processor = new EmailReaderNodeProcessor(mailSessionKey, settings);
         processor.readEmailsAndFillTable(exec);
         final BufferedDataTable table = processor.getMsgTable();
         return table;

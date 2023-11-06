@@ -46,7 +46,7 @@
  * History
  *   Sep 27, 2023 (wiswedel): created
  */
-package org.knime.email.nodes.get;
+package org.knime.email.nodes.reader;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -77,7 +77,7 @@ import org.knime.core.data.v2.value.ValueInterfaces.StringWriteValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
-import org.knime.email.nodes.get.GetEmailNodeSettings.MessageSelector;
+import org.knime.email.nodes.reader.EmailReaderNodeSettings.MessageSelector;
 import org.knime.email.session.EmailSessionKey;
 import org.knime.email.util.EmailUtil;
 
@@ -101,7 +101,7 @@ import jakarta.mail.search.SearchTerm;
  *
  * @author wiswedel
  */
-public final class GetEmailNodeProcessor {
+public final class EmailReaderNodeProcessor {
 
     /** The name of the Message ID column. */
     public static final String COL_MESSAGE_ID = "Message ID";
@@ -158,7 +158,7 @@ public final class GetEmailNodeProcessor {
 
     private final EmailSessionKey m_mailSessionKey;
 
-    private final GetEmailNodeSettings m_settings;
+    private final EmailReaderNodeSettings m_settings;
 
     private long m_attachmentCounter = 0;
 
@@ -170,7 +170,7 @@ public final class GetEmailNodeProcessor {
 
     private BufferedDataTable m_headerTable;
 
-    GetEmailNodeProcessor(final EmailSessionKey mailSessionKey, final GetEmailNodeSettings settings) {
+    EmailReaderNodeProcessor(final EmailSessionKey mailSessionKey, final EmailReaderNodeSettings settings) {
         m_mailSessionKey = mailSessionKey;
         m_settings = settings;
     }

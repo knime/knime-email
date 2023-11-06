@@ -13,11 +13,11 @@
    </extension>
    <extension point="org.knime.workbench.repository.nodes">
       <node category-path="/labs/email"
-            factory-class="org.knime.email.nodes.get.GetEmailNodeFactory"/>
+            factory-class="org.knime.email.nodes.reader.EmailReaderNodeFactory"/>
       <node category-path="/labs/email"
             factory-class="org.knime.email.nodes.connector.EmailConnectorNodeFactory" />
       <node category-path="/labs/email"
-            factory-class="org.knime.email.nodes.move.MoveEmailNodeFactory" />
+            factory-class="org.knime.email.nodes.mover.EmailMoverNodeFactory" />
    </extension>
    <extension
          point="org.knime.core.PortType">

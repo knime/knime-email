@@ -46,7 +46,7 @@
  * History
  *   21 Dec 2022 (jasper): created
  */
-package org.knime.email.nodes.move;
+package org.knime.email.nodes.mover;
 
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
@@ -60,7 +60,7 @@ import org.knime.email.util.UIChoices.MessageIDColumnChoicesProvider;
  * @author Jasper Krauter, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction") // New Node UI is not yet API
-public final class MoveEmailNodeSettings implements DefaultNodeSettings {
+public final class EmailMoverNodeSettings implements DefaultNodeSettings {
 
     /** The name of the lookup column in the data table */
     @Widget(title = "Message-IDs column", description = "Column containing the Message-ID of the emails")

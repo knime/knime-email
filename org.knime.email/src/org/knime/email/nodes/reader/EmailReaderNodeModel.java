@@ -46,7 +46,7 @@
  * History
  *   21 Oct 2022 (jasper): created
  */
-package org.knime.email.nodes.get;
+package org.knime.email.nodes.reader;
 
 import java.io.File;
 import java.io.IOException;
@@ -73,21 +73,21 @@ import org.knime.email.session.EmailSessionKey;
  * Get email node model.
  */
 @SuppressWarnings("restriction") // New Node UI is not yet API
-public class GetEmailNodeModel extends NodeModel {
+public class EmailReaderNodeModel extends NodeModel {
 
-    static final NodeLogger LOGGER = NodeLogger.getLogger(GetEmailNodeModel.class);
+    static final NodeLogger LOGGER = NodeLogger.getLogger(EmailReaderNodeModel.class);
 
-    private GetEmailNodeSettings m_settings = new GetEmailNodeSettings();
+    private EmailReaderNodeSettings m_settings = new EmailReaderNodeSettings();
 
     /**
      * Instantiate a new Value Lookup Node
      *
      * @param configuration node description
-     * @param modelSettingsClass a reference to {@link GetEmailNodeSettings}
+     * @param modelSettingsClass a reference to {@link EmailReaderNodeSettings}
      * @param portsConfiguration
      */
-    GetEmailNodeModel(final WebUINodeConfiguration configuration,
-        final Class<GetEmailNodeSettings> modelSettingsClass, final PortsConfiguration portsConfiguration) {
+    EmailReaderNodeModel(final WebUINodeConfiguration configuration,
+        final Class<EmailReaderNodeSettings> modelSettingsClass, final PortsConfiguration portsConfiguration) {
         super(portsConfiguration.getInputPorts(), portsConfiguration.getOutputPorts());
     }
 
@@ -117,7 +117,7 @@ public class GetEmailNodeModel extends NodeModel {
         final EmailSessionPortObject in = (EmailSessionPortObject)inObjects[0];
         final EmailSessionKey mailSessionKey = in.getEmailSessionKey().orElseThrow(() ->
         new InvalidSettingsException("No mail session available"));
-        final var processor = new GetEmailNodeProcessor(mailSessionKey, m_settings);
+        final var processor = new EmailReaderNodeProcessor(mailSessionKey, m_settings);
         processor.readEmailsAndFillTable(exec);
 
         final List<PortObject> list = new ArrayList<>();
@@ -133,12 +133,12 @@ public class GetEmailNodeModel extends NodeModel {
 
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_settings = DefaultNodeSettings.loadSettings(settings, GetEmailNodeSettings.class);
+        m_settings = DefaultNodeSettings.loadSettings(settings, EmailReaderNodeSettings.class);
     }
 
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        DefaultNodeSettings.saveSettings(GetEmailNodeSettings.class, m_settings, settings);
+        DefaultNodeSettings.saveSettings(EmailReaderNodeSettings.class, m_settings, settings);
     }
 
     @Override

@@ -44,61 +44,60 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 27, 2023 (wiswedel): created
+ *   21 Oct 2022 (jasper): created
  */
-package org.knime.email.nodes.move;
+package org.knime.email.nodes.mover;
 
-import org.eclipse.angus.mail.imap.IMAPFolder;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.email.session.EmailSession;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.webui.node.impl.WebUINodeConfiguration;
+import org.knime.core.webui.node.impl.WebUINodeModel;
+import org.knime.email.port.EmailSessionPortObject;
 import org.knime.email.session.EmailSessionKey;
-import org.knime.email.util.EmailUtil;
-
-import jakarta.mail.Flags.Flag;
 
 /**
- *
- * @author wiswedel
  */
-final class MoveEmailNodeProcessor {
+@SuppressWarnings("restriction") // New Node UI is not yet API
+public class EmailMoverNodeModel extends WebUINodeModel<EmailMoverNodeSettings> {
 
-    private final EmailSessionKey m_mailSessionKey;
-    private MoveEmailNodeSettings m_settings;
+    static final NodeLogger LOGGER = NodeLogger.getLogger(EmailMoverNodeModel.class);
 
-
-
-    MoveEmailNodeProcessor(final EmailSessionKey mailSessionKey, final MoveEmailNodeSettings settings) {
-        m_mailSessionKey = mailSessionKey;
-        m_settings = settings;
+    /**
+     * Instantiate a new Value Lookup Node
+     *
+     * @param configuration node description
+     * @param modelSettingsClass a reference to {@link EmailMoverNodeSettings}
+     */
+    EmailMoverNodeModel(final WebUINodeConfiguration configuration,
+        final Class<EmailMoverNodeSettings> modelSettingsClass) {
+        super(configuration, modelSettingsClass);
     }
 
-    void moveMessages(final ExecutionMonitor exec, final BufferedDataTable idTable) throws Exception {
-        final int idIdx = idTable.getSpec().findColumnIndex(m_settings.m_messageIds);
-        try (EmailSession session = m_mailSessionKey.connect();
-                final var sourceFolder = session.openFolderForWriting(m_settings.m_sourceFolder);
-             final var targetFolder = session.openFolder(m_settings.m_targetFolder);
-             ){
-            exec.setMessage("Processing input table..");
-            final var messages = EmailUtil.findMessages(exec.createSubProgress(0.7), sourceFolder, idTable, idIdx);
-            if (sourceFolder instanceof IMAPFolder imapfolder) {
-                exec.checkCanceled();
-                exec.setProgress(0.8,
-                    "Moving " + messages.length + " messages to target folder: " + m_settings.m_targetFolder);
-                imapfolder.moveMessages(messages, targetFolder);
-            } else {
-                // copy messages over and delete them
-                exec.checkCanceled();
-                exec.setProgress(0.8,
-                    "Copying " + messages.length + " messages to target folder: " + m_settings.m_targetFolder);
-                sourceFolder.copyMessages(messages, targetFolder);
-                exec.setProgress(0.9,
-                    "Deleting " + messages.length + " messages from source folder: " + m_settings.m_sourceFolder);
-                EmailUtil.flagMessages(sourceFolder, messages, Flag.DELETED, true);
-                sourceFolder.expunge();
-            }
-        }
-        exec.setProgress(1);
+    @Override
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs, final EmailMoverNodeSettings modelSettings)
+        throws InvalidSettingsException {
+        return new DataTableSpec[]{};
+    }
+
+    @Override
+    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec,
+        final EmailMoverNodeSettings modelSettings)
+        throws Exception {
+        final EmailSessionPortObject in = (EmailSessionPortObject)inObjects[0];
+        final EmailSessionKey mailSessionKey =
+            in.getEmailSessionKey().orElseThrow(() -> new InvalidSettingsException("No mail session available"));
+        final var table = (BufferedDataTable) inObjects[1];
+        CheckUtils.checkSetting(table.getSpec().findColumnIndex(modelSettings.m_messageIds) >= 0, 
+                "Please specify an existing column for the Message-IDs.");
+        final var processor = new EmailMoverNodeProcessor(mailSessionKey, modelSettings);
+        processor.moveMessages(exec, table);
+        return new BufferedDataTable[]{};
     }
 
 }

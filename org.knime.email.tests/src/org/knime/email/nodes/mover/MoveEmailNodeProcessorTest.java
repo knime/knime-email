@@ -43,7 +43,7 @@
  * ------------------------------------------------------------------------
  */
 
-package org.knime.email.nodes.move;
+package org.knime.email.nodes.mover;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.knime.email.TestUtil.CONFIG;
@@ -67,6 +67,8 @@ import org.knime.core.data.v2.value.ValueInterfaces.StringWriteValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.email.TestUtil;
+import org.knime.email.nodes.mover.EmailMoverNodeProcessor;
+import org.knime.email.nodes.mover.EmailMoverNodeSettings;
 import org.knime.email.util.Message;
 import org.knime.testing.core.ExecutionContextExtension;
 
@@ -92,7 +94,7 @@ public class MoveEmailNodeProcessorTest {
         //create target folder
         final String targetFolderName =
                 TestUtil.createSubFolder(TestUtil.getSessionKeyUser1(greenMail), TestUtil.FOLDER_INBOX, "targetFolder");
-        final MoveEmailNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
+        final EmailMoverNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
         settings.m_messageIds = ID_COL;
         settings.m_targetFolder = targetFolderName;
 
@@ -104,7 +106,7 @@ public class MoveEmailNodeProcessorTest {
 
         //now move all messages to the target folder
         final var mailSessionKey = TestUtil.getSessionKeyUser1(greenMail);
-        final MoveEmailNodeProcessor processor = new MoveEmailNodeProcessor(mailSessionKey, settings);
+        final EmailMoverNodeProcessor processor = new EmailMoverNodeProcessor(mailSessionKey, settings);
         final BufferedDataTable table = createMsgIdTable(exec, testMails);
         processor.moveMessages(exec, table);
         sourceMessages = getAllMessages(settings.m_sourceFolder);
@@ -118,7 +120,7 @@ public class MoveEmailNodeProcessorTest {
         //create target folder
         final String targetFolderName =
                 TestUtil.createSubFolder(TestUtil.getSessionKeyUser1(greenMail), TestUtil.FOLDER_INBOX, "targetFolder");
-        final MoveEmailNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
+        final EmailMoverNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
         settings.m_messageIds = ID_COL;
         settings.m_targetFolder = targetFolderName;
 
@@ -126,7 +128,7 @@ public class MoveEmailNodeProcessorTest {
 
         //now move all except for one messages to the target folder
         final var mailSessionKey = TestUtil.getSessionKeyUser1(greenMail);
-        final MoveEmailNodeProcessor processor = new MoveEmailNodeProcessor(mailSessionKey, settings);
+        final EmailMoverNodeProcessor processor = new EmailMoverNodeProcessor(mailSessionKey, settings);
         final Message retainedMessage = testMails.remove(0);
         final BufferedDataTable table = createMsgIdTable(exec, testMails);
         processor.moveMessages(exec, table);
@@ -152,8 +154,8 @@ public class MoveEmailNodeProcessorTest {
         }
     }
 
-    private static MoveEmailNodeSettings createSettings(final String folder) {
-        final MoveEmailNodeSettings settings = new MoveEmailNodeSettings();
+    private static EmailMoverNodeSettings createSettings(final String folder) {
+        final EmailMoverNodeSettings settings = new EmailMoverNodeSettings();
         settings.m_sourceFolder = folder;
         return settings;
     }

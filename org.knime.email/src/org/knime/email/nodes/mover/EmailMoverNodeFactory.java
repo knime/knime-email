@@ -46,58 +46,57 @@
  * History
  *   21 Oct 2022 (jasper): created
  */
-package org.knime.email.nodes.move;
+package org.knime.email.nodes.mover;
 
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.NodeFactory;
 import org.knime.core.webui.node.impl.WebUINodeConfiguration;
-import org.knime.core.webui.node.impl.WebUINodeModel;
+import org.knime.core.webui.node.impl.WebUINodeFactory;
 import org.knime.email.port.EmailSessionPortObject;
-import org.knime.email.session.EmailSessionKey;
 
 /**
+ * {@link NodeFactory} for the Value Lookup node, which looks up values in a dictionary table and adds them to an input
+ * table
+ *
+ * @author Jasper Krauter, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction") // New Node UI is not yet API
-public class MoveEmailNodeModel extends WebUINodeModel<MoveEmailNodeSettings> {
+public final class EmailMoverNodeFactory extends WebUINodeFactory<EmailMoverNodeModel> {
 
-    static final NodeLogger LOGGER = NodeLogger.getLogger(MoveEmailNodeModel.class);
+    private static final WebUINodeConfiguration CONFIG = WebUINodeConfiguration.builder()//
+        .name("Email Mover")//
+        .icon("./emailMover.png")//
+        .shortDescription("Moves email from on email folder to another email folder using the provided session.")//
+        .fullDescription("""
+                Moves email from on email folder to another email folder using the provided session.
+                """)//
+        .modelSettingsClass(EmailMoverNodeSettings.class)//
+        .addInputPort("Email Session", EmailSessionPortObject.TYPE, "The email session.")//
+        .addInputTable("Emails", "A table containing the emails to be moved.")//
+        .sinceVersion(5, 2, 0)
+        .build();
 
     /**
-     * Instantiate a new Value Lookup Node
-     *
-     * @param configuration node description
-     * @param modelSettingsClass a reference to {@link MoveEmailNodeSettings}
+     * Create a new factory instance (need this constructor for ser/de)
      */
-    MoveEmailNodeModel(final WebUINodeConfiguration configuration,
-        final Class<MoveEmailNodeSettings> modelSettingsClass) {
-        super(configuration, modelSettingsClass);
+    public EmailMoverNodeFactory() {
+        super(CONFIG);
     }
 
-    @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs, final MoveEmailNodeSettings modelSettings)
-        throws InvalidSettingsException {
-        return new DataTableSpec[]{};
+    /**
+     * Create a new factory instance provided a node configuration
+     *
+     * @param configuration
+     */
+    protected EmailMoverNodeFactory(final WebUINodeConfiguration configuration) {
+        super(configuration);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec,
-        final MoveEmailNodeSettings modelSettings)
-        throws Exception {
-        final EmailSessionPortObject in = (EmailSessionPortObject)inObjects[0];
-        final EmailSessionKey mailSessionKey =
-            in.getEmailSessionKey().orElseThrow(() -> new InvalidSettingsException("No mail session available"));
-        final var table = (BufferedDataTable) inObjects[1];
-        CheckUtils.checkSetting(table.getSpec().findColumnIndex(modelSettings.m_messageIds) >= 0, 
-                "Please specify an existing column for the Message-IDs.");
-        final var processor = new MoveEmailNodeProcessor(mailSessionKey, modelSettings);
-        processor.moveMessages(exec, table);
-        return new BufferedDataTable[]{};
+    public EmailMoverNodeModel createNodeModel() {
+        return new EmailMoverNodeModel(CONFIG, EmailMoverNodeSettings.class);
     }
 
 }
