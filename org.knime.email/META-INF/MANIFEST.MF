@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: KNIME EMail Processing (IMAP/POP3)
+Bundle-Name: KNIME EMail Processing
 Bundle-SymbolicName: org.knime.email;singleton:=true
 Bundle-Version: 5.2.0.qualifier
 Bundle-ClassPath: .

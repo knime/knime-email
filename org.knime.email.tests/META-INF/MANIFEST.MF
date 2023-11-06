@@ -12,4 +12,4 @@ Require-Bundle: junit-jupiter-api;bundle-version="[5.9.2,6.0.0)",
  org.knime.testing;bundle-version="[5.2.0,6.0.0)",
  org.slf4j.api;bundle-version="[1.7.30,2.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-17
-Automatic-Module-Name: org.knime.distance.tests
+Automatic-Module-Name: org.knime.email.tests

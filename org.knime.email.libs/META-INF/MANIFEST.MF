@@ -29,4 +29,4 @@ Export-Package: jakarta.activation,
  org.eclipse.angus.mail.smtp,
  org.eclipse.angus.mail.util,
  org.eclipse.angus.mail.util.logging
-Automatic-Module-Name: org.knime.email
+Automatic-Module-Name: org.knime.email.libs
