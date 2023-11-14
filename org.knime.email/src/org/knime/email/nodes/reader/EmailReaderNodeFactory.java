@@ -127,12 +127,12 @@ public final class EmailReaderNodeFactory extends ConfigurableNodeFactory<EmailR
         .modelSettingsClass(EmailReaderNodeSettings.class)//
         .addInputPort("Email Session", EmailSessionPortObject.TYPE, "The email session.")//
         .addOutputTable("Email Data", "The email data in a table, one row per email.")//
-        .addOutputTable("Email Attachments",
+        .addOutputTable(OUTPUT_ATTACH_PORT_GROUP,
             "The email attachments in a table, one row per attachment. Can be joined with the original message via the "
-                + EmailReaderNodeProcessor.COL_MESSAGE_ID + " column.")//
-        .addOutputTable("Email Header",
+                + EmailReaderNodeProcessor.COL_MESSAGE_ID + " column.", true)//
+        .addOutputTable(OUTPUT_HEADER_PORT_GROUP,
             "The email header in a table, one row per header. Can be joined with the original message via the "
-                + EmailReaderNodeProcessor.COL_MESSAGE_ID + " column.")//
+                + EmailReaderNodeProcessor.COL_MESSAGE_ID + " column.", true)//
         .sinceVersion(5, 2, 0).build();
 
     @Override
