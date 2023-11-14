@@ -86,8 +86,6 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.util.Pair;
 import org.knime.email.TestUtil;
-import org.knime.email.nodes.reader.EmailReaderNodeProcessor;
-import org.knime.email.nodes.reader.EmailReaderNodeSettings;
 import org.knime.email.nodes.reader.EmailReaderNodeSettings.MessageAnswerStatus;
 import org.knime.email.nodes.reader.EmailReaderNodeSettings.MessageSeenStatus;
 import org.knime.email.nodes.reader.EmailReaderNodeSettings.MessageSelector;
@@ -132,7 +130,7 @@ public class GetEmailNodeProcessorTest {
     @Test
     public void testProcessor_withHTML(final ExecutionContext exec) throws Exception {
         final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
-        settings.m_retrieveFlags = true;
+        //        settings.m_retrieveFlags = true;
         final List<Message> content = setupTestHTMLMails();
         final var mailSessionKey = TestUtil.getSessionKeyUser1(greenMail);
 
@@ -145,7 +143,7 @@ public class GetEmailNodeProcessorTest {
     @Test
     public void testProcessor_withCC(final ExecutionContext exec) throws Exception {
         final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
-        settings.m_retrieveFlags = false;
+        //        settings.m_retrieveFlags = false;
         final List<Message> content = setupTestCCMails();
 
         var mailSessionKey = TestUtil.getSessionKeyUser1(greenMail);
@@ -165,7 +163,7 @@ public class GetEmailNodeProcessorTest {
     @Test
     public void testProcessor_withFlagsRead(final ExecutionContext exec) throws Exception {
         final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
-        settings.m_retrieveFlags = true;
+        //        settings.m_retrieveFlags = true;
         settings.m_markAsRead = true;
         final List<Message> content = setupTestMails();
         final var mailSessionKey = TestUtil.getSessionKeyUser1(greenMail);
@@ -177,7 +175,7 @@ public class GetEmailNodeProcessorTest {
     @Test
     public void testProcessor_withFlagsUnRead(final ExecutionContext exec) throws Exception {
         final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
-        settings.m_retrieveFlags = true;
+        //        settings.m_retrieveFlags = true;
         settings.m_markAsRead = false;
         final List<Message> content = setupTestMails();
         final var mailSessionKey = TestUtil.getSessionKeyUser1(greenMail);
@@ -189,9 +187,9 @@ public class GetEmailNodeProcessorTest {
     @Test
     public void testProcessor_withFlagsOnlyUnseen(final ExecutionContext exec) throws Exception {
         final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
-        settings.m_retrieveFlags = true;
+        //        settings.m_retrieveFlags = true;
         settings.m_markAsRead = true;
-        settings.m_messageSeenStatus = MessageSeenStatus.Unseen;
+        settings.m_messageSeenStatus = MessageSeenStatus.Unread;
         final List<Message> content = setupTestMails();
         final var mailSessionKey = TestUtil.getSessionKeyUser1(greenMail);
 
@@ -206,9 +204,9 @@ public class GetEmailNodeProcessorTest {
     @Test
     public void testProcessor_withFlagsOnlySeen(final ExecutionContext exec) throws Exception {
         final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
-        settings.m_retrieveFlags = true;
+        //        settings.m_retrieveFlags = true;
         settings.m_markAsRead = true;
-        settings.m_messageSeenStatus = MessageSeenStatus.Seen;
+        settings.m_messageSeenStatus = MessageSeenStatus.Read;
         setupTestMails();
         final var mailSessionKey = TestUtil.getSessionKeyUser1(greenMail);
 
@@ -220,7 +218,7 @@ public class GetEmailNodeProcessorTest {
     @Test
     public void testProcessor_withFlagsSeenUnseen(final ExecutionContext exec) throws Exception {
         final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
-        settings.m_retrieveFlags = true;
+        //        settings.m_retrieveFlags = true;
         settings.m_markAsRead = true;
         settings.m_messageSeenStatus = MessageSeenStatus.All;
         final List<Message> content = setupTestMails();
@@ -237,7 +235,7 @@ public class GetEmailNodeProcessorTest {
     @Test
     public void testProcessor_withFlagsOnlyUnanswered(final ExecutionContext exec) throws Exception {
         final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
-        settings.m_retrieveFlags = true;
+        //        settings.m_retrieveFlags = true;
         settings.m_markAsRead = true;
         settings.m_messageSeenStatus = MessageSeenStatus.All;
         settings.m_messageAnsweredStatus = MessageAnswerStatus.Unanswered;
@@ -257,62 +255,62 @@ public class GetEmailNodeProcessorTest {
         table = getMessagesTable(exec, settings, mailSessionKey);
         checkMsgTable(content, table, settings.m_markAsRead);
     }
+    //flags are no longer retrieved
+    //    @Test
+    //    public void testProcessor_withFlagsOnlyAnswered(final ExecutionContext exec) throws Exception {
+    //        final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
+    //        //        settings.m_retrieveFlags = true;
+    //        settings.m_markAsRead = true;
+    //        settings.m_messageSeenStatus = MessageSeenStatus.All;
+    //        settings.m_messageAnsweredStatus = MessageAnswerStatus.Answered;
+    //        final List<Message> content = setupTestMails();
+    //        final var mailSessionKey = TestUtil.getSessionKeyUser1(greenMail);
+    //
+    //        BufferedDataTable table = getMessagesTable(exec, settings, mailSessionKey);
+    //        //all messages are un-answered so far
+    //        assertEquals(0, table.size());
+    //
+    //        //mark one message as replied
+    //        final MimeMessage[] receivedMessages = greenMail.getReceivedMessages();
+    //        final MimeMessage messageToReply = receivedMessages[0];
+    //        //this sets the answered flag on the message
+    //        messageToReply.reply(true);
+    //        table = getMessagesTable(exec, settings, mailSessionKey);
+    //        //only one message is answered
+    //        assertEquals(1, table.size());
+    //        final List<Message> answeredContent = getSubMessages(content, messageToReply);
+    //        checkMsgTable(answeredContent, table, settings.m_markAsRead, true, true);
+    //    }
 
-    @Test
-    public void testProcessor_withFlagsOnlyAnswered(final ExecutionContext exec) throws Exception {
-        final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
-        settings.m_retrieveFlags = true;
-        settings.m_markAsRead = true;
-        settings.m_messageSeenStatus = MessageSeenStatus.All;
-        settings.m_messageAnsweredStatus = MessageAnswerStatus.Answered;
-        final List<Message> content = setupTestMails();
-        final var mailSessionKey = TestUtil.getSessionKeyUser1(greenMail);
-
-        BufferedDataTable table = getMessagesTable(exec, settings, mailSessionKey);
-        //all messages are un-answered so far
-        assertEquals(0, table.size());
-
-        //mark one message as replied
-        final MimeMessage[] receivedMessages = greenMail.getReceivedMessages();
-        final MimeMessage messageToReply = receivedMessages[0];
-        //this sets the answered flag on the message
-        messageToReply.reply(true);
-        table = getMessagesTable(exec, settings, mailSessionKey);
-        //only one message is answered
-        assertEquals(1, table.size());
-        final List<Message> answeredContent = getSubMessages(content, messageToReply);
-        checkMsgTable(answeredContent, table, settings.m_markAsRead, true, true);
-    }
-
-    @Test
-    public void testProcessor_withFlagsAnsweredUnanswered(final ExecutionContext exec) throws Exception {
-        final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
-        settings.m_retrieveFlags = true;
-        settings.m_markAsRead = true;
-        settings.m_messageSeenStatus = MessageSeenStatus.All;
-        settings.m_messageAnsweredStatus = MessageAnswerStatus.All;
-        final List<Message> content = setupTestMails();
-        final var mailSessionKey = TestUtil.getSessionKeyUser1(greenMail);
-
-        BufferedDataTable table = getMessagesTable(exec, settings, mailSessionKey);
-        checkMsgTable(content, table, settings.m_markAsRead, false, true);
-
-        //mark one message as replied
-        final MimeMessage[] receivedMessages = greenMail.getReceivedMessages();
-        final MimeMessage messageToReply = receivedMessages[0];
-        //this sets the answered flag on the message
-        messageToReply.reply(true);
-        table = getMessagesTable(exec, settings, mailSessionKey);
-        //should return all messages
-        checkMsgTable(content, table, settings.m_markAsRead);
-    }
+    //    @Test
+    //    public void testProcessor_withFlagsAnsweredUnanswered(final ExecutionContext exec) throws Exception {
+    //        final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
+    //        //        settings.m_retrieveFlags = true;
+    //        settings.m_markAsRead = true;
+    //        settings.m_messageSeenStatus = MessageSeenStatus.All;
+    //        settings.m_messageAnsweredStatus = MessageAnswerStatus.All;
+    //        final List<Message> content = setupTestMails();
+    //        final var mailSessionKey = TestUtil.getSessionKeyUser1(greenMail);
+    //
+    //        BufferedDataTable table = getMessagesTable(exec, settings, mailSessionKey);
+    //                checkMsgTable(content, table, settings.m_markAsRead, false, true);
+    //
+    //        //mark one message as replied
+    //        final MimeMessage[] receivedMessages = greenMail.getReceivedMessages();
+    //        final MimeMessage messageToReply = receivedMessages[0];
+    //        //this sets the answered flag on the message
+    //        messageToReply.reply(true);
+    //        table = getMessagesTable(exec, settings, mailSessionKey);
+    //        //should return all messages
+    //        checkMsgTable(content, table, settings.m_markAsRead);
+    //    }
 
     @Test
     public void testProcessor_withFlagsReadAnswered(final ExecutionContext exec) throws Exception {
         final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
-        settings.m_retrieveFlags = true;
+        //        settings.m_retrieveFlags = true;
         settings.m_markAsRead = true;
-        settings.m_messageSeenStatus = MessageSeenStatus.Seen;
+        settings.m_messageSeenStatus = MessageSeenStatus.Read;
         settings.m_messageAnsweredStatus = MessageAnswerStatus.Answered;
         final List<Message> content = setupTestMails();
         final var mailSessionKey = TestUtil.getSessionKeyUser1(greenMail);
@@ -330,7 +328,7 @@ public class GetEmailNodeProcessorTest {
         //all messages are un-seen so far
         assertEquals(0, table.size());
 
-        settings.m_messageSeenStatus = MessageSeenStatus.Unseen;
+        settings.m_messageSeenStatus = MessageSeenStatus.Unread;
         table = getMessagesTable(exec, settings, mailSessionKey);
         //should return only the answered but un-seen message
         final List<Message> answeredContent = getSubMessages(content, messageToReply);
@@ -344,7 +342,7 @@ public class GetEmailNodeProcessorTest {
     @Test
     public void testProcessor_withFolder(final ExecutionContext exec) throws Exception {
         final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
-        settings.m_retrieveFlags = true;
+        //        settings.m_retrieveFlags = true;
         settings.m_markAsRead = true;
         final List<Message> content = setupTestMails();
         final var mailSessionKey = TestUtil.getSessionKeyUser1(greenMail);
@@ -362,8 +360,8 @@ public class GetEmailNodeProcessorTest {
     @Test
     public void testProcessor_withLimit(final ExecutionContext exec) throws Exception {
         final EmailReaderNodeSettings settings = createSettings(TestUtil.FOLDER_INBOX);
-        settings.m_retrieveFlags = true;
-        settings.m_limitMessages = true;
+        //        settings.m_retrieveFlags = true;
+        settings.m_messageSelector = MessageSelector.Oldest;
         settings.m_limitMessagesCount = 1;
         final List<Message> content = setupTestMails();
         final var mailSessionKey = TestUtil.getSessionKeyUser1(greenMail);
@@ -392,7 +390,7 @@ public class GetEmailNodeProcessorTest {
         final List<Message> content = setupTestMails();
         final var mailSessionKey = TestUtil.getSessionKeyUser1(greenMail);
 
-        settings.m_retrieveHeaders = true;
+        settings.m_outputHeaders = true;
         EmailReaderNodeProcessor processor = new EmailReaderNodeProcessor(mailSessionKey, settings);
         processor.readEmailsAndFillTable(exec);
         //email table should always be returned
@@ -413,7 +411,7 @@ public class GetEmailNodeProcessorTest {
         assertEquals(contentIDs, headerIDs);
 
 
-        settings.m_retrieveHeaders = false;
+        settings.m_outputHeaders = false;
         processor = new EmailReaderNodeProcessor(mailSessionKey, settings);
         processor.readEmailsAndFillTable(exec);
         //should contain messages
@@ -433,7 +431,7 @@ public class GetEmailNodeProcessorTest {
         final List<Attachment> goldAttachments = contentAttachments.getSecond();
         final var mailSessionKey = TestUtil.getSessionKeyUser1(greenMail);
 
-        settings.m_retrieveAttachments = true;
+        settings.m_outputAttachments = true;
         EmailReaderNodeProcessor processor = new EmailReaderNodeProcessor(mailSessionKey, settings);
         processor.readEmailsAndFillTable(exec);
         //email table should always be returned
@@ -455,7 +453,7 @@ public class GetEmailNodeProcessorTest {
         assertEquals(0, headerTable.size());
 
 
-        settings.m_retrieveAttachments = false;
+        settings.m_outputAttachments = false;
         processor = new EmailReaderNodeProcessor(mailSessionKey, settings);
         processor.readEmailsAndFillTable(exec);
         //should contain messages
@@ -561,7 +559,7 @@ public class GetEmailNodeProcessorTest {
 
     private static void checkMsgTable(final List<Message> content, final BufferedDataTable table,
         final boolean seen) {
-        checkMsgTable(content, table, seen, null, true);
+        checkMsgTable(content, table, seen, null, false);
     }
 
     private static void checkMsgTable(final List<Message> content, final BufferedDataTable table,
@@ -618,6 +616,7 @@ public class GetEmailNodeProcessorTest {
     public static EmailReaderNodeSettings createSettings(final String folder) {
         final EmailReaderNodeSettings settings = new EmailReaderNodeSettings();
         settings.m_folder = folder;
+        settings.m_messageSelector = MessageSelector.All;
         return settings;
     }
 

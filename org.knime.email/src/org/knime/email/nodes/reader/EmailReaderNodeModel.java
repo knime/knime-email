@@ -122,10 +122,10 @@ public class EmailReaderNodeModel extends NodeModel {
 
         final List<PortObject> list = new ArrayList<>();
         list.add(processor.getMsgTable());
-        if (m_settings.m_retrieveAttachments) {
+        if (m_settings.m_outputAttachments) {
             list.add(processor.getAttachTable());
         }
-        if (m_settings.m_retrieveHeaders) {
+        if (m_settings.m_outputHeaders) {
             list.add(processor.getHeaderTable());
         }
         return list.toArray(PortObject[]::new);

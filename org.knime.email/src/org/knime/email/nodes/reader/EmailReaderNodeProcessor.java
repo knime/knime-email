@@ -77,7 +77,6 @@ import org.knime.core.data.v2.value.ValueInterfaces.StringWriteValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
-import org.knime.email.nodes.reader.EmailReaderNodeSettings.MessageSelector;
 import org.knime.email.session.EmailSessionKey;
 import org.knime.email.util.EmailUtil;
 
@@ -104,7 +103,7 @@ import jakarta.mail.search.SearchTerm;
 public final class EmailReaderNodeProcessor {
 
     /** The name of the Message ID column. */
-    public static final String COL_MESSAGE_ID = "Message ID";
+    public static final String COL_EMAIL_ID = "Email ID";
 
     private static final class MatchAllSearchTerm extends SearchTerm {
         private static final long serialVersionUID = 1L;
@@ -119,7 +118,7 @@ public final class EmailReaderNodeProcessor {
 
     static DataTableSpec getMsgSpec(final boolean retrieveFlags) {
         final var specCreator = new DataTableSpecCreator() //
-            .addColumns(new DataColumnSpecCreator(COL_MESSAGE_ID, StringCell.TYPE).createSpec()) //
+            .addColumns(new DataColumnSpecCreator(COL_EMAIL_ID, StringCell.TYPE).createSpec()) //
             .addColumns(new DataColumnSpecCreator("Date", LocalDateTimeCellFactory.TYPE).createSpec()) //
             .addColumns(new DataColumnSpecCreator("Subject", StringCell.TYPE).createSpec()) //
             .addColumns(new DataColumnSpecCreator("Text (plain)", StringCell.TYPE).createSpec()) //
@@ -145,13 +144,13 @@ public final class EmailReaderNodeProcessor {
         .build();
 
     static final DataTableSpec ATTACH_TABLE_SPEC = new DataTableSpecCreator() //
-        .addColumns(new DataColumnSpecCreator(COL_MESSAGE_ID, StringCell.TYPE).createSpec()) //
+        .addColumns(new DataColumnSpecCreator(COL_EMAIL_ID, StringCell.TYPE).createSpec()) //
         .addColumns(new DataColumnSpecCreator("File Name", StringCell.TYPE).createSpec()) //
         .addColumns(new DataColumnSpecCreator("Attachment", BinaryObjectDataCell.TYPE).createSpec()) //
         .createSpec();
 
     static final DataTableSpec HEADER_TABLE_SPEC = new DataTableSpecCreator() //
-        .addColumns(new DataColumnSpecCreator(COL_MESSAGE_ID, StringCell.TYPE).createSpec()) //
+        .addColumns(new DataColumnSpecCreator(COL_EMAIL_ID, StringCell.TYPE).createSpec()) //
         .addColumns(new DataColumnSpecCreator("Header Name", StringCell.TYPE).createSpec()) //
         .addColumns(new DataColumnSpecCreator("Header Value", StringCell.TYPE).createSpec()) //
         .createSpec();
@@ -184,7 +183,9 @@ public final class EmailReaderNodeProcessor {
                 @SuppressWarnings("resource")
                 final var folder = !m_settings.m_markAsRead ? session.openFolderForWriting(m_settings.m_folder):
                     session.openFolder(m_settings.m_folder); //
-                final var msgRowContainer = context.createRowContainer(getMsgSpec(m_settings.m_retrieveFlags), false); //
+//                for now we do not support header retrieval
+//                final var msgRowContainer = context.createRowContainer(getMsgSpec(m_settings.m_retrieveFlags), false);
+                final var msgRowContainer = context.createRowContainer(getMsgSpec(false), false); //
                 var msgWriteCursor = msgRowContainer.createCursor(); //
                 final var attachRowContainer = context.createRowContainer(ATTACH_TABLE_SPEC, false); //
                 var attachWriteCursor = attachRowContainer.createCursor();
@@ -196,17 +197,21 @@ public final class EmailReaderNodeProcessor {
             final int count = messages.length;
             final int indexStart;
             final int indexEnd;
-            if (m_settings.m_limitMessages) {
-                if (m_settings.m_messageSelector == MessageSelector.Oldest) {
+            switch (m_settings.m_messageSelector) {
+                case All:
                     indexStart = 1;
-                    indexEnd = Math.min(count, m_settings.m_limitMessagesCount);
-                } else {
+                    indexEnd = count;
+                    break;
+                case Newest:
                     indexStart = 1 + Math.max(0, count - m_settings.m_limitMessagesCount);
                     indexEnd = count;
-                }
-            } else {
-                indexStart = 1;
-                indexEnd = count;
+                    break;
+                case Oldest:
+                    indexStart = 1;
+                    indexEnd = Math.min(count, m_settings.m_limitMessagesCount);
+                    break;
+                default:
+                    throw new IllegalStateException("Invalid message selector");
             }
             for (int i = indexStart; i <= indexEnd;) {
                 final var batchEnd = Math.min(i + 10, count);
@@ -246,10 +251,10 @@ public final class EmailReaderNodeProcessor {
     private SearchTerm buildSearchTerm() {
         final SearchTerm[] terms = new SearchTerm[2];
         switch (m_settings.m_messageSeenStatus) {
-            case Seen:
+            case Read:
                 terms[0] = new FlagTerm(new Flags(Flag.SEEN), true);
                 break;
-            case Unseen:
+            case Unread:
                 terms[0] = new FlagTerm(new Flags(Flag.SEEN), false);
                 break;
             case All:
@@ -274,7 +279,7 @@ public final class EmailReaderNodeProcessor {
 
     private void writeHeader(final String messageId, final Message message, final RowWriteCursor headerWriteCursor)
         throws MessagingException {
-        if (m_settings.m_retrieveHeaders) {
+        if (m_settings.m_outputHeaders) {
             final Enumeration<Header> allHeaders = message.getAllHeaders();
             while (allHeaders.hasMoreElements()) {
                 final RowWrite rowWrite = headerWriteCursor.forward();
@@ -364,11 +369,11 @@ public final class EmailReaderNodeProcessor {
             rowWrite.<StringListWriteValue> getWriteValue(index++).setValue(cc);
         }
 
-        // flags
-        if (m_settings.m_retrieveFlags) {
-            // Flags
-            rowWrite.<StringListWriteValue> getWriteValue(index++).setValue(extractFlags(message));
-        }
+        // flags are not supported
+//        if (m_settings.m_retrieveFlags) {
+//            // Flags
+//            rowWrite.<StringListWriteValue> getWriteValue(index++).setValue(extractFlags(message));
+//        }
     }
 
     private String[] extractFlags(final Message message) throws MessagingException {
@@ -444,7 +449,7 @@ public final class EmailReaderNodeProcessor {
 
     private void writeAttachment(final BinaryObjectCellFactory factory, final String messageId,
         final RowWriteCursor attachWriteCurser, final Part p) throws MessagingException, IOException {
-        if (m_settings.m_retrieveAttachments) {
+        if (m_settings.m_outputAttachments) {
             if (p instanceof MimeBodyPart mp) {
                 try (var is = mp.getInputStream()) {
                     final RowWrite writer = attachWriteCurser.forward();

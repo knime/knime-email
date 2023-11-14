@@ -57,7 +57,6 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.NumberInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 
 /**
@@ -94,27 +93,24 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
             description = "The email server login.")
     public Credentials m_login;
 
-    enum Security {
-        @Label("Yes")
-        YES,
-        @Label("No")
-        NO
-    }
 
-    /**The email protocol.*/
-    @Widget(title = "Use secure protocol",
-                 description = "Choose whether to use an encrypted or unencrypted connection.")
-    @ValueSwitchWidget()
-    public Security m_useSecureProtocol = Security.YES;
-
-
-    @Section(title = "Connection properties", advanced = true)
+    @Section(title = "Connection Properties", advanced = true)
     interface ConnectionPropertySection {}
 
-    @Widget(title = "Property list", description = "Allows to define additional connection properties.",
+
+    /**The email protocol.*/
+    @Layout(ConnectionPropertySection.class)
+    @Widget(title = "Use secure protocol",
+            description = "Choose whether to use an encrypted or unencrypted connection.", advanced = true)
+    public boolean m_useSecureProtocol = true;
+
+    @Widget(title = "Custom properties", description =
+            "Allows to define additional connection properties. For details about the supported properties see "
+            + "<a href='https://javaee.github.io/javamail/docs/api//com/sun/mail/imap/package-summary.html#properties'>"
+            + "here.</a>",
             advanced = true)
     @Layout(ConnectionPropertySection.class)
-    @ArrayWidget(addButtonText = "Add property")
+    @ArrayWidget(addButtonText = "Add custom property")
     public ConnectionProperties[] m_properties = new ConnectionProperties[0];
 
     static final class ConnectionProperties implements DefaultNodeSettings {
@@ -123,13 +119,13 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
         interface ConnectionPropertiesLayout {
         }
 
-        @Widget(title = "Name", description = "Property name e.g. mail.smtp.timeout.")
+        @Widget(title = "Name", description = "Custom property name e.g. mail.smtp.timeout.")
         @TextInputWidget(pattern = "\\S+.*")
         @Layout(ConnectionPropertiesLayout.class)
         public String m_name;
 
         @Widget(title = "Value",
-            description = "Property value e.g. 10 or true.")
+            description = "Custom property value e.g. 10 or true.")
         @TextInputWidget(pattern = "\\S+.*")
         @Layout(ConnectionPropertiesLayout.class)
         public String m_value;

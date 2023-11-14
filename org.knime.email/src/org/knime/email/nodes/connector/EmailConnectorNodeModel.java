@@ -64,7 +64,6 @@ import org.knime.core.webui.node.impl.WebUINodeConfiguration;
 import org.knime.core.webui.node.impl.WebUINodeModel;
 import org.knime.email.nodes.connector.EmailConnectorSettings.ConnectionProperties;
 import org.knime.email.nodes.connector.EmailConnectorSettings.EmailProtocol;
-import org.knime.email.nodes.connector.EmailConnectorSettings.Security;
 import org.knime.email.port.EmailSessionPortObject;
 import org.knime.email.port.EmailSessionPortObjectSpec;
 import org.knime.email.session.EmailSessionCache;
@@ -115,7 +114,7 @@ public class EmailConnectorNodeModel extends WebUINodeModel<EmailConnectorSettin
         return EmailSessionKey.builder() //
             .host(settings.m_server, settings.m_port) //
             .user(settings.m_login.getUsername(), settings.m_login.getPassword()) //
-            .protocol(EmailProtocol.IMAP.toString().toLowerCase(), Security.YES == settings.m_useSecureProtocol) //
+            .protocol(EmailProtocol.IMAP.toString().toLowerCase(), settings.m_useSecureProtocol) //
             .properties(extractProperties(settings.m_properties)) //
             .build();
     }

@@ -98,13 +98,17 @@ public final class UIChoices {
 
         private static final NodeLogger LOGGER = NodeLogger.getLogger(UIChoices.FolderProvider.class);
 
+        private static final String MISSING_SESSION_MSG = "Rexecute the connector node to restore the email session.";
+
         @Override
         public IdAndText[] choicesWithIdAndText(final DefaultNodeSettingsContext context) {
             try {
                 Optional<PortObjectSpec> optional = context.getPortObjectSpec(0);
-                final EmailSessionPortObjectSpec in = (EmailSessionPortObjectSpec)optional.orElseThrow();
-                final EmailSessionKey sessionKey = in.getEmailSessionKey().orElseThrow(
-                    () -> new IllegalStateException("Rexecute the connector node to restore the email session."));
+                final EmailSessionPortObjectSpec in = (EmailSessionPortObjectSpec)optional.orElseThrow(() -> {
+                    return new IllegalStateException(MISSING_SESSION_MSG);
+                });
+                final EmailSessionKey sessionKey =
+                    in.getEmailSessionKey().orElseThrow(() -> new IllegalStateException(MISSING_SESSION_MSG));
                 try (final var mailSession = sessionKey.connect()) {
                     final String[] folders = mailSession.listFolders();
                     Arrays.sort(folders);

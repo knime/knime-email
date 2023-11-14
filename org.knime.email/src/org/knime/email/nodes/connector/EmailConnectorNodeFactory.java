@@ -60,11 +60,12 @@ import org.knime.email.port.EmailSessionPortObject;
 public class EmailConnectorNodeFactory extends WebUINodeFactory<EmailConnectorNodeModel> {
 
     private static final WebUINodeConfiguration CONFIG = WebUINodeConfiguration.builder()//
-            .name("Email Connector")//
+            .name("Email Connector (Labs)")//
             .icon("./emailConnector.png")//
             .shortDescription("Connects to an email account using the IMAP protocol.")//
             .fullDescription("Connects to an email account using the IMAP protocol.")//
             .modelSettingsClass(EmailConnectorSettings.class)//
+            .nodeType(NodeType.Source)//
             .addOutputPort("Email Session", EmailSessionPortObject.TYPE, "The email session.")//
             .keywords("Email", "IMAP")//
             .sinceVersion(5, 2, 0).build();

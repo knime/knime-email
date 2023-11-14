@@ -63,17 +63,20 @@ import org.knime.email.port.EmailSessionPortObject;
 public final class EmailMoverNodeFactory extends WebUINodeFactory<EmailMoverNodeModel> {
 
     private static final WebUINodeConfiguration CONFIG = WebUINodeConfiguration.builder()//
-        .name("Email Mover")//
+        .name("Email Mover (Labs)")//
         .icon("./emailMover.png")//
-        .shortDescription("Moves email from on email folder to another email folder using the provided session.")//
+        .shortDescription(
+            "Moves email from one folder to another folder using a session provided by an Email Connector node.")//
         .fullDescription("""
-                Moves email from on email folder to another email folder using the provided session.
-                """)//
+                Moves email from one folder to another folder using a session provided by an
+                Email Connector node. The node searches in the provided source folder for the provided email ids
+                and moves all found email from the source folder to the target folder.
+                All ids that haven't been found are ignored.""")//
         .modelSettingsClass(EmailMoverNodeSettings.class)//
+        .nodeType(NodeType.Manipulator)//
         .addInputPort("Email Session", EmailSessionPortObject.TYPE, "The email session.")//
         .addInputTable("Emails", "A table containing the emails to be moved.")//
-        .sinceVersion(5, 2, 0)
-        .build();
+        .sinceVersion(5, 2, 0).build();
 
     /**
      * Create a new factory instance (need this constructor for ser/de)

@@ -48,15 +48,15 @@
  */
 package org.knime.email.nodes.reader;
 
-import static org.knime.email.nodes.reader.EmailReaderNodeProcessor.COL_MESSAGE_ID;
+import static org.knime.email.nodes.reader.EmailReaderNodeProcessor.COL_EMAIL_ID;
 
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
+import org.knime.core.webui.node.dialog.defaultdialog.rule.OneOfEnumCondition;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Signal;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.TrueCondition;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.NumberInputWidget;
@@ -72,99 +72,118 @@ import org.knime.email.util.UIChoices.FolderProvider;
 @SuppressWarnings("restriction") // New Node UI is not yet API
 public final class EmailReaderNodeSettings implements DefaultNodeSettings {
 
+    public enum MessageSeenStatus {
+            @Label(value = "Unread") //
+            Unread, //
+            @Label(value = "Read") //
+            Read, //
+            @Label(value = "All") //
+            All
+    }
+
+    public enum MessageAnswerStatus {
+            @Label(value = "Unanswered") //
+            Unanswered, //
+            @Label(value = "Answered") //
+            Answered, //
+            @Label(value = "All") //
+            All
+    }
+
+    public enum MessageSelector {
+            @Label(value = "Newest") //
+            Newest, //
+            @Label(value = "Oldest") //
+            Oldest, //
+            @Label(value = "All") //
+            All
+    }
+
+    static class IsLimitMessageCount extends OneOfEnumCondition<MessageSelector> {
+
+        @Override
+        public MessageSelector[] oneOf() {
+            return new MessageSelector[]{MessageSelector.Newest, MessageSelector.Oldest};
+        }
+
+    }
+
     /** The name of the lookup column in the data table */
-    @Widget(title = "Folder name",
+    @Widget(title = "Folder",
         description = "The full path to the email folder to read from e.g. 'INBOX' or Folder.Subfolder")
     @ChoicesWidget(choices = FolderProvider.class, showSearch = true)
     String m_folder;
 
-    @Widget(title = "Mark loaded messages as read",
-        description = "If not selected, the node will reset the SEEN flag of all loaded messages to false after "
-            + "downloading their content.",
-        advanced = true)
-    boolean m_markAsRead = true;
+
 
     @Section(title = "Filtering")
     interface FilteringSection {
     }
 
-    @Widget(title = "Retrieve only",
+    @Widget(title = "Read status",
         description = "Defines if only unseen, seen or all messages are retrieved from the server.")
     @Layout(FilteringSection.class)
     @ValueSwitchWidget
-    MessageSeenStatus m_messageSeenStatus = MessageSeenStatus.Unseen;
+    MessageSeenStatus m_messageSeenStatus = MessageSeenStatus.Unread;
 
-    @Widget(title = "Retrieve only",
+    @Widget(title = "Answered status",
         description = "Defines if only unanswered, answered or all messages are retrieved from the server.")
     @Layout(FilteringSection.class)
     @ValueSwitchWidget
     MessageAnswerStatus m_messageAnsweredStatus = MessageAnswerStatus.Unanswered;
 
-    @Section(title = "Message count")
-    interface LimitMessages {
-    }
+    @Widget(title = "Limit number of emails",
+            description = "Select if the oldest, newest or all emails should be retrieved.")
+    @Layout(FilteringSection.class)
+    @Signal(id = FilteringSection.class, condition = IsLimitMessageCount.class)
+    @ValueSwitchWidget
+    MessageSelector m_messageSelector = MessageSelector.Newest;
 
-    @Widget(title = "Limit number of messages",
-        description = "If checked, the number of messages retrieved from the server is capped.")
-    @Signal(id = LimitMessages.class, condition = TrueCondition.class)
-    @Layout(value = LimitMessages.class)
-    boolean m_limitMessages = true;
-
-    @Widget(title = "Count", description = "The number of messages to retrieve at most.")
-    @Layout(value = LimitMessages.class)
-    @Effect(signals = LimitMessages.class, type = EffectType.SHOW)
+    @Widget(title = "Maximum number of emails", description = "The number of messages to retrieve at most.")
+    @Layout(value = FilteringSection.class)
+    @Effect(signals = FilteringSection.class, type = EffectType.SHOW)
     @NumberInputWidget(min = 1, max = Integer.MAX_VALUE)
     int m_limitMessagesCount = 100;
 
-    @Widget(title = "Message selection", description = "Oldest or newest message")
-    @Layout(LimitMessages.class)
-    @Effect(signals = LimitMessages.class, type = EffectType.SHOW)
-    @ValueSwitchWidget
-    MessageSelector m_messageSelector = MessageSelector.Oldest;
 
-    @Section(title = "Additional information", advanced = true)
-    interface AdditionalInfo {
+
+    @Section(title = "Output", advanced = true)
+    interface OutputSection {
     }
 
-    @Widget(title = "Retrieve email flags",
-        description = "If checked, the node will append an additional flags column to the message table. "
-            + "Flags indicate the status of a message e.g. read, deleted, answered.",
-        advanced = true)
-    @Layout(value = AdditionalInfo.class)
-    boolean m_retrieveFlags = false;
+    //  Postponed to a later release since we are not sure if they are necessary and the returned
+    //  collection is hard to work with.
+    //    @Widget(title = "Retrieve email flags",
+    //        description = "If checked, the node will append an additional flags column to the message table. "
+    //            + "Flags indicate the status of a message e.g. read, deleted, answered.",
+    //        advanced = true)
+    //    @Layout(value = AdditionalInfo.class)
+    //    boolean m_retrieveFlags = false;
 
-    @Widget(title = "Retrieve email attachments",
+    @Widget(title = "Output attachments table",
         description = "If checked, the node will provide all email attachments in an additional output table. "
-            + "The table can be joined with the original email table via the " + COL_MESSAGE_ID + " column.",
+            + "The table can be joined with the original email table via the " + COL_EMAIL_ID + " column.",
         advanced = true)
-    @Layout(value = AdditionalInfo.class)
-    boolean m_retrieveAttachments = false;
+    @Layout(value = OutputSection.class)
+    boolean m_outputAttachments = false;
 
-    @Widget(title = "Retrieve email header",
+    @Widget(title = "Output header table",
         description = "If checked, the node will provide all email header in an additional output table. "
-            + "The table can be joined with the original email table via the " + COL_MESSAGE_ID + " column.",
+            + "The table can be joined with the original email table via the " + COL_EMAIL_ID + " column.",
         advanced = true)
-    @Layout(value = AdditionalInfo.class)
-    boolean m_retrieveHeaders = false;
+    @Layout(value = OutputSection.class)
+    boolean m_outputHeaders = false;
 
-    public enum MessageSeenStatus {
-            @Label(value = "Unseen")
-            Unseen, @Label(value = "Seen")
-            Seen, @Label(value = "All")
-            All
+
+
+    @Section(title = "Advanced", advanced = true)
+    interface AdvancedSection {
     }
 
-    public enum MessageAnswerStatus {
-            @Label(value = "Unanswered")
-            Unanswered, @Label(value = "Answered")
-            Answered, @Label(value = "All")
-            All
-    }
-
-    public enum MessageSelector {
-            @Label(value = "Oldest")
-            Oldest, @Label(value = "Newest")
-            Newest
-    }
-
+    @Widget(title = "Mark read emails as read",
+        description = "By default all loaded emails are flagged as read. To prevent this, unselect this option in "
+            + "which case the node will reset the read status of all loaded emails after downloading their content.",
+        advanced = true)
+    @Layout(value = AdvancedSection.class)
+    boolean m_markAsRead = true;
 }

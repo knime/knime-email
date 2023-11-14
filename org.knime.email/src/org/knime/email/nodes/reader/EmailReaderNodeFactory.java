@@ -101,7 +101,7 @@ public final class EmailReaderNodeFactory extends ConfigurableNodeFactory<EmailR
             while (outputConfig.hasConfiguredPorts()) {
                 outputConfig.removeLastPort();
             }
-            final boolean retrieverAttachments = updatedModelSettings.getBoolean("retrieveAttachments", false);
+            final boolean retrieverAttachments = updatedModelSettings.getBoolean("outputAttachments", false);
             if (retrieverAttachments) {
                 outputConfig.addPort(BufferedDataTable.TYPE);
             }
@@ -109,7 +109,7 @@ public final class EmailReaderNodeFactory extends ConfigurableNodeFactory<EmailR
             while (outputConfig.hasConfiguredPorts()) {
                 outputConfig.removeLastPort();
             }
-            final boolean retrieverHeader = updatedModelSettings.getBoolean("retrieveHeaders", false);
+            final boolean retrieverHeader = updatedModelSettings.getBoolean("outputHeaders", false);
             if (retrieverHeader) {
                 outputConfig.addPort(BufferedDataTable.TYPE);
             }
@@ -129,10 +129,10 @@ public final class EmailReaderNodeFactory extends ConfigurableNodeFactory<EmailR
         .addOutputTable("Email Data", "The email data in a table, one row per email.")//
         .addOutputTable(OUTPUT_ATTACH_PORT_GROUP,
             "The email attachments in a table, one row per attachment. Can be joined with the original message via the "
-                + EmailReaderNodeProcessor.COL_MESSAGE_ID + " column.", true)//
+                + EmailReaderNodeProcessor.COL_EMAIL_ID + " column.", true)//
         .addOutputTable(OUTPUT_HEADER_PORT_GROUP,
             "The email header in a table, one row per header. Can be joined with the original message via the "
-                + EmailReaderNodeProcessor.COL_MESSAGE_ID + " column.", true)//
+                + EmailReaderNodeProcessor.COL_EMAIL_ID + " column.", true)//
         .sinceVersion(5, 2, 0).build();
 
     @Override
