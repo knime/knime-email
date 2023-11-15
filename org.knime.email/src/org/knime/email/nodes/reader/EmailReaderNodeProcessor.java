@@ -176,13 +176,8 @@ public final class EmailReaderNodeProcessor {
 
     void readEmailsAndFillTable(final ExecutionContext context) throws Exception {
         try (final var session = m_mailSessionKey.connect();
-                //We don't need to flag a message as seen since this happens automatically once we read the content
-                //in which case the folder doesn't need to be opened in read_write mode. However when we explicitly
-                //reset the seen flag e.g. the user hasn't selected the mark as read option we need to open the folder
-                //in read-write mode https://stackoverflow.com/questions/7678919/javamail-mark-gmail-message-as-read
-                @SuppressWarnings("resource")
-                final var folder = !m_settings.m_markAsRead ? session.openFolderForWriting(m_settings.m_folder):
-                    session.openFolder(m_settings.m_folder); //
+                //In order to have a message set as read we need to opened the folder in read_write mode.
+                final var folder = session.openFolderForWriting(m_settings.m_folder);
 //                for now we do not support header retrieval
 //                final var msgRowContainer = context.createRowContainer(getMsgSpec(m_settings.m_retrieveFlags), false);
                 final var msgRowContainer = context.createRowContainer(getMsgSpec(false), false); //
@@ -213,6 +208,7 @@ public final class EmailReaderNodeProcessor {
                 default:
                     throw new IllegalStateException("Invalid message selector");
             }
+            final List<Message> readMessages = new ArrayList<>();
             for (int i = indexStart; i <= indexEnd;) {
                 final var batchEnd = Math.min(i + 10, count);
                 final var paddedNumber = "%" + Long.toString(count).length() + "d";
@@ -235,12 +231,13 @@ public final class EmailReaderNodeProcessor {
                     final var messageId = EmailUtil.getMessageId(message);
                     writeMessageAndAttachments(context, factory, messageId, message, msgRowWrite, attachWriteCursor);
                     writeHeader(messageId, message, headerWriteCursor);
+                    readMessages.add(message);
                 }
             }
             if (!m_settings.m_markAsRead) {
                 //explicitly mark message as un-seen since they are automatically set to seen when content is
                 //downloaded https://jakarta.ee/specifications/mail/1.6/apidocs/javax/mail/flags.flag#SEEN
-                EmailUtil.flagMessages(folder, messages, Flags.Flag.SEEN, false);
+                EmailUtil.flagMessages(folder, readMessages.toArray(new Message[0]), Flags.Flag.SEEN, false);
             }
             m_msgTable = msgRowContainer.finish();
             m_attachTable = attachRowContainer.finish();
