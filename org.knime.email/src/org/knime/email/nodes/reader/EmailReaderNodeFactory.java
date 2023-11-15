@@ -120,11 +120,12 @@ public final class EmailReaderNodeFactory extends ConfigurableNodeFactory<EmailR
     private static final WebUINodeConfiguration CONFIG = WebUINodeConfiguration.builder()//
         .name("Email Reader")//
         .icon("./emailReader.png")//
-        .shortDescription("Reads email from the provided email session and folder.")//
+        .shortDescription("Reads email from a folder using a session provided by an Email Connector node.")//
         .fullDescription("""
-                Reads email from the provided email session and folder.
+                Reads email from a folder using a session provided by an Email Connector node.
                 """)//
         .modelSettingsClass(EmailReaderNodeSettings.class)//
+        .nodeType(NodeType.Source)//
         .addInputPort("Email Session", EmailSessionPortObject.TYPE, "The email session.")//
         .addOutputTable("Email Data", "The email data in a table, one row per email.")//
         .addOutputTable(OUTPUT_ATTACH_PORT_GROUP,

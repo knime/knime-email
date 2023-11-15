@@ -51,6 +51,7 @@ package org.knime.email.nodes.reader;
 import static org.knime.email.nodes.reader.EmailReaderNodeProcessor.COL_EMAIL_ID;
 
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect;
@@ -148,6 +149,7 @@ public final class EmailReaderNodeSettings implements DefaultNodeSettings {
 
 
     @Section(title = "Output", advanced = true)
+    @After(FilteringSection.class)
     interface OutputSection {
     }
 
@@ -177,6 +179,7 @@ public final class EmailReaderNodeSettings implements DefaultNodeSettings {
 
 
     @Section(title = "Advanced", advanced = true)
+    @After(OutputSection.class)
     interface AdvancedSection {
     }
 
