@@ -118,7 +118,7 @@ public final class EmailReaderNodeFactory extends ConfigurableNodeFactory<EmailR
     }
 
     private static final WebUINodeConfiguration CONFIG = WebUINodeConfiguration.builder()//
-        .name("Email Reader")//
+        .name("Email Reader (Labs)")//
         .icon("./emailReader.png")//
         .shortDescription("Reads email from a folder using a session provided by an Email Connector node.")//
         .fullDescription("""
