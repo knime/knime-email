@@ -121,7 +121,7 @@ public final class EmailReaderNodeProcessor {
             .addColumns(new DataColumnSpecCreator(COL_EMAIL_ID, StringCell.TYPE).createSpec()) //
             .addColumns(new DataColumnSpecCreator("Date", LocalDateTimeCellFactory.TYPE).createSpec()) //
             .addColumns(new DataColumnSpecCreator("Subject", StringCell.TYPE).createSpec()) //
-            .addColumns(new DataColumnSpecCreator("Text (plain)", StringCell.TYPE).createSpec()) //
+            .addColumns(new DataColumnSpecCreator("Text (Plain)", StringCell.TYPE).createSpec()) //
             .addColumns(new DataColumnSpecCreator("Text (HTML)", HTMLCellFactory.TYPE).createSpec()) //
             .addColumns(new DataColumnSpecCreator("From", StringCell.TYPE).createSpec()) //
             .addColumns(new DataColumnSpecCreator("To", ListCell.getCollectionType(StringCell.TYPE)).createSpec())
