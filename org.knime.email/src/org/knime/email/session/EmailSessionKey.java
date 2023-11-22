@@ -134,15 +134,25 @@ public final class EmailSessionKey {
         props.putAll(m_properties);
         EmailSession.LOGGER.debugWithFormat("Connecting email client to %s:%d via %s using following properties %s",
             m_host, m_port, protocol, m_properties);
-        final var emailSession = Session.getInstance(props);
-        final var emailStore = emailSession.getStore();
+
+        final Thread t = Thread.currentThread();
+        final ClassLoader orig = t.getContextClassLoader();
+        //use the ClassLoader of the Session.class from the email libs project which contains the meta_inf with the
+        //service definitions
+        t.setContextClassLoader(Session.class.getClassLoader());
         try {
-            emailStore.connect(m_user, m_password);
-        } catch (MessagingException me) {
-            emailStore.close();
-            throw me;
+            final var emailSession = Session.getInstance(props);
+            final var emailStore = emailSession.getStore();
+            try {
+                emailStore.connect(m_user, m_password);
+                return new EmailSession(emailStore);
+            } catch (MessagingException me) {
+                emailStore.close();
+                throw me;
+            }
+        } finally {
+          t.setContextClassLoader(orig);
         }
-        return new EmailSession(emailStore);
     }
 
     @FunctionalInterface
