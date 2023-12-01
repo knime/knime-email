@@ -52,8 +52,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
+import org.knime.core.data.StringValue;
 import org.knime.core.data.container.filter.TableFilter;
-import org.knime.core.data.def.StringCell;
 import org.knime.core.data.v2.RowCursor;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -110,7 +110,7 @@ public final class EmailUtil {
                 exec.checkCanceled();
                 exec.setProgress(counter++ / (double) size, "Searching for id " + counter + " of " + size);
                 final var row = cursor.forward();
-                final var messageId = ((StringCell)row.getValue(idx)).getStringValue();
+                final var messageId = ((StringValue)row.getValue(idx)).getStringValue();
                 final var message = findMessageById(messageId, folder);
                 if (message != null && !message.isExpunged()) {
                     messages.add(message);
