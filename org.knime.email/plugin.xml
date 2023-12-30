@@ -15,6 +15,8 @@
       <node category-path="/labs/email"
             factory-class="org.knime.email.nodes.reader.EmailReaderNodeFactory"/>
       <node category-path="/labs/email"
+            factory-class="org.knime.email.nodes.sender.EmailSenderNodeFactory"/>
+      <node category-path="/labs/email"
             factory-class="org.knime.email.nodes.connector.EmailConnectorNodeFactory" />
       <node category-path="/labs/email"
             factory-class="org.knime.email.nodes.mover.EmailMoverNodeFactory" />

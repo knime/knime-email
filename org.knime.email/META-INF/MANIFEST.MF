@@ -7,12 +7,17 @@ Bundle-ClassPath: .
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Require-Bundle: org.knime.base;bundle-version="[5.3.0,6.0.0)",
  org.knime.core.ui;bundle-version="[5.3.0,6.0.0)",
+ org.knime.filehandling.core;bundle-version="[5.3.0,6.0.0)",
  org.knime.credentials.base;bundle-version="[5.3.0,6.0.0)",
  org.knime.time;bundle-version="[5.3.0,6.0.0)",
  com.google.guava;bundle-version="[31.0.1,32.0.0)",
  org.apache.commons.lang3;bundle-version="[3.9.0,4.0.0)",
  org.knime.reporting2;bundle-version="[5.3.0,6.0.0)",
- org.knime.email.libs;bundle-version="[5.3.0,6.0.0)"
+ org.knime.email.libs;bundle-version="[5.3.0,6.0.0)",
+ jakarta.validation.jakarta.validation-api;bundle-version="3.0.2",
+ com.fasterxml.jackson.core.jackson-annotations;bundle-version="[2.13.2,3.0.0)",
+ org.jsoup;bundle-version="[1.14.3,2.0.0)",
+ org.apache.commons.lang3;bundle-version="[3.9.0,4.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-ActivationPolicy: lazy
 Eclipse-BundleShape: jar

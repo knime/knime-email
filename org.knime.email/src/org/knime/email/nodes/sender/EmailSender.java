@@ -1,0 +1,438 @@
+/*
+ * ------------------------------------------------------------------------
+ *  Copyright by KNIME AG, Zurich, Switzerland
+ *  Website: http://www.knime.com; Email: contact@knime.com
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License, Version 3, as
+ *  published by the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, see <http://www.gnu.org/licenses>.
+ *
+ *  Additional permission under GNU GPL version 3 section 7:
+ *
+ *  KNIME interoperates with ECLIPSE solely via ECLIPSE's plug-in APIs.
+ *  Hence, KNIME and ECLIPSE are both independent programs and are not
+ *  derived from each other. Should, however, the interpretation of the
+ *  GNU GPL Version 3 ("License") under any applicable laws result in
+ *  KNIME and ECLIPSE being a combined program, KNIME AG herewith grants
+ *  you the additional permission to use and propagate KNIME together with
+ *  ECLIPSE with only the license terms in place for ECLIPSE applying to
+ *  ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
+ *  license terms of ECLIPSE themselves allow for the respective use and
+ *  propagation of ECLIPSE together with KNIME.
+ *
+ *  Additional permission relating to nodes for KNIME that extend the Node
+ *  Extension (and in particular that are based on subclasses of NodeModel,
+ *  NodeDialog, and NodeView) and that only interoperate with KNIME through
+ *  standard APIs ("Nodes"):
+ *  Nodes are deemed to be separate and independent programs and to not be
+ *  covered works.  Notwithstanding anything to the contrary in the
+ *  License, the License does not apply to Nodes, you are not required to
+ *  license Nodes under the License, and you are granted a license to
+ *  prepare and propagate Nodes, in each case even if such Nodes are
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  may freely choose the license terms applicable to such Node, including
+ *  when such Node is propagated with or for interoperation with KNIME.
+ * ---------------------------------------------------------------------
+ *
+ * Created on Aug 22, 2013 by wiswedel
+ */
+package org.knime.email.nodes.sender;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.SocketTimeoutException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.function.Consumer;
+
+import org.apache.commons.io.FileUtils;
+import org.knime.base.util.flowvariable.FlowVariableProvider;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.util.FileUtil;
+import org.knime.core.util.Pointer;
+import org.knime.email.nodes.sender.MessageSettings.Attachment;
+import org.knime.filehandling.core.connections.FSConnection;
+import org.knime.filehandling.core.connections.FSFileSystem;
+import org.knime.filehandling.core.connections.FSLocation;
+import org.knime.filehandling.core.connections.FSPath;
+import org.knime.filehandling.core.connections.uriexport.URIExporterIDs;
+import org.knime.filehandling.core.connections.uriexport.noconfig.NoConfigURIExporterFactory;
+import org.knime.filehandling.core.defaultnodesettings.FileSystemHelper;
+import org.knime.filehandling.core.defaultnodesettings.filechooser.reader.FileFilterStatistic;
+import org.knime.filehandling.core.defaultnodesettings.filechooser.reader.ReadPathAccessor;
+import org.knime.filehandling.core.defaultnodesettings.status.StatusMessage;
+
+import com.google.common.base.Strings;
+
+import jakarta.activation.FileTypeMap;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Multipart;
+import jakarta.mail.Session;
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
+import jakarta.mail.internet.MimeUtility;
+
+/**
+ * Sends emails via jakarta mail API. It's an adaption (copy) of class
+ * {@link org.knime.base.node.util.sendmail.SendMailConfiguration}, which is soon going to be deprecated.
+ *
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ */
+final class EmailSender {
+
+    /**
+     * A system property that, if set, will disallow emails sent to recipients other than specified in a comma separate
+     * list. For instance-D{@value #PROPERTY_ALLOWED_RECIPIENT_DOMAINS}=foo.com,bar.org would allow only emails to be
+     * sent to foo.com and bar.org. If other recipients are specified the node will fail during execution. If this
+     * property is not specified or empty all domains are allowed.
+     */
+    public static final String PROPERTY_ALLOWED_RECIPIENT_DOMAINS = "knime.sendmail.allowed_domains";
+
+    private final EmailSenderNodeSettings m_settings;
+
+    EmailSender(final EmailSenderNodeSettings settings) {
+        m_settings = CheckUtils.checkArgumentNotNull(settings);
+    }
+
+    /**
+     * Throws exception if the address list contains forbidden entries according to
+     * {@link #PROPERTY_ALLOWED_RECIPIENT_DOMAINS}.
+     *
+     * @param addressString The non null string as entered in dialog (addresses separated by comma)
+     * @return The list of addresses, passed through the validator.
+     * @throws AddressException If parsing fails.
+     * @thorws InvalidSettingsException If domain not allowed.
+     */
+    private static InternetAddress[] parseAndValidateRecipients(final String addressString)
+        throws InvalidSettingsException, AddressException {
+        var validDomainListString = System.getProperty(PROPERTY_ALLOWED_RECIPIENT_DOMAINS);
+        InternetAddress[] addressArray = InternetAddress.parse(addressString, false);
+        String[] validDomains = Strings.isNullOrEmpty(validDomainListString) //
+            ? new String[0] : validDomainListString.toLowerCase().split(",");
+        for (InternetAddress a : addressArray) {
+            boolean isOK = validDomains.length == 0; // ok if domain list not specified
+            final String address = a.getAddress().toLowerCase();
+            for (String validDomain : validDomains) {
+                isOK = isOK || address.endsWith(validDomain);
+            }
+            if (!isOK) {
+                throw new InvalidSettingsException(String.format(
+                    "Recipient '%s' is not valid as the domain is not in the allowed list. "
+                        + "Check the system property \"%s\", which currently lists %s.",
+                    address, PROPERTY_ALLOWED_RECIPIENT_DOMAINS, validDomainListString));
+            }
+        }
+        return addressArray;
+    }
+
+    /**
+     * Send the mail.
+     *
+     * @throws MessagingException ... when sending fails, also authorization exceptions etc.
+     * @throws IOException SSL problems or when copying remote URLs to temp local file.
+     * @throws InvalidSettingsException on invalid referenced flow vars
+     */
+    void send(final FlowVariableProvider flowVarResolver)
+        throws MessagingException, IOException, InvalidSettingsException {
+        final String flowVarCorrectedText = getVarCorrectedText(flowVarResolver);
+        var properties = new Properties(System.getProperties());
+        final String protocol = addPropertiesAndGetProtocol(properties);
+
+        // Make sure TLS is used. Available protocols can be obtained via:
+        // SSLContext.getDefault().getSupportedSSLParameters().getProtocols()
+        addMailProtocol(properties, protocol);
+
+        var oldContextClassLoader = Thread.currentThread().getContextClassLoader();
+        // make sure to set class loader to jakarta.mail - this has caused problems in the past, see bug 5316
+        Thread.currentThread().setContextClassLoader(Session.class.getClassLoader());
+        try {
+            final Session session = Session.getInstance(properties, null);
+            final MimeMessage message = initMessage(session);
+
+            // text or html message part
+            final Multipart mp = initMessageBody(flowVarCorrectedText);
+
+            send(protocol, session, message, mp);
+        } finally {
+            Thread.currentThread().setContextClassLoader(oldContextClassLoader);
+        }
+    }
+
+    private void send(final String protocol, final Session session,
+        final MimeMessage message, final Multipart mp)
+        throws IOException, InvalidSettingsException, MessagingException {
+        List<File> tempDirs = new ArrayList<>();
+        var oldContextClassLoader = Thread.currentThread().getContextClassLoader();
+        // make sure to set class loader to jakarta.mail - this has caused problems in the past, see bug 5316
+        Thread.currentThread().setContextClassLoader(Session.class.getClassLoader());
+        try {
+            final Attachment[] attachments = m_settings.m_messageSettings.m_attachments;
+            for (var i = 0; i < attachments.length; i++) {
+                final var fsLocation = attachments[i].m_attachment.getFSLocation();
+                final Pointer<StatusMessage> messagePointer = new Pointer<>();
+                try (final var pathAccessor = new FSLocationPathAccessor(fsLocation);
+                        final var fsConnection = pathAccessor.getConnection()) {
+                    final var fsPath = pathAccessor.getRootPath(messagePointer::set);
+                    final var localFile = toLocalFile(tempDirs, fsPath, fsConnection);
+                    addAttachments(mp, localFile, Integer.toString(i));
+                }
+            }
+            sendMail(protocol, session, message, mp);
+        } catch (MessagingException e) {
+            var isSocketTimeout = e.getCause() instanceof SocketTimeoutException;
+            var errorMessage = isSocketTimeout ? e.getMessage() : e.toString();
+            var resolutionMessage = isSocketTimeout ? " Try adjusting the SMTP timeout settings." : "";
+            throw new InvalidSettingsException("This error occurred while communicating with the SMTP server: \""
+                + errorMessage + "\"." + resolutionMessage, e);
+        } finally {
+            Thread.currentThread().setContextClassLoader(oldContextClassLoader);
+            for (File d : tempDirs) {
+                FileUtils.deleteQuietly(d);
+            }
+        }
+    }
+
+    private String getVarCorrectedText(final FlowVariableProvider flowVarResolver) throws InvalidSettingsException {
+        try {
+            return m_settings.m_messageSettings.getMessage(flowVarResolver);
+        } catch (NoSuchElementException nse) {
+            throw new InvalidSettingsException(
+                "A flow variable could not be resolved due to \"" + nse.getMessage() + "\".", nse);
+        }
+    }
+
+    private String addPropertiesAndGetProtocol(final Properties properties) {
+        var protocol = "smtp";
+        switch (m_settings.m_smtpServerSettings.m_smtpSecurity) {
+            case NONE:
+                break;
+            case STARTTLS:
+                properties.setProperty("mail.smtp.starttls.enable", "true");
+                // we need to require STARTTLS as well to enforce a TLS connection -- fixes AP-19571
+                properties.setProperty("mail.smtp.starttls.required", "true");
+                break;
+            case SSL:
+                // this is the way to do it in javax.mail 1.4.5+ (default is currently (Aug '13) 1.4.0):
+                // www.oracle.com/technetwork/java/javamail145sslnotes-1562622.html
+                // 'First, and perhaps the simplest, is to set a property to enable use
+                // of SSL.  For example, to enable use of SSL for SMTP connections, set
+                // the property "mail.smtp.ssl.enable" to "true".'
+                properties.setProperty("mail.smtp.ssl.enable", "true");
+                // this is an alternative/backup, which works also:
+                // http://javakiss.blogspot.ch/2010/10/smtp-in-java-with-javaxmail.html
+                // I verify it's actually using SSL:
+                //  - it hid a breakpoint in sun.security.ssl.SSLSocketFactoryImpl
+                //  - Hostpoint (knime.com mail server) is rejecting any smtp request on their ssl port (465)
+                //    without this property
+                properties.setProperty("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+                // a third (and most transparent) option would be to use a different protocol:
+                protocol = "smtps";
+                /* note, protocol smtps doesn't work with default javax.mail bundle (1.4.0):
+                 * Unable to load class for provider: protocol=smtps; type=javax.mail.Provider$Type@2d0fc05b;
+                 * class=org.apache.geronimo.javamail.transport.smtp.SMTPTSransport;
+                 * vendor=Apache Software Foundation;version=1.0
+                 * https://issues.apache.org/jira/browse/GERONIMO-4476
+                 * It's a typo in geronimo class name (SMTPSTransport vs. SMTPTSransport) - plenty of google hits.
+                 * (This impl. uses javax.mail.glassfish bundle.) */
+                break;
+            default:
+        }
+        return protocol;
+    }
+
+    private void addMailProtocol(final Properties properties, final String protocol) {
+
+        final SmtpServerSettings smtpSettings = m_settings.m_smtpServerSettings;
+        final var mail = "mail.";
+        // only support secure versions of TLS -- changed with AP-19572
+        properties.setProperty(mail + "smtp.ssl.protocols", "TLSv1.2 TLSv1.3");
+
+        properties.setProperty(mail + protocol + ".host", smtpSettings.m_smtpHost);
+        properties.setProperty(mail + protocol + ".port", Integer.toString(smtpSettings.m_smtpPort));
+        properties.setProperty(mail + protocol + ".auth", Boolean.toString(smtpSettings.m_smtpRequiresAuthentication));
+
+        properties.setProperty(mail + protocol + ".connectiontimeout",
+            String.valueOf(1000 * smtpSettings.m_smtpConnectTimeoutS));
+        properties.setProperty(mail + protocol + ".timeout", String.valueOf(1000 * smtpSettings.m_smtpReadTimeoutS));
+    }
+
+    private MimeMessage initMessage(final Session session) throws MessagingException, InvalidSettingsException {
+
+        final var recipientSettings = m_settings.m_recipientsSettings;
+        final var message = new MimeMessage(session);
+
+        final String to = recipientSettings.getToNotNull();
+        final String cc = recipientSettings.getCCNotNull();
+        final String bcc = recipientSettings.getBCCNotNull();
+        final String replyTo = recipientSettings.getReplyToNotNull();
+        if (!Strings.isNullOrEmpty(to)) {
+            message.addRecipients(Message.RecipientType.TO, parseAndValidateRecipients(to));
+        }
+        if (!Strings.isNullOrEmpty(cc)) {
+            message.addRecipients(Message.RecipientType.CC, parseAndValidateRecipients(cc));
+        }
+        if (!Strings.isNullOrEmpty(bcc)) {
+            message.addRecipients(Message.RecipientType.BCC, parseAndValidateRecipients(bcc));
+        }
+        if (!Strings.isNullOrEmpty(replyTo)) {
+            message.setReplyTo(parseAndValidateRecipients(replyTo));
+        }
+        if (message.getAllRecipients() == null) {
+            throw new InvalidSettingsException("No recipients were specified. Set them in the configuration dialog.");
+        }
+
+        message.setHeader("X-Mailer", "KNIME/" + KNIMEConstants.VERSION);
+
+        final var messageSettings = m_settings.m_messageSettings;
+        message.setHeader("X-Priority", messageSettings.m_priority.toXPriority());
+        message.setSentDate(new Date()); // NOSONAR
+        message.setSubject(messageSettings.m_subject, StandardCharsets.UTF_8.name());
+
+        return message;
+    }
+
+    private Multipart initMessageBody(final String flowVarCorrectedText) throws MessagingException {
+        final String textType = switch (m_settings.m_messageSettings.m_format) {
+            case HTML -> "text/html; charset=\"utf-8\"";
+            case TEXT -> "text/plain; charset=\"utf-8\"";
+            default -> throw new IllegalArgumentException(
+                "The unsupported email format \"" + m_settings.m_messageSettings.m_format
+                    + "\" was specified. Valid formats are only \"HTML\" and \"TEXT\".");
+        };
+        var contentBody = new MimeBodyPart();
+        contentBody.setContent(flowVarCorrectedText, textType);
+        Multipart mp = new MimeMultipart();
+        mp.addBodyPart(contentBody);
+        return mp;
+    }
+
+    private static void addAttachments(final Multipart mp, final File file, final String cid)
+        throws IOException, MessagingException {
+        var filePart = new MimeBodyPart();
+        filePart.attachFile(file);
+        String encodedFileName = MimeUtility.encodeText(file.getName(), StandardCharsets.UTF_8.name(), null);
+        filePart.setFileName(encodedFileName);
+        filePart.setHeader("Content-Type", FileTypeMap.getDefaultFileTypeMap().getContentType(file));
+        // set content-id header, allows in-line embedding of attached images (AP-21415)
+        filePart.setHeader("X-Attachment-Id", cid);
+        filePart.setHeader("Content-ID", cid);
+        mp.addBodyPart(filePart);
+    }
+
+    /** Resolves the path to a local file, copying it locally if needed and adding it to the list of temp files. */
+    private static File toLocalFile(final List<File> tempDirs, final FSPath path, final FSConnection fsConnection)
+        throws IOException {
+        final File file;
+
+        final var factory = fsConnection.getURIExporterFactory(URIExporterIDs.KNIME_FILE);
+        if (factory != null) { // we are local
+            URI uri;
+            try {
+                uri = ((NoConfigURIExporterFactory)factory).getExporter().toUri(path);
+            } catch (URISyntaxException ex) {
+                throw new IOException(
+                    String.format("Unable to resolve path to local file - \"%s\": %s", path, ex.getMessage()), ex);
+            }
+            file = Paths.get(uri).toFile();
+        } else {
+            var tempDir = FileUtil.createTempDir("send-mail-attachment");
+            tempDirs.add(tempDir);
+            file = new File(tempDir, path.getName(path.getNameCount() - 1).toString());
+            Files.copy(path, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        }
+        if (!file.canRead()) {
+            throw new IOException(
+                "The KNIME AP does not have the permissions to read the file attachment at " + path + ".");
+        }
+        return file;
+    }
+
+    private void sendMail(final String protocol, final Session session,
+        final MimeMessage message, final Multipart mp) throws MessagingException {
+        try (final var transport = session.getTransport(protocol)) {
+            final var smtpServerSettings = m_settings.m_smtpServerSettings;
+            if (smtpServerSettings.m_smtpRequiresAuthentication) {
+                String user = smtpServerSettings.m_smtpCredentials.getUsername();
+                String pass = smtpServerSettings.m_smtpCredentials.getPassword();
+                transport.connect(user, pass);
+            } else {
+                transport.connect();
+            }
+            message.setContent(mp);
+            transport.sendMessage(message, message.getAllRecipients());
+        }
+    }
+
+    /**
+     * Temporary solution to enable FSLocation flow variables on all convenience file systems. Copied from
+     * org.knime.google.api.nodes.authenticator.GoogleAuthenticatorNodeModel.FSLocationPathAccessor
+     */
+    static class FSLocationPathAccessor implements ReadPathAccessor {
+
+        private final FSLocation m_fsLocation;
+
+        private final FSConnection m_connection;
+
+        private final FSFileSystem<?> m_fileSystem;
+
+        FSLocationPathAccessor(final FSLocation fsLocation) throws IOException {
+            m_fsLocation = fsLocation;
+            m_connection = FileSystemHelper.retrieveFSConnection(Optional.empty(), fsLocation)
+                    .orElseThrow(() -> new IOException("File system is not available"));
+            m_fileSystem = m_connection.getFileSystem();
+        }
+
+        @Override
+        public void close() throws IOException {
+            m_fileSystem.close();
+            m_connection.close();
+        }
+
+        @Override
+        public List<FSPath> getFSPaths(final Consumer<StatusMessage> statusMessageConsumer)
+            throws IOException, InvalidSettingsException {
+            return List.of(getRootPath(statusMessageConsumer));
+        }
+
+        @Override
+        public FSPath getRootPath(final Consumer<StatusMessage> statusMessageConsumer)
+            throws IOException, InvalidSettingsException {
+            return m_fileSystem.getPath(m_fsLocation);
+        }
+
+        @Override
+        public FileFilterStatistic getFileFilterStatistic() {
+            return new FileFilterStatistic(0, 0, 0, 1, 0, 0, 0);
+        }
+
+        FSConnection getConnection() {
+            return m_connection;
+        }
+
+    }
+
+}
