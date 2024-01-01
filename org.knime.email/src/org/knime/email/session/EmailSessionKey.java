@@ -61,6 +61,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.email.util.EmailUtil;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -163,12 +164,7 @@ public final class EmailSessionKey {
             "Connecting email client to %s:%d via %s using following properties %s", m_imapHost, m_imapPort, protocol,
             m_properties);
 
-        final Thread t = Thread.currentThread();
-        final ClassLoader orig = t.getContextClassLoader();
-        //use the ClassLoader of the Session.class from the email libs project which contains the meta_inf with the
-        //service definitions
-        t.setContextClassLoader(Session.class.getClassLoader());
-        try {
+        try (final var closeable = EmailUtil.runWithContextClassloader(Session.class)) {
             final var emailSession = Session.getInstance(props);
             final var emailStore = emailSession.getStore();
             try {
@@ -183,8 +179,6 @@ public final class EmailSessionKey {
                 emailStore.close();
                 throw me;
             }
-        } finally {
-            t.setContextClassLoader(orig);
         }
     }
 

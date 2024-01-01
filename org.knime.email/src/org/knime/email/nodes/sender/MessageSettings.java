@@ -48,15 +48,6 @@
  */
 package org.knime.email.nodes.sender;
 
-import org.jsoup.Jsoup;
-import org.jsoup.internal.StringUtil;
-import org.jsoup.nodes.Node;
-import org.jsoup.nodes.TextNode;
-import org.jsoup.safety.Safelist;
-import org.jsoup.select.NodeTraversor;
-import org.jsoup.select.NodeVisitor;
-import org.knime.base.util.flowvariable.FlowVariableProvider;
-import org.knime.base.util.flowvariable.FlowVariableResolver;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
@@ -148,6 +139,7 @@ final class MessageSettings implements DefaultNodeSettings, LayoutGroup {
 
     static final class Attachment implements DefaultNodeSettings {
 
+        @Widget
         FileChooser m_attachment = new FileChooser();
 
         @JsonIgnore
@@ -156,74 +148,4 @@ final class MessageSettings implements DefaultNodeSettings, LayoutGroup {
         }
     }
 
-    @JsonIgnore
-    String getMessage(final FlowVariableProvider resolver) {
-        String htmlMessage = FlowVariableResolver.parse(m_message, resolver);
-        return switch (m_format) {
-            case TEXT -> messageToPlainText(htmlMessage);
-            case HTML -> Jsoup.clean(htmlMessage, Safelist.relaxed());
-            default -> throw new IllegalStateException("Illegal format: " + m_format);
-        };
-    }
-
-
-    /**
-     * The text body of a rich text editor ({@link RichTextInputWidget}) returns content in html, but we need
-     * plain text. This method strips html tags, and retains line breaks (best effort).
-     * @param htmlMessage message from rich text editor.
-     * @return Plain text message.
-     */
-    static String messageToPlainText(final String htmlMessage) {
-        final var jsoupDoc = Jsoup.parse(htmlMessage);
-        final var formatter = new FormattingVisitor();
-        NodeTraversor.traverse(formatter, jsoupDoc);
-        return formatter.toString();
-    }
-
-    /** jsoup visitor handing <p>, <br> and header (h1, etc) by replacing them with new line. */
-    // copied and adjusted from Jsoup Example (src/main/java/org/jsoup/examples/HtmlToPlainText.java)
-    private static class FormattingVisitor implements NodeVisitor {
-
-        private final StringBuilder m_accum = new StringBuilder();
-        private boolean m_isAfterParagraphClose;
-        private boolean m_isFirstElement = true;
-
-        // hit when the node is first seen
-        @Override
-        public void head(final Node node, final int depth) {
-            String name = node.nodeName();
-            if (node instanceof TextNode text) {
-                if (m_isAfterParagraphClose) {
-                    append("\n");
-                }
-                append(text.text());
-            } else if (StringUtil.in(name, "p", "h1", "h2", "h3", "h4", "h5")) {
-                if (m_isFirstElement) {
-                    m_isFirstElement = false; // ignore subsequently
-                } else {
-                    append("\n");
-                }
-            }
-            m_isAfterParagraphClose = false;
-        }
-
-        // hit when all of the node's children (if any) have been visited
-        @Override
-        public void tail(final Node node, final int depth) {
-            String name = node.nodeName();
-            if (StringUtil.in(name, "br", "dd", "dt", "p", "h1", "h2", "h3", "h4", "h5")) {
-                m_isAfterParagraphClose = true;
-            }
-        }
-
-        // appends text to the string builder with a simple word wrap method
-        private void append(final String text) {
-            m_accum.append(text);
-        }
-
-        @Override
-        public String toString() {
-            return m_accum.toString();
-        }
-    }
 }

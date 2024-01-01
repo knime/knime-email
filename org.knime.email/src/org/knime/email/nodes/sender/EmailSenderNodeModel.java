@@ -48,13 +48,23 @@
  */
 package org.knime.email.nodes.sender;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+
 import org.knime.base.util.flowvariable.FlowVariableProvider;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.context.ports.PortsConfiguration;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.webui.node.impl.WebUINodeConfiguration;
-import org.knime.core.webui.node.impl.WebUINodeModel;
+import org.knime.core.node.port.report.IReportPortObject;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 
 /**
  * The node model of the node.
@@ -62,29 +72,61 @@ import org.knime.core.webui.node.impl.WebUINodeModel;
  * @author Bernd Wiswedel
  */
 @SuppressWarnings("restriction")
-final class EmailSenderNodeModel extends WebUINodeModel<EmailSenderNodeSettings> implements FlowVariableProvider {
+final class EmailSenderNodeModel extends NodeModel implements FlowVariableProvider {
 
-    EmailSenderNodeModel(final WebUINodeConfiguration configuration) {
-        super(configuration, EmailSenderNodeSettings.class);
+    private EmailSenderNodeSettings m_settings = new EmailSenderNodeSettings();
+
+    EmailSenderNodeModel(final PortsConfiguration portsConfiguration) {
+        super(portsConfiguration.getInputPorts(), portsConfiguration.getOutputPorts());
     }
 
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs, final EmailSenderNodeSettings settings)
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        DefaultNodeSettings.loadSettings(settings, EmailSenderNodeSettings.class).validate();
+    }
+
+    @Override
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+        m_settings = DefaultNodeSettings.loadSettings(settings, EmailSenderNodeSettings.class);
+    }
+
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
+        DefaultNodeSettings.saveSettings(EmailSenderNodeSettings.class, m_settings, settings);
+    }
+
+    @Override
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
         throws InvalidSettingsException {
-        settings.validate();
+        m_settings.validate();
         return new PortObjectSpec[]{};
     }
 
     @Override
-    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec,
-        final EmailSenderNodeSettings settings) throws Exception {
-        new EmailSender(settings).send(this);
+    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
+        IReportPortObject report = Arrays.stream(inObjects).filter(IReportPortObject.class::isInstance)
+            .map(IReportPortObject.class::cast).findFirst().orElse(null);
+        final var sender = new EmailSender(m_settings);
+        sender.addReport(report);
+        sender.send(this);
         return new PortObject[]{};
     }
 
     @Override
-    protected void validateSettings(final EmailSenderNodeSettings settings) throws InvalidSettingsException {
-        settings.validate();
+    protected void reset() {
+        // no reset
+    }
+
+    @Override
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
+        // empty
+    }
+
+    @Override
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
+        // empty
     }
 
 }

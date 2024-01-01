@@ -52,12 +52,15 @@ import java.util.List;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.workflow.CredentialsStore;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.email.util.EmailUtil;
 import org.knime.testing.core.TestrunJanitor;
 
 import com.icegreen.greenmail.configuration.GreenMailConfiguration;
 import com.icegreen.greenmail.imap.ImapServer;
 import com.icegreen.greenmail.util.GreenMail;
 import com.icegreen.greenmail.util.ServerSetup;
+
+import jakarta.mail.Session;
 
 /**
  * Email server janitor.
@@ -86,11 +89,14 @@ public class EmailServerJanitor extends TestrunJanitor {
     public static final String PWD3 = "knime1234";
 
     /** {@link GreenMailConfiguration} with the two test users. */
-    public static final GreenMailConfiguration CONFIG =
-            new GreenMailConfiguration().withUser(USER1, PWD1).withUser(USER2, PWD2).withUser(USER3, PWD3);
+    public static final GreenMailConfiguration CONFIG = new GreenMailConfiguration() //
+        .withUser(USER1, PWD1) //
+        .withUser(USER2, PWD2) //
+        .withUser(USER3, PWD3);
 
     /** {@link ServerSetup} for SMTP and IMAP tests. */
-    public static final ServerSetup[] SETUP = new ServerSetup[]{ServerSetup.SMTP.dynamicPort().setVerbose(true),
+    public static final ServerSetup[] SETUP = new ServerSetup[]{ //
+        ServerSetup.SMTP.dynamicPort().setVerbose(true), //
         ServerSetup.IMAP.dynamicPort().setVerbose(true)};
 
     private static final String VAR_PREFIX = "email-";
@@ -98,9 +104,7 @@ public class EmailServerJanitor extends TestrunJanitor {
     private GreenMail m_mail;
     private String m_bindAddress;
     private int m_imapPort;
-    private int m_smptPort;
-
-
+    private int m_smtpPort;
 
     @Override
     public void after() throws Exception {
@@ -112,16 +116,17 @@ public class EmailServerJanitor extends TestrunJanitor {
 
     @Override
     public void before() throws Exception {
-
-        m_mail = new GreenMail(SETUP);
-        m_mail.withConfiguration(CONFIG);
-        m_mail.start();
-        final ImapServer imap = m_mail.getImap();
-        final ServerSetup serverSetup = imap.getServerSetup();
-        m_bindAddress = serverSetup.getBindAddress();
-        m_imapPort = serverSetup.getPort();
-        final var smtp = m_mail.getSmtp();
-        m_smptPort = smtp.getPort();
+        try (final var closeable = EmailUtil.runWithContextClassloader(Session.class)) {
+            m_mail = new GreenMail(SETUP);
+            m_mail.withConfiguration(CONFIG);
+            m_mail.start();
+            final ImapServer imap = m_mail.getImap();
+            final ServerSetup serverSetup = imap.getServerSetup();
+            m_bindAddress = serverSetup.getBindAddress();
+            m_imapPort = serverSetup.getPort();
+            final var smtp = m_mail.getSmtp();
+            m_smtpPort = smtp.getPort();
+        }
     }
 
     @Override
@@ -151,7 +156,7 @@ public class EmailServerJanitor extends TestrunJanitor {
         }
         flowVariables.add(new FlowVariable(VAR_PREFIX + "host", m_bindAddress));
         flowVariables.add(new FlowVariable(VAR_PREFIX + "imap-port", m_imapPort));
-        flowVariables.add(new FlowVariable(VAR_PREFIX + "smtp-port", m_smptPort));
+        flowVariables.add(new FlowVariable(VAR_PREFIX + "smtp-port", m_smtpPort));
         return flowVariables;
     }
 

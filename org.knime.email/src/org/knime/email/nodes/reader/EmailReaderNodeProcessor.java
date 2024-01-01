@@ -56,6 +56,7 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -91,6 +92,7 @@ import jakarta.mail.Message.RecipientType;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Multipart;
 import jakarta.mail.Part;
+import jakarta.mail.Session;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.search.AndTerm;
 import jakarta.mail.search.FlagTerm;
@@ -185,7 +187,8 @@ public final class EmailReaderNodeProcessor {
                 final var attachRowContainer = context.createRowContainer(ATTACH_TABLE_SPEC, false); //
                 var attachWriteCursor = attachRowContainer.createCursor();
                 final var headerRowContainer = context.createRowContainer(HEADER_TABLE_SPEC, false); //
-                var headerWriteCursor = headerRowContainer.createCursor()) {
+                var headerWriteCursor = headerRowContainer.createCursor(); //
+                var classLoaderCloseable = EmailUtil.runWithContextClassloader(Session.class)) {
             final BinaryObjectCellFactory factory = new BinaryObjectCellFactory(context);
             final SearchTerm searchTerm = buildSearchTerm();
             var messages = folder.search(searchTerm);
@@ -348,7 +351,8 @@ public final class EmailReaderNodeProcessor {
         }
 
         // from
-        final var from = Arrays.stream(message.getFrom()).findFirst().map(Address::toString).orElse(null);
+        final var from = Optional.ofNullable(message.getFrom()).stream().flatMap(Arrays::stream).findFirst()
+            .map(Address::toString).orElse(null);
         rowWrite.<StringWriteValue> getWriteValue(index++).setStringValue(from);
 
         // TO

@@ -53,6 +53,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -64,13 +65,21 @@ import java.util.Properties;
 import java.util.function.Consumer;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.knime.base.util.flowvariable.FlowVariableProvider;
+import org.knime.base.util.flowvariable.FlowVariableResolver;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.port.report.IReportPortObject;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.Pointer;
 import org.knime.email.nodes.sender.MessageSettings.Attachment;
+import org.knime.email.nodes.sender.MessageUtil.DocumentAndContentType;
+import org.knime.email.util.EmailUtil;
 import org.knime.filehandling.core.connections.FSConnection;
 import org.knime.filehandling.core.connections.FSFileSystem;
 import org.knime.filehandling.core.connections.FSLocation;
@@ -81,13 +90,17 @@ import org.knime.filehandling.core.defaultnodesettings.FileSystemHelper;
 import org.knime.filehandling.core.defaultnodesettings.filechooser.reader.FileFilterStatistic;
 import org.knime.filehandling.core.defaultnodesettings.filechooser.reader.ReadPathAccessor;
 import org.knime.filehandling.core.defaultnodesettings.status.StatusMessage;
+import org.knime.reporting2.nodes.htmlwriter.ReportHtmlImageHandler;
+import org.knime.reporting2.nodes.htmlwriter.ReportHtmlWriterUtils;
 
 import com.google.common.base.Strings;
 
+import jakarta.activation.DataHandler;
 import jakarta.activation.FileTypeMap;
 import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Multipart;
+import jakarta.mail.Part;
 import jakarta.mail.Session;
 import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
@@ -95,6 +108,7 @@ import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 import jakarta.mail.internet.MimeUtility;
+import jakarta.mail.util.ByteArrayDataSource;
 
 /**
  * Sends emails via jakarta mail API. It's an adaption (copy) of class
@@ -114,8 +128,14 @@ final class EmailSender {
 
     private final EmailSenderNodeSettings m_settings;
 
+    private IReportPortObject m_reportPortObject;
+
     EmailSender(final EmailSenderNodeSettings settings) {
         m_settings = CheckUtils.checkArgumentNotNull(settings);
+    }
+
+    void addReport(final IReportPortObject report) {
+        m_reportPortObject = report;
     }
 
     /**
@@ -158,27 +178,23 @@ final class EmailSender {
      */
     void send(final FlowVariableProvider flowVarResolver)
         throws MessagingException, IOException, InvalidSettingsException {
-        final String flowVarCorrectedText = getVarCorrectedText(flowVarResolver);
-        var properties = new Properties(System.getProperties());
-        final String protocol = addPropertiesAndGetProtocol(properties);
+        final var messageAndContentType = readMessage(flowVarResolver);
+        final var properties = new Properties(System.getProperties());
+        final var protocol = addPropertiesAndGetProtocol(properties);
 
         // Make sure TLS is used. Available protocols can be obtained via:
         // SSLContext.getDefault().getSupportedSSLParameters().getProtocols()
         addMailProtocol(properties, protocol);
 
-        var oldContextClassLoader = Thread.currentThread().getContextClassLoader();
         // make sure to set class loader to jakarta.mail - this has caused problems in the past, see bug 5316
-        Thread.currentThread().setContextClassLoader(Session.class.getClassLoader());
-        try {
-            final Session session = Session.getInstance(properties, null);
-            final MimeMessage message = initMessage(session);
+        try (final var closeable = EmailUtil.runWithContextClassloader(Session.class)) {
+            final var session = Session.getInstance(properties, null);
+            final var mimeMessage = initMessage(session);
 
             // text or html message part
-            final Multipart mp = initMessageBody(flowVarCorrectedText);
+            final Multipart mp = initMessageBody(messageAndContentType, m_reportPortObject);
 
-            send(protocol, session, message, mp);
-        } finally {
-            Thread.currentThread().setContextClassLoader(oldContextClassLoader);
+            send(protocol, session, mimeMessage, mp);
         }
     }
 
@@ -186,10 +202,8 @@ final class EmailSender {
         final MimeMessage message, final Multipart mp)
         throws IOException, InvalidSettingsException, MessagingException {
         List<File> tempDirs = new ArrayList<>();
-        var oldContextClassLoader = Thread.currentThread().getContextClassLoader();
         // make sure to set class loader to jakarta.mail - this has caused problems in the past, see bug 5316
-        Thread.currentThread().setContextClassLoader(Session.class.getClassLoader());
-        try {
+        try (final var closeable = EmailUtil.runWithContextClassloader(Session.class)) {
             final Attachment[] attachments = m_settings.m_messageSettings.m_attachments;
             for (var i = 0; i < attachments.length; i++) {
                 final var fsLocation = attachments[i].m_attachment.getFSLocation();
@@ -209,20 +223,31 @@ final class EmailSender {
             throw new InvalidSettingsException("This error occurred while communicating with the SMTP server: \""
                 + errorMessage + "\"." + resolutionMessage, e);
         } finally {
-            Thread.currentThread().setContextClassLoader(oldContextClassLoader);
             for (File d : tempDirs) {
                 FileUtils.deleteQuietly(d);
             }
         }
     }
 
-    private String getVarCorrectedText(final FlowVariableProvider flowVarResolver) throws InvalidSettingsException {
+    /**
+     * The message as per settings, with flow variable placeholders filled in. Message is (still) in html since the rich
+     * text editor text is html (only).
+     *
+     * @param flowVarResolver The resolver for the flow variables (= NodeModel)
+     * @return The message, flow variable placeholders replaced by their respective value.
+     * @throws InvalidSettingsException
+     */
+    private DocumentAndContentType readMessage(final FlowVariableProvider flowVarResolver) throws InvalidSettingsException {
+        final String rawMessageHTML = m_settings.m_messageSettings.m_message;
+        final String messageHtml;
         try {
-            return m_settings.m_messageSettings.getMessage(flowVarResolver);
+            messageHtml = FlowVariableResolver.parse(rawMessageHTML, flowVarResolver);
         } catch (NoSuchElementException nse) {
             throw new InvalidSettingsException(
                 "A flow variable could not be resolved due to \"" + nse.getMessage() + "\".", nse);
         }
+        final Document messageDoc = Jsoup.parse(messageHtml);
+        return new DocumentAndContentType(messageDoc, m_settings.m_messageSettings.m_format);
     }
 
     private String addPropertiesAndGetProtocol(final Properties properties) {
@@ -315,19 +340,49 @@ final class EmailSender {
         return message;
     }
 
-    private Multipart initMessageBody(final String flowVarCorrectedText) throws MessagingException {
-        final String textType = switch (m_settings.m_messageSettings.m_format) {
-            case HTML -> "text/html; charset=\"utf-8\"";
-            case TEXT -> "text/plain; charset=\"utf-8\"";
-            default -> throw new IllegalArgumentException(
-                "The unsupported email format \"" + m_settings.m_messageSettings.m_format
-                    + "\" was specified. Valid formats are only \"HTML\" and \"TEXT\".");
-        };
+    private static Multipart initMessageBody(final DocumentAndContentType messageRecord, final IReportPortObject report)
+        throws MessagingException {
         var contentBody = new MimeBodyPart();
-        contentBody.setContent(flowVarCorrectedText, textType);
         Multipart mp = new MimeMultipart();
         mp.addBodyPart(contentBody);
+        Document document = messageRecord.messageDocument();
+        if (report != null) {
+            try {
+                final Document reportDocument = appendReport(mp, report);
+                if (StringUtils.isNotBlank(document.text())) {
+                    reportDocument.body() //
+                        .insertChildren(0, new Element("hr")) //
+                        .insertChildren(0, document.body().children());
+                }
+                // There are 95% of the document are style definition, making very simple reports as large as 200+kB
+                // (GMail has a limitation of 120kB - mail body larger than that are clipped)
+                // TODO: review and discuss with UIEXT team
+                reportDocument.select("style").remove();
+                document = reportDocument;
+            } catch (IOException ioe) {
+                throw new MessagingException("Unable to append report to email body: " + ioe.getMessage(), ioe);
+            }
+        }
+        final String content = switch (messageRecord.format()) {
+            case HTML -> document.html();
+            case TEXT -> MessageUtil.documentToPlainText(document);
+            default -> throw new IllegalStateException("Unknown message type");
+        };
+        contentBody.setContent(content, messageRecord.contentType());
         return mp;
+    }
+
+    private static Document appendReport(final Multipart mp, final IReportPortObject reportPortObject) throws IOException {
+        File tempDir = FileUtil.createTempDir("email-sender-report");
+        try {
+            final Path reportFilePath = tempDir.toPath().resolve("report.html");
+            final AsPartImageHandler imageHandler = new AsPartImageHandler(mp);
+            ReportHtmlWriterUtils.writeReportToHtml(reportFilePath, reportPortObject, imageHandler);
+            final String asString = Files.readString(reportFilePath, StandardCharsets.UTF_8);
+            return Jsoup.parse(asString);
+        } finally {
+            FileUtils.deleteQuietly(tempDir);
+        }
     }
 
     private static void addAttachments(final Multipart mp, final File file, final String cid)
@@ -432,7 +487,40 @@ final class EmailSender {
         FSConnection getConnection() {
             return m_connection;
         }
+    }
 
+    private static class AsPartImageHandler extends ReportHtmlImageHandler.InlinedImageHandler {
+
+        private final Multipart m_multipart;
+        private int m_imageCounter;
+
+        AsPartImageHandler(final Multipart multipart) {
+            m_multipart = multipart;
+        }
+
+        @Override
+        protected String handleImage(final byte[] imageBytes) throws IOException {
+            m_imageCounter += 1;
+            final String cid = String.format("image_%03d", m_imageCounter) ;
+            try {
+                addInlinePNG(m_multipart, imageBytes, cid);
+            } catch (MessagingException ex) {
+                throw new IOException("Failed to append inline images as multipart element", ex);
+            }
+            return String.format("cid:%s", cid);
+        }
+
+        private static void addInlinePNG(final Multipart mp, final byte[] data, final String cid)
+                throws MessagingException {
+                var imagePart = new MimeBodyPart();
+                imagePart.setDataHandler(new DataHandler(new ByteArrayDataSource(data, "image/png")));
+                imagePart.setDisposition(Part.INLINE);
+                imagePart.setFileName(String.format("%s.png", cid));
+                imagePart.setHeader("X-Attachment-Id", cid);
+                // embedded in <..> - found out by looking at other examples created with gmail editor
+                imagePart.setContentID(String.format("<%s>", cid));
+                mp.addBodyPart(imagePart);
+            }
     }
 
 }

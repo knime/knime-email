@@ -48,6 +48,7 @@
  */
 package org.knime.email.nodes.sender;
 
+import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -57,13 +58,13 @@ import org.junit.jupiter.api.Test;
  * 
  * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  */
-class MessageSettingsTest {
+class MessageUtilTest {
 
     @SuppressWarnings("static-method")
     @Test
     final void testHtmlToTextWithParagraphAndTags() {
         String html = "<p>Greetings!</p><p></p><p>&lt;b&gt;Best&lt;/b&gt; regards.</p>";
-        String plain = MessageSettings.messageToPlainText(html);
+        String plain = MessageUtil.documentToPlainText(Jsoup.parse(html));
         Assertions.assertEquals(
             """
                 Greetings!
@@ -76,27 +77,8 @@ class MessageSettingsTest {
     @Test
     final void testHtmlToTextInlineTags() {
         String html = "<p>Greetings!</p>foo bar";
-        String plain = MessageSettings.messageToPlainText(html);
+        String plain = MessageUtil.documentToPlainText(Jsoup.parse(html));
         Assertions.assertEquals("Greetings!\nfoo bar", plain, "text with inline tags");
     }
-    
-//    @SuppressWarnings("static-method")
-//    @Test
-//    final void testHtmlComplexExample() {
-//        String html = "<p>Hallo Bernd,</p><p></p><p>This is eval \\n. Is it on one line?</p><p></p><p>And hahaha - is that on the same line?</p><p></p><p>And how about tags like &lt;b&gt;content in tag&lt;/b&gt;.</p><p></p><p></p><p></p><p>&lt;b&gt;This&lt;/b&gt; is some <strong>text</strong>.</p>";
-//        String plain = MessageSettings.messageToPlainText(html);
-//        Assertions.assertEquals("""
-//                Hallo Bernd,
-//
-//                This is eval \\n. Is it on one line?
-//                
-//                And hahaha - is that on the same line?
-//                
-//                And how about tags like <b>content in tag</b>.
-//                
-//                
-//                
-//                <b>This</b> is some text.""", plain, "text with inline tags");
-//    }
     
 }

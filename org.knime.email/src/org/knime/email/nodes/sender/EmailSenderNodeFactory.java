@@ -48,7 +48,19 @@
  */
 package org.knime.email.nodes.sender;
 
+import java.util.Optional;
+
+import org.knime.core.node.ConfigurableNodeFactory;
+import org.knime.core.node.NodeDescription;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeView;
+import org.knime.core.node.context.NodeCreationConfiguration;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
+import org.knime.core.node.port.report.IReportPortObject;
+import org.knime.core.webui.node.dialog.NodeDialog;
+import org.knime.core.webui.node.dialog.NodeDialogFactory;
+import org.knime.core.webui.node.dialog.SettingsType;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeDialog;
 import org.knime.core.webui.node.impl.WebUINodeConfiguration;
 import org.knime.core.webui.node.impl.WebUINodeFactory;
 
@@ -57,28 +69,77 @@ import org.knime.core.webui.node.impl.WebUINodeFactory;
  * @author wiswedel
  */
 @SuppressWarnings("restriction")
-public final class EmailSenderNodeFactory extends WebUINodeFactory<EmailSenderNodeModel> {
+public final class EmailSenderNodeFactory extends ConfigurableNodeFactory<EmailSenderNodeModel>
+    implements NodeDialogFactory {
+
+    private static final String FULL_DESCRIPTION = """
+            Sends Emails to a list of recipients, supporting html content, reports, file attachments etc.
+            """;
+
+    private static final String INPUT_FLOWVAR_IDENTIFIER = "Flow Variables";
+
+    private static final String INPUT_REPORT_IDENTIFIER = "Report";
 
     private static final WebUINodeConfiguration CONFIGURATION = WebUINodeConfiguration.builder() //
         .name("Email Sender (Labs)") //
         .icon("mailsend.png") //
         .shortDescription("Sends Emails to a recipient list.") //
-        .fullDescription("""
-                Sends Emails to a list of recipients, supporting html content, reports, file attachments etc.
-                """) //
+        .fullDescription(FULL_DESCRIPTION) //
         .modelSettingsClass(EmailSenderNodeSettings.class) //
         .nodeType(NodeType.Other) //
-        .addInputPort("Flow Variables", FlowVariablePortObject.TYPE,
-            "Any types of variables that can be used in the email body") //
+        .addInputPort(INPUT_FLOWVAR_IDENTIFIER, FlowVariablePortObject.TYPE,
+            "Any types of variables that can be used in the email body", true) //
+        .addInputPort(INPUT_REPORT_IDENTIFIER, IReportPortObject.TYPE, "A report defining the content of the email. " //
+            + "In case the email is sent in text format, the report is attached as PDF file", true) //
+        .sinceVersion(5, 3, 0) //
         .build();
 
-    public EmailSenderNodeFactory() {
-        super(CONFIGURATION);
+
+    @Override
+    protected NodeDescription createNodeDescription() {
+        return WebUINodeFactory.createNodeDescription(CONFIGURATION);
     }
 
     @Override
-    public EmailSenderNodeModel createNodeModel() {
-        return new EmailSenderNodeModel(CONFIGURATION);
+    protected boolean hasDialog() {
+        return false;
+    }
+
+    @Override
+    protected NodeDialogPane createNodeDialogPane(final NodeCreationConfiguration creationConfig) {
+        return null; // not used
+    }
+
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
+
+    @Override
+    public EmailSenderNodeModel createNodeModel(final NodeCreationConfiguration creationConfig) {
+        return new EmailSenderNodeModel(creationConfig.getPortConfig().orElseThrow());
+    }
+
+    @Override
+    protected Optional<PortsConfigurationBuilder> createPortsConfigBuilder() {
+        final var b = new PortsConfigurationBuilder();
+        b.addOptionalInputPortGroupWithDefault(INPUT_FLOWVAR_IDENTIFIER, FlowVariablePortObject.TYPE,
+            FlowVariablePortObject.TYPE);
+        b.addOptionalInputPortGroup(INPUT_REPORT_IDENTIFIER, IReportPortObject.TYPE);
+        return Optional.of(b);
+    }
+
+    @Override
+    public NodeDialog createNodeDialog() {
+        return new DefaultNodeDialog(SettingsType.MODEL, EmailSenderNodeSettings.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView<EmailSenderNodeModel> createNodeView(final int viewIndex, final EmailSenderNodeModel nodeModel) {
+        return null; // no view
     }
 
 }
