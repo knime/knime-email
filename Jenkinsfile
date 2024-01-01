@@ -5,6 +5,7 @@ library "knime-pipeline@$BN"
 
 properties([
     pipelineTriggers([
+        upstream('knime-reporting2/' + env.BRANCH_NAME.replaceAll('/', '%2F')),
         upstream('knime-json/' + env.BRANCH_NAME.replaceAll('/', '%2F'))
     ]),
     parameters(workflowTests.getConfigurationsAsParameters()),
@@ -27,6 +28,7 @@ try {
                 "knime-core-ui",
                 "knime-distance",
                 "knime-ensembles",
+                "knime-filehandling",
                 "knime-gateway",
                 "knime-js-base",
                 "knime-json",
