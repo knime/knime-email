@@ -56,7 +56,7 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
-import org.knime.email.session.EmailSession;
+import org.knime.email.session.EmailIncomingSession;
 import org.knime.email.session.EmailSessionKey;
 import org.knime.email.util.EmailUtil;
 import org.knime.email.util.Message;
@@ -129,10 +129,10 @@ public final class TestUtil {
         return mailSessionKey;
     }
 
-    public static EmailSession getSessionUser1(final GreenMailExtension greenMail) {
+    public static EmailIncomingSession getSessionUser1(final GreenMailExtension greenMail) {
         final EmailSessionKey key = getSessionKeyUser1(greenMail);
         try {
-            return key.connect();
+            return key.connectIncoming();
         } catch (final MessagingException e) {
             throw new RuntimeException(e);
         }
@@ -163,7 +163,7 @@ public final class TestUtil {
         final String subFolderName)
                 throws MessagingException {
         String resultFolderName = null;
-        try (EmailSession session = mailSessionKey.connect();) {
+        try (EmailIncomingSession session = mailSessionKey.connectIncoming();) {
             final Folder inbox = session.openFolderForWriting(parentFolder);
             final Folder subFolder = createSubFolder(inbox, subFolderName);
             resultFolderName = subFolder.getFullName();

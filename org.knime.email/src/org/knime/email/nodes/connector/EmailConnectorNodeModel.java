@@ -103,7 +103,7 @@ public class EmailConnectorNodeModel extends WebUINodeModel<EmailConnectorSettin
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec,
         final EmailConnectorSettings modelSettings) throws Exception {
         final var mailSessionKey = createKey(modelSettings);
-        try (final var mailSession = mailSessionKey.connect()) {
+        try (final var mailSession = mailSessionKey.connectIncoming()) {
             // try connect
         }
         m_cacheId = EmailSessionCache.store(mailSessionKey);

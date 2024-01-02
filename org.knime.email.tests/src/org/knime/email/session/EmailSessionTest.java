@@ -47,7 +47,7 @@ public class EmailSessionTest {
     @Test
     public void connect_validUser() throws MessagingException {
         final var mailSessionKey = TestUtil.getSessionKeyUser1(greenMail);
-        try (final var mailSession = mailSessionKey.connect()) {
+        try (final var mailSession = mailSessionKey.connectIncoming()) {
             for (final String s : mailSession.listFolders()) {
                 LOGGER.info("Folder: " + s);
             }
@@ -64,7 +64,7 @@ public class EmailSessionTest {
                 .user("INVALID_USER", "INVALID_PASSWORD") //
                 .protocol(imap.getProtocol(), false) //
                 .properties(new Properties()).build();
-        Assertions.assertThrows(AuthenticationFailedException.class, () -> invalidUserMailSessionKey.connect());
+        Assertions.assertThrows(AuthenticationFailedException.class, () -> invalidUserMailSessionKey.connectIncoming());
     }
 
     @Test
@@ -72,7 +72,7 @@ public class EmailSessionTest {
 
         //INBOX is always there
         final List<String> first = new ArrayList<>(Arrays.asList("INBOX"));
-        try (EmailSession session = TestUtil.getSessionUser1(greenMail)){
+        try (EmailIncomingSession session = TestUtil.getSessionUser1(greenMail)){
             List<String> second = new ArrayList<>(Arrays.asList(session.listFolders()));
             assertTrue(first.size() == second.size() && first.containsAll(second) && second.containsAll(first));
 
@@ -90,7 +90,7 @@ public class EmailSessionTest {
 
     @Test
     public void openFolder() throws MessagingException {
-        try (EmailSession session = TestUtil.getSessionUser1(greenMail)){
+        try (EmailIncomingSession session = TestUtil.getSessionUser1(greenMail)){
 
             GreenMailUtil.sendTextEmail(USER1, USER2, "some subject", "some body", greenMail.getSmtp().getServerSetup());
             Folder inbox = session.openFolder("INBOX");
@@ -115,7 +115,7 @@ public class EmailSessionTest {
 
     @Test
     public void openFolderForWriting() throws MessagingException {
-        try (EmailSession session = TestUtil.getSessionUser1(greenMail)){
+        try (EmailIncomingSession session = TestUtil.getSessionUser1(greenMail)){
 
             GreenMailUtil.sendTextEmail(USER1, USER2, "some subject", "some body", greenMail.getSmtp().getServerSetup());
             Folder inbox = session.openFolderForWriting("INBOX");
@@ -137,7 +137,7 @@ public class EmailSessionTest {
 
     @Test
     public void close() throws MessagingException {
-        final EmailSession session = TestUtil.getSessionUser1(greenMail);
+        final EmailIncomingSession session = TestUtil.getSessionUser1(greenMail);
         final Folder inbox = session.openFolder("INBOX");
 
         session.close();

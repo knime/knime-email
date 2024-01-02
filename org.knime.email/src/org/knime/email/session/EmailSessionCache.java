@@ -56,7 +56,7 @@ import java.util.UUID;
 import jakarta.mail.MessagingException;
 
 /**
- * Allows retrieving {@link EmailSession}s via unique id.
+ * Allows retrieving {@link EmailIncomingSession}s via unique id.
  *
  * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
  */

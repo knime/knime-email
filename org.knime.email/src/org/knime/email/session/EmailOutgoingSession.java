@@ -44,61 +44,38 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 27, 2023 (wiswedel): created
+ *   Sep 26, 2023 (wiswedel): created
  */
-package org.knime.email.nodes.mover;
+package org.knime.email.session;
 
-import org.eclipse.angus.mail.imap.IMAPFolder;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.email.session.EmailIncomingSession;
-import org.knime.email.session.EmailSessionKey;
-import org.knime.email.util.EmailUtil;
+import org.knime.core.node.NodeLogger;
 
-import jakarta.mail.Flags.Flag;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Transport;
 
 /**
- *
+ * The main entrance point to work with outgoing emails (SMTP).
  * @author wiswedel
  */
-final class EmailMoverNodeProcessor {
+public final class EmailOutgoingSession implements AutoCloseable {
 
-    private final EmailSessionKey m_mailSessionKey;
-    private EmailMoverNodeSettings m_settings;
+    static final NodeLogger LOGGER = NodeLogger.getLogger(EmailOutgoingSession.class);
 
+    private final Transport m_emailTransport;
 
-
-    EmailMoverNodeProcessor(final EmailSessionKey mailSessionKey, final EmailMoverNodeSettings settings) {
-        m_mailSessionKey = mailSessionKey;
-        m_settings = settings;
+    EmailOutgoingSession(final Transport emailTransport) {
+        m_emailTransport = emailTransport;
     }
 
-    void moveMessages(final ExecutionMonitor exec, final BufferedDataTable idTable) throws Exception {
-        final int idIdx = idTable.getSpec().findColumnIndex(m_settings.m_messageIds);
-        try (EmailIncomingSession session = m_mailSessionKey.connectIncoming();
-                final var sourceFolder = session.openFolderForWriting(m_settings.m_sourceFolder);
-             final var targetFolder = session.openFolder(m_settings.m_targetFolder);
-             ){
-            exec.setMessage("Processing input table..");
-            final var messages = EmailUtil.findMessages(exec.createSubProgress(0.7), sourceFolder, idTable, idIdx);
-            if (sourceFolder instanceof IMAPFolder imapfolder) {
-                exec.checkCanceled();
-                exec.setProgress(0.8,
-                    "Moving " + messages.length + " messages to target folder: " + m_settings.m_targetFolder);
-                imapfolder.moveMessages(messages, targetFolder);
-            } else {
-                // copy messages over and delete them
-                exec.checkCanceled();
-                exec.setProgress(0.8,
-                    "Copying " + messages.length + " messages to target folder: " + m_settings.m_targetFolder);
-                sourceFolder.copyMessages(messages, targetFolder);
-                exec.setProgress(0.9,
-                    "Deleting " + messages.length + " messages from source folder: " + m_settings.m_sourceFolder);
-                EmailUtil.flagMessages(sourceFolder, messages, Flag.DELETED, true);
-                sourceFolder.expunge();
-            }
-        }
-        exec.setProgress(1);
+    /**
+     * @return the emailTransport
+     */
+    public Transport getEmailTransport() {
+        return m_emailTransport;
     }
 
+    @Override
+    public void close() throws MessagingException {
+        m_emailTransport.close();
+    }
 }

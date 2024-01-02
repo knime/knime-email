@@ -62,11 +62,12 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
-import org.knime.email.session.EmailSession;
+import org.knime.email.session.EmailIncomingSession;
 import org.knime.email.session.EmailSessionKey;
 
 /**
- * {@link PortObject} that provides access to an {@link EmailSession} via the {@link EmailSessionKey}.
+ * {@link PortObject} that provides access to an {@link EmailIncomingSession} and/or {@link EmailOutgoingSession}
+ * via the {@link EmailSessionKey}.
  * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
  */
 public class EmailSessionPortObject extends AbstractSimplePortObject implements EmailSessionProvider {

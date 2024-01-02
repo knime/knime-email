@@ -57,8 +57,8 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.Session;
 
 /**
- * {@link EmailSession} provider that establishes a connection to the {@link EmailSession} when necessary.
- * Retrieved {@link EmailSession} should be closed once the processing is done!
+ * {@link EmailIncomingSession} provider that establishes a connection to the {@link EmailIncomingSession} when necessary.
+ * Retrieved {@link EmailIncomingSession} should be closed once the processing is done!
  * @author wiswedel
  */
 public final class EmailSessionKey {
@@ -117,13 +117,13 @@ public final class EmailSessionKey {
     }
 
     /**
-     * Connects to the underlying email store and returns the session to work with it. Please close the session
-     * once the work  is done!
-     * @return a new {@link EmailSession} which should be closed when done
+     * Connects to the underlying email store and returns the incoming session to work with it.
+     * Please close the session once the work is done!
+     * @return a new {@link EmailIncomingSession} which should be closed when done
      * @throws MessagingException if the connection fails
      */
     @SuppressWarnings("resource")
-    public EmailSession connect() throws MessagingException {
+    public EmailIncomingSession connectIncoming() throws MessagingException {
         CheckUtils.checkArgument(List.of("imap", "pop3").contains(m_protocol), "Invalid protocol: %s", m_protocol);
         final var protocol = m_useSecurePortocol ? m_protocol.concat("s") : m_protocol;
         final var props = new Properties();
@@ -132,7 +132,7 @@ public final class EmailSessionKey {
         props.put("mail." + protocol + ".port", m_port);
         //use the user settings last to allow for more flexibility by allowing users to overwrite our standard settings
         props.putAll(m_properties);
-        EmailSession.LOGGER.debugWithFormat("Connecting email client to %s:%d via %s using following properties %s",
+        EmailIncomingSession.LOGGER.debugWithFormat("Connecting email client to %s:%d via %s using following properties %s",
             m_host, m_port, protocol, m_properties);
 
         final Thread t = Thread.currentThread();
@@ -145,7 +145,7 @@ public final class EmailSessionKey {
             final var emailStore = emailSession.getStore();
             try {
                 emailStore.connect(m_user, m_password);
-                return new EmailSession(emailStore);
+                return new EmailIncomingSession(emailStore);
             } catch (MessagingException me) {
                 emailStore.close();
                 throw me;
@@ -153,6 +153,18 @@ public final class EmailSessionKey {
         } finally {
           t.setContextClassLoader(orig);
         }
+    }
+
+    /**
+     * Connects to the underlying email transport and returns the outgoing session to work with it.
+     * Please close the session once the work is done!
+     * @return a new {@link EmailIncomingSession} which should be closed when done
+     * @throws MessagingException if the connection fails
+     */
+    @SuppressWarnings("resource")
+    public EmailOutgoingSession connectOutgoing() throws MessagingException {
+        //TODO: implement
+        return new EmailOutgoingSession(null);
     }
 
     @FunctionalInterface

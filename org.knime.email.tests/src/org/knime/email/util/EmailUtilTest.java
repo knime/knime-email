@@ -57,7 +57,7 @@ import static org.knime.email.TestUtil.USER2;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.knime.email.TestUtil;
-import org.knime.email.session.EmailSession;
+import org.knime.email.session.EmailIncomingSession;
 
 import com.icegreen.greenmail.junit5.GreenMailExtension;
 import com.icegreen.greenmail.util.GreenMailUtil;
@@ -76,7 +76,7 @@ class EmailUtilTest {
     @Test
     void getMessageId() throws MessagingException {
         final ServerSetup serverSetup = greenMail.getSmtp().getServerSetup();
-        try (EmailSession session = TestUtil.getSessionUser1(greenMail)) {
+        try (EmailIncomingSession session = TestUtil.getSessionUser1(greenMail)) {
             GreenMailUtil.sendTextEmail(USER1, USER2, "some subject", "some body", serverSetup);
             GreenMailUtil.sendTextEmail(USER1, USER2, "some other subject", "some  other body", serverSetup);
             GreenMailUtil.sendTextEmail(USER1, USER2, "yet another subject", "and yet another body", serverSetup);
@@ -98,7 +98,7 @@ class EmailUtilTest {
 
     @Test
     void findMessageById() throws MessagingException {
-        try (EmailSession session = TestUtil.getSessionUser1(greenMail)) {
+        try (EmailIncomingSession session = TestUtil.getSessionUser1(greenMail)) {
             final ServerSetup serverSetup = greenMail.getSmtp().getServerSetup();
             GreenMailUtil.sendTextEmail(USER1, USER2, "some subject", "some body", serverSetup);
             GreenMailUtil.sendTextEmail(USER1, USER2, "some other subject", "some  other body", serverSetup);
@@ -116,7 +116,7 @@ class EmailUtilTest {
 
     @Test
     void flagMessages() throws MessagingException {
-        try (EmailSession session = TestUtil.getSessionUser1(greenMail)) {
+        try (EmailIncomingSession session = TestUtil.getSessionUser1(greenMail)) {
             final ServerSetup serverSetup = greenMail.getSmtp().getServerSetup();
             GreenMailUtil.sendTextEmail(USER1, USER2, "some subject", "some body", serverSetup);
             GreenMailUtil.sendTextEmail(USER1, USER2, "some other subject", "some  other body", serverSetup);

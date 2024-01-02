@@ -175,7 +175,7 @@ public final class EmailReaderNodeProcessor {
     }
 
     void readEmailsAndFillTable(final ExecutionContext context) throws Exception {
-        try (final var session = m_mailSessionKey.connect();
+        try (final var session = m_mailSessionKey.connectIncoming();
                 //In order to have a message set as read we need to opened the folder in read_write mode.
                 final var folder = session.openFolderForWriting(m_settings.m_folder);
 //                for now we do not support header retrieval

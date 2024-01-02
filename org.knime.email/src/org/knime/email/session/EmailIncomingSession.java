@@ -60,16 +60,16 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.Store;
 
 /**
- * The main entrance point to work with emails.
+ * The main entrance point to work with incoming emails (IMAP).
  * @author wiswedel
  */
-public final class EmailSession implements AutoCloseable {
+public final class EmailIncomingSession implements AutoCloseable {
 
-    static final NodeLogger LOGGER = NodeLogger.getLogger(EmailSession.class);
+    static final NodeLogger LOGGER = NodeLogger.getLogger(EmailIncomingSession.class);
 
     private final Store m_emailStore;
 
-    EmailSession(final Store emailStore) {
+    EmailIncomingSession(final Store emailStore) {
         m_emailStore = emailStore;
     }
 

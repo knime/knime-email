@@ -109,7 +109,7 @@ public final class UIChoices {
                 });
                 final EmailSessionKey sessionKey =
                     in.getEmailSessionKey().orElseThrow(() -> new IllegalStateException(MISSING_SESSION_MSG));
-                try (final var mailSession = sessionKey.connect()) {
+                try (final var mailSession = sessionKey.connectIncoming()) {
                     final String[] folders = mailSession.listFolders();
                     Arrays.sort(folders);
                     return Arrays.asList(folders).stream().map(s -> new IdAndText(s, s)).toList()
