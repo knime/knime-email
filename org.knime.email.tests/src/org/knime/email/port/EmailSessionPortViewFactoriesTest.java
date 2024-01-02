@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -40,7 +41,10 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   Dec 29, 2023 (wiswedel): created
  */
 package org.knime.email.port;
 
@@ -71,7 +75,7 @@ import jakarta.mail.MessagingException;
  * 
  * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  */
-@SuppressWarnings("java:S5960") // sonar believes this is production code
+@SuppressWarnings({"java:S5960", "java:S112"}) // sonar believes this is production code
 class EmailSessionPortViewFactoriesTest {
     
     private UUID m_sessionCacheID;

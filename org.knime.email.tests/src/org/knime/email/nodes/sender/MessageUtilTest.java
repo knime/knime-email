@@ -58,6 +58,7 @@ import org.junit.jupiter.api.Test;
  * 
  * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  */
+@SuppressWarnings("java:S5960")
 class MessageUtilTest {
 
     @SuppressWarnings("static-method")

@@ -237,7 +237,8 @@ final class EmailSender {
      * @return The message, flow variable placeholders replaced by their respective value.
      * @throws InvalidSettingsException
      */
-    private DocumentAndContentType readMessage(final FlowVariableProvider flowVarResolver) throws InvalidSettingsException {
+    private DocumentAndContentType readMessage(final FlowVariableProvider flowVarResolver)
+        throws InvalidSettingsException {
         final String rawMessageHTML = m_settings.m_messageSettings.m_message;
         final String messageHtml;
         try {
@@ -276,13 +277,6 @@ final class EmailSender {
                 properties.setProperty("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
                 // a third (and most transparent) option would be to use a different protocol:
                 protocol = "smtps";
-                /* note, protocol smtps doesn't work with default javax.mail bundle (1.4.0):
-                 * Unable to load class for provider: protocol=smtps; type=javax.mail.Provider$Type@2d0fc05b;
-                 * class=org.apache.geronimo.javamail.transport.smtp.SMTPTSransport;
-                 * vendor=Apache Software Foundation;version=1.0
-                 * https://issues.apache.org/jira/browse/GERONIMO-4476
-                 * It's a typo in geronimo class name (SMTPSTransport vs. SMTPTSransport) - plenty of google hits.
-                 * (This impl. uses javax.mail.glassfish bundle.) */
                 break;
             default:
         }
@@ -372,8 +366,9 @@ final class EmailSender {
         return mp;
     }
 
-    private static Document appendReport(final Multipart mp, final IReportPortObject reportPortObject) throws IOException {
-        File tempDir = FileUtil.createTempDir("email-sender-report");
+    private static Document appendReport(final Multipart mp, final IReportPortObject reportPortObject)
+        throws IOException {
+        final File tempDir = FileUtil.createTempDir("email-sender-report");
         try {
             final Path reportFilePath = tempDir.toPath().resolve("report.html");
             final AsPartImageHandler imageHandler = new AsPartImageHandler(mp);
@@ -419,10 +414,8 @@ final class EmailSender {
             file = new File(tempDir, path.getName(path.getNameCount() - 1).toString());
             Files.copy(path, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
         }
-        if (!file.canRead()) {
-            throw new IOException(
-                "The KNIME AP does not have the permissions to read the file attachment at " + path + ".");
-        }
+        CheckUtils.check(file.canRead(), IOException::new, () -> String
+            .format("The KNIME AP does not have the permissions to read the file attachment at \"%s\".", path));
         return file;
     }
 
@@ -511,16 +504,16 @@ final class EmailSender {
         }
 
         private static void addInlinePNG(final Multipart mp, final byte[] data, final String cid)
-                throws MessagingException {
-                var imagePart = new MimeBodyPart();
-                imagePart.setDataHandler(new DataHandler(new ByteArrayDataSource(data, "image/png")));
-                imagePart.setDisposition(Part.INLINE);
-                imagePart.setFileName(String.format("%s.png", cid));
-                imagePart.setHeader("X-Attachment-Id", cid);
-                // embedded in <..> - found out by looking at other examples created with gmail editor
-                imagePart.setContentID(String.format("<%s>", cid));
-                mp.addBodyPart(imagePart);
-            }
+            throws MessagingException {
+            final var imagePart = new MimeBodyPart();
+            imagePart.setDataHandler(new DataHandler(new ByteArrayDataSource(data, "image/png")));
+            imagePart.setDisposition(Part.INLINE);
+            imagePart.setFileName(String.format("%s.png", cid));
+            imagePart.setHeader("X-Attachment-Id", cid);
+            // embedded in <..> - found out by looking at other examples created with gmail editor
+            imagePart.setContentID(String.format("<%s>", cid));
+            mp.addBodyPart(imagePart);
+        }
     }
 
 }

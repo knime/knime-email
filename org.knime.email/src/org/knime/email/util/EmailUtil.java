@@ -67,7 +67,6 @@ import jakarta.mail.Folder;
 import jakarta.mail.Message;
 import jakarta.mail.Message.RecipientType;
 import jakarta.mail.MessagingException;
-import jakarta.mail.Session;
 import jakarta.mail.search.MessageIDTerm;
 
 /**
@@ -220,7 +219,8 @@ public final class EmailUtil {
      * @return the recipient strings or null if none exists
      * @throws MessagingException
      */
-    public static String[] extractRecipients(final Message message, final RecipientType type) throws MessagingException {
+    public static String[] extractRecipients(final Message message, final RecipientType type)
+        throws MessagingException {
         final var recipients = message.getRecipients(type);
         if (recipients == null || recipients.length == 0) {
             return null;
