@@ -209,6 +209,7 @@ public final class EmailReaderNodeProcessor {
                     throw new IllegalStateException("Invalid message selector");
             }
             final List<Message> readMessages = new ArrayList<>();
+            long rowKey = 0;
             for (int i = indexStart; i <= indexEnd;) {
                 final var batchEnd = Math.min(i + 10, count);
                 final var paddedNumber = "%" + Long.toString(count).length() + "d";
@@ -225,14 +226,14 @@ public final class EmailReaderNodeProcessor {
                 final Message message = messages[i - 1];
                 if (!message.isExpunged()) {
                     final var msgRowWrite = msgWriteCursor.forward();
-                    msgRowWrite.setRowKey(RowKey.createRowKey((long)i));
-                    i++;
+                    msgRowWrite.setRowKey(RowKey.createRowKey(rowKey++));
                     // message ID
                     final var messageId = EmailUtil.getMessageId(message);
                     writeMessageAndAttachments(context, factory, messageId, message, msgRowWrite, attachWriteCursor);
                     writeHeader(messageId, message, headerWriteCursor);
                     readMessages.add(message);
                 }
+                i++;
             }
             if (!m_settings.m_markAsRead) {
                 //explicitly mark message as un-seen since they are automatically set to seen when content is
