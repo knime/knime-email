@@ -95,7 +95,6 @@ import org.knime.reporting2.nodes.htmlwriter.ReportHtmlWriterUtils;
 
 import com.google.common.base.Strings;
 
-import jakarta.activation.DataHandler;
 import jakarta.activation.FileTypeMap;
 import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
@@ -108,7 +107,7 @@ import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 import jakarta.mail.internet.MimeUtility;
-import jakarta.mail.util.ByteArrayDataSource;
+import jakarta.mail.internet.PreencodedMimeBodyPart;
 
 /**
  * Sends emails via jakarta mail API. It's an adaption (copy) of class
@@ -337,7 +336,8 @@ final class EmailSender {
     private static Multipart initMessageBody(final DocumentAndContentType messageRecord, final IReportPortObject report)
         throws MessagingException {
         var contentBody = new MimeBodyPart();
-        Multipart mp = new MimeMultipart();
+        // related = can use cid references (some clients would otherwise not show them inline, e.g. thunderbird)
+        Multipart mp = new MimeMultipart("related");
         mp.addBodyPart(contentBody);
         Document document = messageRecord.messageDocument();
         if (report != null) {
@@ -351,7 +351,9 @@ final class EmailSender {
                 // There are 95% of the document are style definition, making very simple reports as large as 200+kB
                 // (GMail has a limitation of 120kB - mail body larger than that are clipped)
                 // TODO: review and discuss with UIEXT team
-                reportDocument.select("style").remove();
+                if (!Boolean.getBoolean("knime.email.report.keep.style")) {
+                    reportDocument.select("style").remove();
+                }
                 document = reportDocument;
             } catch (IOException ioe) {
                 throw new MessagingException("Unable to append report to email body: " + ioe.getMessage(), ioe);
@@ -482,7 +484,18 @@ final class EmailSender {
         }
     }
 
-    private static class AsPartImageHandler extends ReportHtmlImageHandler.InlinedImageHandler {
+    private static class AsPartImageHandler implements ReportHtmlImageHandler {
+
+        private static final int MIME_LINE_LENGTH = 76;
+
+        private static final String CRLF = "\r\n";
+
+        /** Inline images start with this string, e.g.
+         * <pre>
+         *   &lt;img style="width:701px" src="data:image/png;base64,iVBORw0...
+         * </pre>
+         */
+        private static final String IMG_SRC_INLINE = "data:image/png;base64,";
 
         private final Multipart m_multipart;
         private int m_imageCounter;
@@ -491,29 +504,55 @@ final class EmailSender {
             m_multipart = multipart;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
-        protected String handleImage(final byte[] imageBytes) throws IOException {
-            m_imageCounter += 1;
-            final String cid = String.format("image_%03d", m_imageCounter) ;
-            try {
-                addInlinePNG(m_multipart, imageBytes, cid);
-            } catch (MessagingException ex) {
-                throw new IOException("Failed to append inline images as multipart element", ex);
+        public String handleImage(final String imageData) throws IOException {
+            if (StringUtils.startsWith(imageData, IMG_SRC_INLINE)) {
+                try {
+                    String base64 = StringUtils.removeStart(imageData, IMG_SRC_INLINE);
+                    m_imageCounter += 1;
+                    final String cid = String.format("image_%03d", m_imageCounter) ;
+                    final var imagePart = new PreencodedMimeBodyPart("base64");
+                    base64 = mimeEncodeBase64(base64);
+                    imagePart.setContent(base64, "image/png");
+                    imagePart.setDisposition(Part.INLINE);
+                    imagePart.setFileName(String.format("%s.png", cid));
+                    imagePart.setHeader("X-Attachment-Id", cid);
+                    // embedded in <..> - found out by looking at other examples created with gmail editor
+                    imagePart.setContentID(String.format("<%s>", cid));
+                    m_multipart.addBodyPart(imagePart);
+                    return String.format("cid:%s", cid);
+                } catch (MessagingException ex) {
+                    throw new IOException("Failed to append inline images as multipart element", ex);
+                }
+            } else {
+                return imageData;
             }
-            return String.format("cid:%s", cid);
         }
 
-        private static void addInlinePNG(final Multipart mp, final byte[] data, final String cid)
-            throws MessagingException {
-            final var imagePart = new MimeBodyPart();
-            imagePart.setDataHandler(new DataHandler(new ByteArrayDataSource(data, "image/png")));
-            imagePart.setDisposition(Part.INLINE);
-            imagePart.setFileName(String.format("%s.png", cid));
-            imagePart.setHeader("X-Attachment-Id", cid);
-            // embedded in <..> - found out by looking at other examples created with gmail editor
-            imagePart.setContentID(String.format("<%s>", cid));
-            mp.addBodyPart(imagePart);
+        /**
+         * MIME-compliant Base64 encoding (blocks of lines of length 76 chars, terminated by crlf)
+         * https://www.ietf.org/rfc/rfc2045.txt * (search for '76 characters')
+         * @param base64 The original base64 string (one long line)
+         * @return mime encoded base64 (line split after each 76 chars)
+         */
+        private static String mimeEncodeBase64(String base64) {
+            if (!StringUtils.contains(base64, CRLF)) {
+                final StringBuilder mimeEncodedBase64 = new StringBuilder();
+                for (int i = 0, length = StringUtils.length(base64); i < length; i += MIME_LINE_LENGTH) {
+                    final int end = Math.min(i + MIME_LINE_LENGTH, length);
+                    mimeEncodedBase64.append(base64.subSequence(i, end));
+                    if (end < length) {
+                        mimeEncodedBase64.append(CRLF);
+                    }
+                }
+                base64 = mimeEncodedBase64.toString();
+            }
+            return base64;
         }
+
     }
 
 }
