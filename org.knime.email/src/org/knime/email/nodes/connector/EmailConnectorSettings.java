@@ -49,14 +49,24 @@
 package org.knime.email.nodes.connector;
 
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.HorizontalLayout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.DefaultProvider;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
+import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect;
+import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
+import org.knime.core.webui.node.dialog.defaultdialog.rule.OneOfEnumCondition;
+import org.knime.core.webui.node.dialog.defaultdialog.rule.Or;
+import org.knime.core.webui.node.dialog.defaultdialog.rule.Signal;
+import org.knime.core.webui.node.dialog.defaultdialog.rule.TrueCondition;
 import org.knime.core.webui.node.dialog.defaultdialog.setting.credentials.Credentials;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.NumberInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 
 /**
@@ -66,43 +76,90 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 @SuppressWarnings("restriction")
 public class EmailConnectorSettings implements DefaultNodeSettings {
 
-    enum EmailProtocol {
-        @Label("IMAP(4)")
-        IMAP,
-        @Label("POP3")
-        POP3
-    }
+    @Widget(title = "Email address",
+            description = "The email address.")
+    String m_emailAddress;
 
-//    /**The email protocol.*/
-//    @Widget(title = "Email protocol", description = "Choose the email protocol to use.")
-//    @ValueSwitchWidget()
-//    public EmailProtocol m_protocol = EmailProtocol.IMAP;
+    @Widget(title = "Connection type", description = "Choose the type of connection.")
+    @Signal(id = IncomingServerSection.class, condition = IsReadSelected.class)
+    @Signal(id = OutgoingServerSection.class, condition = IsWriteSelected.class)
+    @Persist(defaultProvider = TypeDefaultProvider.class)
+    @ValueSwitchWidget()
+    ConnectionType m_type = ConnectionType.READ_ONLY;
 
-    /** The name of the lookup column in the data table */
-    @Widget(title = "Email server", description = "The address of the email server.") //
+
+//  INCOMING SERVER SETTINGS
+    @Section(title = "Incoming Mail Server")
+    @Effect(signals = IncomingServerSection.class, type = EffectType.SHOW)
+    interface IncomingServerSection {}
+
+
+    @Layout(IncomingServerSection.class)
+    @Widget(title = "Server", description = "The address of the incoming email server (IMAP).") //
     @TextInputWidget(pattern = "[^ ]+")
     String m_server;
 
-    /** The name of the lookup column in the data table */
-    @Widget(title = "Port", description = "The port of the email server (e.g. 993).") //
+
+    @Layout(IncomingServerSection.class)
+    @Widget(title = "Port", description = "The port of the incoming email server (e.g. 993).") //
     @NumberInputWidget(min = 1, max = 0xFFFF) // 65635
     int m_port = 993;
 
-    /**The email server login.*/
-    @Widget(title = "Login",
-            description = "The email server login.")
-    public Credentials m_login;
-
-
-    @Section(title = "Connection Properties", advanced = true)
-    interface ConnectionPropertySection {}
-
-
-    /**The email protocol.*/
-    @Layout(ConnectionPropertySection.class)
+    @Layout(IncomingServerSection.class)
     @Widget(title = "Use secure protocol",
             description = "Choose whether to use an encrypted or unencrypted connection.", advanced = true)
-    public boolean m_useSecureProtocol = true;
+    boolean m_useSecureProtocol = true;
+
+
+//  OUTGOING SERVER SETTINGS
+    @Section(title = "Outgoing Mail Server")
+    @After(IncomingServerSection.class)
+    @Effect(signals = OutgoingServerSection.class, type = EffectType.SHOW)
+    interface OutgoingServerSection {}
+
+    @Layout(OutgoingServerSection.class)
+    @Widget(title = "Server", description = "The address of the outgoing email server (SMTP).")
+    @TextInputWidget(pattern = "^\\w[\\w\\.]*")
+    @Persist(defaultProvider = EmptyHostProvider.class)
+    String m_smtpHost;
+
+    @Layout(OutgoingServerSection.class)
+    @Widget(title = "Port", description = "The port of the incoming email server (e.g. 587).")
+    @NumberInputWidget(min = 1)
+    @Persist(defaultProvider = DefaultPortProvider.class)
+    int m_smtpPort = 587;
+
+    interface RequiresAuthentication {}
+    @Layout(OutgoingServerSection.class)
+    @Widget(title = "Outgoing mail server requires authentication")
+    @Persist(defaultProvider = DeafultAuthenticationProvider.class)
+    @Signal(id=RequiresAuthentication.class, condition = TrueCondition.class)
+    boolean m_smtpRequiresAuthentication = true;
+
+    @Layout(OutgoingServerSection.class)
+    @Widget(title = "Connection Security")
+    @ValueSwitchWidget
+    @Persist(defaultProvider = DeafultSecurityProvider.class)
+    ConnectionSecurity m_smtpSecurity = ConnectionSecurity.NONE;
+
+
+    @Section(title = "Authentication")
+    @After(OutgoingServerSection.class)
+    interface AuthenticationSection {}
+    /**The email server login.*/
+    @Layout(AuthenticationSection.class)
+    @Widget(title = "Login",
+            description = "The email server login.")
+    Credentials m_login;
+
+
+//  CONNECTION PROPERTIES
+    @Section(title = "Connection Properties", advanced = true)
+    @Effect(signals = {IncomingServerSection.class, RequiresAuthentication.class}, type = EffectType.SHOW,
+    operation = Or.class)
+    @After(AuthenticationSection.class)
+    interface ConnectionPropertySection {}
+
 
     @Widget(title = "Custom properties", description =
             "Allows to define additional connection properties. For details about the supported properties see "
@@ -111,10 +168,9 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
             advanced = true)
     @Layout(ConnectionPropertySection.class)
     @ArrayWidget(addButtonText = "Add custom property")
-    public ConnectionProperties[] m_properties = new ConnectionProperties[0];
+    ConnectionProperties[] m_properties = new ConnectionProperties[0];
 
     static final class ConnectionProperties implements DefaultNodeSettings {
-
         @HorizontalLayout
         interface ConnectionPropertiesLayout {
         }
@@ -129,5 +185,82 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
         @TextInputWidget(pattern = "\\S+.*")
         @Layout(ConnectionPropertiesLayout.class)
         public String m_value;
+    }
+
+
+//  HELPER SECTION
+    enum ConnectionType {
+        @Label("Read-only")
+        READ_ONLY,
+        @Label("Write-only")
+        WRITE_ONLY,
+        @Label("Read-write")
+        READ_WRITE
+    }
+
+    // OUTGOING SERVER SETTINGS
+    enum ConnectionSecurity {
+        @Label("None")
+        NONE,
+        @Label("SSL")
+        SSL,
+        @Label("STARTTLS")
+        STARTTLS
+    }
+
+    enum EmailProtocol {
+        @Label("IMAP(4)")
+        IMAP,
+        @Label("POP3")
+        POP3
+    }
+
+    static class IsReadSelected extends OneOfEnumCondition<ConnectionType> {
+        @Override
+        public ConnectionType[] oneOf() {
+            return new ConnectionType[]{ConnectionType.READ_ONLY, ConnectionType.READ_WRITE};
+        }
+    }
+
+    static class IsWriteSelected extends OneOfEnumCondition<ConnectionType> {
+        @Override
+        public ConnectionType[] oneOf() {
+            return new ConnectionType[]{ConnectionType.WRITE_ONLY, ConnectionType.READ_WRITE};
+        }
+    }
+
+    private static final class TypeDefaultProvider implements DefaultProvider<ConnectionType> {
+        @Override
+        public ConnectionType getDefault() {
+            return ConnectionType.READ_ONLY;
+        }
+    }
+
+    private static final class EmptyHostProvider implements DefaultProvider<Object> {
+        @Override
+        public Object getDefault() {
+            return null;
+        }
+    }
+
+    private static final class DefaultPortProvider implements DefaultProvider<Integer> {
+        @Override
+        public Integer getDefault() {
+            return 587;
+        }
+    }
+
+    private static final class DeafultAuthenticationProvider implements DefaultProvider<Boolean> {
+        @Override
+        public Boolean getDefault() {
+            return Boolean.TRUE;
+        }
+    }
+
+    private static final class DeafultSecurityProvider implements DefaultProvider<ConnectionSecurity> {
+        @Override
+        public ConnectionSecurity getDefault() {
+            return ConnectionSecurity.NONE;
+        }
     }
 }
