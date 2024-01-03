@@ -55,7 +55,8 @@ import jakarta.mail.Transport;
 
 /**
  * The main entrance point to work with outgoing emails (SMTP).
- * @author wiswedel
+ *
+ * @author Bernd Wiswedel
  */
 public final class EmailOutgoingSession implements AutoCloseable {
 

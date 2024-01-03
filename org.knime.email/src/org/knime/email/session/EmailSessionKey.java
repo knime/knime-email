@@ -48,9 +48,10 @@
  */
 package org.knime.email.session;
 
-import java.util.List;
 import java.util.Properties;
+import java.util.function.Function;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.util.CheckUtils;
 
 import jakarta.mail.MessagingException;
@@ -59,61 +60,50 @@ import jakarta.mail.Session;
 /**
  * {@link EmailIncomingSession} provider that establishes a connection to the {@link EmailIncomingSession} when necessary.
  * Retrieved {@link EmailIncomingSession} should be closed once the processing is done!
- * @author wiswedel
+ *
+ * @author Bernd Wiswedel
  */
+@SuppressWarnings("javadoc")
 public final class EmailSessionKey {
 
-    private final String m_host;
-    private final int m_port;
-    private final String m_user;
-    private final String m_password;
-    private final String m_protocol;
-    private final boolean m_useSecurePortocol;
+    /** SMTP Connection Security as specified in the builder. */
+    public enum SmtpConnectionSecurity {
+        NONE,
+        SSL,
+        STARTTLS
+    }
+
+    private final String m_imapHost;
+    private final int m_imapPort;
+    private final boolean m_imapUseSecurePortocol;
+
+    private final String m_smtpHost;
+    private final int m_smtpPort;
+    private final String m_smtpEmailAddress;
+    private final SmtpConnectionSecurity m_smtpConnectionSecurity;
+
     private Properties m_properties;
 
-    private EmailSessionKey(final Builder builder) {
-        m_host = builder.m_host;
-        m_port = builder.m_port;
+    private final String m_user;
+    private final String m_password;
+
+    private EmailSessionKey(final EmailSessionKeyBuilder builder) {
+        m_imapHost = builder.m_imapHost;
+        m_imapPort = builder.m_imapPort;
+        m_imapUseSecurePortocol = builder.m_imapUseSecureProtocol;
+
+        m_smtpHost = builder.m_smtpHost;
+        m_smtpPort = builder.m_smtpPort;
+        m_smtpEmailAddress = builder.m_smtpEmailAddress;
+        m_smtpConnectionSecurity = builder.m_smtpConnectionSecurity;
+
         m_user = builder.m_user;
         m_password = builder.m_password;
-        m_protocol = builder.m_protocol;
-        m_useSecurePortocol = builder.m_useSecureProtocol;
         m_properties = builder.m_properties;
     }
 
-    String getHost() {
-        return m_host;
-    }
-
-    int getPort() {
-        return m_port;
-    }
-
-    String getUser() {
-        return m_user;
-    }
-
-    String getPassword() {
-        return m_password;
-    }
-
-    String getProtocol() {
-        return m_protocol;
-    }
-
-    boolean isUseSecurePortocol() {
-        return m_useSecurePortocol;
-    }
-
-    /**
-     * @return the properties
-     */
-    public Properties getProperties() {
-        return m_properties;
-    }
-
-    public static WithHost builder() {
-        return new Builder();
+    public static Builder builder() {
+        return new EmailSessionKeyBuilder();
     }
 
     /**
@@ -124,16 +114,15 @@ public final class EmailSessionKey {
      */
     @SuppressWarnings("resource")
     public EmailIncomingSession connectIncoming() throws MessagingException {
-        CheckUtils.checkArgument(List.of("imap", "pop3").contains(m_protocol), "Invalid protocol: %s", m_protocol);
-        final var protocol = m_useSecurePortocol ? m_protocol.concat("s") : m_protocol;
+        final var protocol = m_imapUseSecurePortocol ? "imaps" : "imap";
         final var props = new Properties();
         props.put("mail.store.protocol", protocol);
-        props.put("mail." + protocol + ".host", m_host);
-        props.put("mail." + protocol + ".port", m_port);
+        props.put("mail." + protocol + ".host", m_imapHost);
+        props.put("mail." + protocol + ".port", m_imapPort);
         //use the user settings last to allow for more flexibility by allowing users to overwrite our standard settings
         props.putAll(m_properties);
         EmailIncomingSession.LOGGER.debugWithFormat("Connecting email client to %s:%d via %s using following properties %s",
-            m_host, m_port, protocol, m_properties);
+            m_imapHost, m_imapPort, protocol, m_properties);
 
         final Thread t = Thread.currentThread();
         final ClassLoader orig = t.getContextClassLoader();
@@ -167,72 +156,143 @@ public final class EmailSessionKey {
         return new EmailOutgoingSession(null);
     }
 
-    @FunctionalInterface
-    public interface WithHost {
-        WithUser host(final String host, final int port);
-    }
+    /**
+     * Builder for a session, as returned by {@link EmailSessionKey#builder()}. Method names should be self-explanatory.
+     * One of imap or smtp server must be specified (though both are optional).
+     */
+    public sealed interface Builder permits EmailSessionKeyBuilder {
 
-    @FunctionalInterface
-    public interface WithUser {
-        WithProtocol user(final String user, final String password);
-    }
-
-    @FunctionalInterface
-    public interface WithProtocol {
-        WithProperties protocol(final String protocol, final boolean isUseSecure);
-    }
-
-    @FunctionalInterface
-    public interface WithProperties {
-        FinalStageBuilder properties(final Properties properties);
-    }
-
-    public interface FinalStageBuilder {
+        Builder withSmtp(Function<WithSmtpBaseBuilder, WithSmtpFinalBuilder> builderFunction);
 
         EmailSessionKey build();
+
+        Builder withProperties(Properties properties);
+
+        Builder withAuth(String user, String password);
+
+        Builder withImap(Function<WithImapBaseBuilder, WithImapFinalBuilder> builderFunction);
+
     }
 
-    private static final class Builder implements WithHost, WithUser, WithProtocol, WithProperties, FinalStageBuilder {
+    public sealed interface WithImapBaseBuilder permits EmailSessionKeyBuilder {
+        WithImapProtocolBuilder imapHost(final String host, final int port);
+    }
 
-        private String m_host;
-        private int m_port;
+    public sealed interface WithImapProtocolBuilder permits EmailSessionKeyBuilder {
+        WithImapFinalBuilder imapSecureConnection(final boolean isUseSecure);
+    }
+
+    public sealed interface WithImapFinalBuilder permits EmailSessionKeyBuilder {
+
+    }
+
+    public sealed interface WithSmtpBaseBuilder permits EmailSessionKeyBuilder {
+        WithSmtpEMailAddressBuilder smtpHost(final String host, final int port);
+    }
+
+    public sealed interface WithSmtpEMailAddressBuilder permits EmailSessionKeyBuilder {
+        WithSmtpSecurityBuilder smtpEmailAddress(final String email);
+    }
+
+    public sealed interface WithSmtpSecurityBuilder permits EmailSessionKeyBuilder {
+        WithSmtpFinalBuilder security(SmtpConnectionSecurity security);
+    }
+
+    public sealed interface WithSmtpFinalBuilder {
+
+    }
+
+    private static final class EmailSessionKeyBuilder
+        implements Builder, WithImapBaseBuilder, WithImapFinalBuilder, WithImapProtocolBuilder, WithSmtpBaseBuilder,
+        WithSmtpEMailAddressBuilder, WithSmtpSecurityBuilder, WithSmtpFinalBuilder {
+
+        private String m_imapHost;
+        private int m_imapPort;
+        private boolean m_imapUseSecureProtocol;
+
+        private String m_smtpHost;
+        private int m_smtpPort;
+        private String m_smtpEmailAddress;
+        private SmtpConnectionSecurity m_smtpConnectionSecurity;
+
         private String m_user;
         private String m_password;
-        private String m_protocol;
-        private boolean m_useSecureProtocol;
+
         private Properties m_properties;
 
-
         @Override
-        public WithUser host(final String host, final int port) {
-            m_host = host;
-            m_port = port;
+        public Builder
+            withImap(final Function<WithImapBaseBuilder, WithImapFinalBuilder> builderFunction) {
+            builderFunction.apply(this);
             return this;
         }
 
         @Override
-        public WithProtocol user(final String user, final String password) {
+        public WithImapProtocolBuilder imapHost(final String host, final int port) {
+            CheckUtils.checkArgument(StringUtils.isNotBlank(host), "IMAP Server parameter must not be blank");
+            checkPortRange(port);
+            m_imapHost = host;
+            m_imapPort = port;
+            return this;
+        }
+
+        private static void checkPortRange(final int port) {
+            CheckUtils.checkArgument(port > 0 && port <= 0xFFFF, "Server port out of range [0, %d]: %d", 0xFFFF, port);
+        }
+
+        @Override
+        public WithImapFinalBuilder imapSecureConnection(final boolean isUseSecure) {
+            m_imapUseSecureProtocol = isUseSecure;
+            return this;
+        }
+
+        @Override
+        public Builder
+            withSmtp(final Function<WithSmtpBaseBuilder, WithSmtpFinalBuilder> builderFunction) {
+            builderFunction.apply(this);
+            return this;
+        }
+
+        @Override
+        public WithSmtpEMailAddressBuilder smtpHost(final String host, final int port) {
+            CheckUtils.checkArgument(StringUtils.isNotBlank(host), "SMTP Server parameter must not be blank");
+            checkPortRange(port);
+            m_smtpHost = host;
+            m_smtpPort = port;
+            return this;
+        }
+
+        @Override
+        public WithSmtpSecurityBuilder smtpEmailAddress(final String email) {
+            m_smtpEmailAddress = email;
+            return this;
+        }
+
+        @Override
+        public WithSmtpFinalBuilder security(final SmtpConnectionSecurity security) {
+            m_smtpConnectionSecurity = CheckUtils.checkArgumentNotNull(security);
+            return this;
+        }
+
+        @Override
+        public Builder withAuth(final String user, final String password) {
             m_user = user;
             m_password = password;
             return this;
         }
 
         @Override
-        public WithProperties protocol(final String protocol, final boolean isUseSecure) {
-            m_protocol = protocol;
-            m_useSecureProtocol = isUseSecure;
-            return this;
-        }
-
-        @Override
-        public FinalStageBuilder properties(final Properties properties) {
+        public Builder withProperties(final Properties properties) {
             m_properties = properties;
             return this;
         }
 
         @Override
         public EmailSessionKey build() {
+            CheckUtils.checkArgument(StringUtils.isNotBlank(m_imapHost) && StringUtils.isNotBlank(m_smtpHost),
+                "One of SMTP or IMAP connection must be specified");
             return new EmailSessionKey(this);
         }
+
     }
 }

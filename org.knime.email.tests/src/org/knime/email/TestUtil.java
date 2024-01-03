@@ -122,10 +122,11 @@ public final class TestUtil {
         final ImapServer imap = greenMail.getImap();
         final ServerSetup serverSetup = imap.getServerSetup();
         final var mailSessionKey = EmailSessionKey.builder() //
-                .host(serverSetup.getBindAddress(), serverSetup.getPort()) //
-                .user(user, pwd) //
-                .protocol(imap.getProtocol(), false) //
-                .properties(new Properties()).build();
+            .withImap(b -> b //
+                .imapHost(serverSetup.getBindAddress(), serverSetup.getPort()) //
+                .imapSecureConnection(false)) //
+            .withAuth(user, pwd) //
+            .withProperties(new Properties()).build();
         return mailSessionKey;
     }
 

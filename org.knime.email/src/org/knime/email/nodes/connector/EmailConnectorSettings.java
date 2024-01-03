@@ -68,6 +68,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.NumberInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.email.session.EmailSessionKey.SmtpConnectionSecurity;
 
 /**
  * Settings class.
@@ -201,11 +202,22 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     // OUTGOING SERVER SETTINGS
     enum ConnectionSecurity {
         @Label("None")
-        NONE,
+        NONE(SmtpConnectionSecurity.NONE),
         @Label("SSL")
-        SSL,
+        SSL(SmtpConnectionSecurity.SSL),
         @Label("STARTTLS")
-        STARTTLS
+        STARTTLS(SmtpConnectionSecurity.STARTTLS);
+
+        private final SmtpConnectionSecurity m_smtpConnectionSecurity;
+
+        ConnectionSecurity(final SmtpConnectionSecurity sec) {
+            m_smtpConnectionSecurity = sec;
+        }
+
+        SmtpConnectionSecurity toSmtpConnectionSecurity() {
+            return m_smtpConnectionSecurity;
+        }
+
     }
 
     enum EmailProtocol {

@@ -60,10 +60,11 @@ public class EmailSessionTest {
         final ImapServer imap = greenMail.getImap();
         final ServerSetup serverSetup = imap.getServerSetup();
         final var invalidUserMailSessionKey = EmailSessionKey.builder() //
-                .host(serverSetup.getBindAddress(), serverSetup.getPort()) //
-                .user("INVALID_USER", "INVALID_PASSWORD") //
-                .protocol(imap.getProtocol(), false) //
-                .properties(new Properties()).build();
+            .withImap(b -> b //
+                .imapHost(serverSetup.getBindAddress(), serverSetup.getPort()) //
+                .imapSecureConnection(false)) //
+            .withAuth("INVALID_USER", "INVALID_PASSWORD") //
+            .withProperties(new Properties()).build();
         Assertions.assertThrows(AuthenticationFailedException.class, () -> invalidUserMailSessionKey.connectIncoming());
     }
 
