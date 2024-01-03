@@ -57,6 +57,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.OneOfEnumCondition;
+import org.knime.core.webui.node.dialog.defaultdialog.rule.Or;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Signal;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.TrueCondition;
 import org.knime.core.webui.node.dialog.defaultdialog.setting.credentials.Credentials;
@@ -130,11 +131,10 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     @Persist(optional = true)
     int m_smtpPort = 587;
 
-    interface RequiresAuthentication {}
     @Layout(OutgoingServerSection.class)
     @Widget(title = "Outgoing mail server requires authentication")
     @Persist(optional = true)
-    @Signal(id=RequiresAuthentication.class, condition = TrueCondition.class)
+    @Signal(id=SMTPRequiresAuthentication.class, condition = TrueCondition.class)
     boolean m_smtpRequiresAuthentication = true;
 
     @Layout(OutgoingServerSection.class)
@@ -145,20 +145,18 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
 
 
     @Section(title = "Authentication")
+    @Effect(signals = {IncomingServerSection.class, SMTPRequiresAuthentication.class}, type = EffectType.SHOW,
+        operation = Or.class)
     @After(OutgoingServerSection.class)
     interface AuthenticationSection {}
     /**The email server login.*/
     @Layout(AuthenticationSection.class)
-    @Widget(title = "Login",
-            description = "The email server login.")
+    @Widget(title = "Login", description = "The email server login.")
     Credentials m_login;
 
 
 //  CONNECTION PROPERTIES
     @Section(title = "Connection Properties", advanced = true)
-//    @Effect(signals = {IncomingServerSection.class, RequiresAuthentication.class}, type = EffectType.SHOW,
-//    operation = Or.class)
-    @Effect(signals = IncomingServerSection.class, type = EffectType.SHOW)
     @After(AuthenticationSection.class)
     interface ConnectionPropertySection {}
 
@@ -234,5 +232,7 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
             return new ConnectionType[]{ConnectionType.OUTGOING, ConnectionType.INCOMING_OUTGOING};
         }
     }
+
+    interface SMTPRequiresAuthentication {}
 
 }
