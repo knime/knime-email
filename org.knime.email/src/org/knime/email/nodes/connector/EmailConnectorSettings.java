@@ -53,12 +53,10 @@ import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.HorizontalLayout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.DefaultProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.OneOfEnumCondition;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Or;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Signal;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.TrueCondition;
 import org.knime.core.webui.node.dialog.defaultdialog.setting.credentials.Credentials;
@@ -77,16 +75,13 @@ import org.knime.email.session.EmailSessionKey.SmtpConnectionSecurity;
 @SuppressWarnings("restriction")
 public class EmailConnectorSettings implements DefaultNodeSettings {
 
-    @Widget(title = "Email address",
-            description = "The email address.")
-    String m_emailAddress;
 
     @Widget(title = "Connection type", description = "Choose the type of connection.")
     @Signal(id = IncomingServerSection.class, condition = IsReadSelected.class)
     @Signal(id = OutgoingServerSection.class, condition = IsWriteSelected.class)
-    @Persist(defaultProvider = TypeDefaultProvider.class)
+    @Persist(optional = true)
     @ValueSwitchWidget()
-    ConnectionType m_type = ConnectionType.READ_ONLY;
+    ConnectionType m_type = ConnectionType.INCOMING;
 
 
 //  INCOMING SERVER SETTINGS
@@ -119,28 +114,33 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     interface OutgoingServerSection {}
 
     @Layout(OutgoingServerSection.class)
+    @Widget(title = "Email address", description = "Some SMTP servers require the sender's email address, other "
+        + "accept this to be not specified will automatically derive it from the user account")
+    @Persist(optional = true)
+    String m_smtpEmailAddress;
+    @Layout(OutgoingServerSection.class)
     @Widget(title = "Server", description = "The address of the outgoing email server (SMTP).")
     @TextInputWidget(pattern = "^\\w[\\w\\.]*")
-    @Persist(defaultProvider = EmptyHostProvider.class)
+    @Persist(optional = true)
     String m_smtpHost;
 
     @Layout(OutgoingServerSection.class)
     @Widget(title = "Port", description = "The port of the incoming email server (e.g. 587).")
     @NumberInputWidget(min = 1)
-    @Persist(defaultProvider = DefaultPortProvider.class)
+    @Persist(optional = true)
     int m_smtpPort = 587;
 
     interface RequiresAuthentication {}
     @Layout(OutgoingServerSection.class)
     @Widget(title = "Outgoing mail server requires authentication")
-    @Persist(defaultProvider = DeafultAuthenticationProvider.class)
+    @Persist(optional = true)
     @Signal(id=RequiresAuthentication.class, condition = TrueCondition.class)
     boolean m_smtpRequiresAuthentication = true;
 
     @Layout(OutgoingServerSection.class)
     @Widget(title = "Connection Security")
     @ValueSwitchWidget
-    @Persist(defaultProvider = DeafultSecurityProvider.class)
+    @Persist(optional = true)
     ConnectionSecurity m_smtpSecurity = ConnectionSecurity.NONE;
 
 
@@ -156,8 +156,9 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
 
 //  CONNECTION PROPERTIES
     @Section(title = "Connection Properties", advanced = true)
-    @Effect(signals = {IncomingServerSection.class, RequiresAuthentication.class}, type = EffectType.SHOW,
-    operation = Or.class)
+//    @Effect(signals = {IncomingServerSection.class, RequiresAuthentication.class}, type = EffectType.SHOW,
+//    operation = Or.class)
+    @Effect(signals = IncomingServerSection.class, type = EffectType.SHOW)
     @After(AuthenticationSection.class)
     interface ConnectionPropertySection {}
 
@@ -191,12 +192,12 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
 
 //  HELPER SECTION
     enum ConnectionType {
-        @Label("Read-only")
-        READ_ONLY,
-        @Label("Write-only")
-        WRITE_ONLY,
-        @Label("Read-write")
-        READ_WRITE
+        @Label("Incoming")
+        INCOMING,
+        @Label("Outgoing")
+        OUTGOING,
+        @Label("Incoming & Outgoing")
+        INCOMING_OUTGOING
     }
 
     // OUTGOING SERVER SETTINGS
@@ -220,59 +221,18 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
 
     }
 
-    enum EmailProtocol {
-        @Label("IMAP(4)")
-        IMAP,
-        @Label("POP3")
-        POP3
-    }
-
     static class IsReadSelected extends OneOfEnumCondition<ConnectionType> {
         @Override
         public ConnectionType[] oneOf() {
-            return new ConnectionType[]{ConnectionType.READ_ONLY, ConnectionType.READ_WRITE};
+            return new ConnectionType[]{ConnectionType.INCOMING, ConnectionType.INCOMING_OUTGOING};
         }
     }
 
     static class IsWriteSelected extends OneOfEnumCondition<ConnectionType> {
         @Override
         public ConnectionType[] oneOf() {
-            return new ConnectionType[]{ConnectionType.WRITE_ONLY, ConnectionType.READ_WRITE};
+            return new ConnectionType[]{ConnectionType.OUTGOING, ConnectionType.INCOMING_OUTGOING};
         }
     }
 
-    private static final class TypeDefaultProvider implements DefaultProvider<ConnectionType> {
-        @Override
-        public ConnectionType getDefault() {
-            return ConnectionType.READ_ONLY;
-        }
-    }
-
-    private static final class EmptyHostProvider implements DefaultProvider<Object> {
-        @Override
-        public Object getDefault() {
-            return null;
-        }
-    }
-
-    private static final class DefaultPortProvider implements DefaultProvider<Integer> {
-        @Override
-        public Integer getDefault() {
-            return 587;
-        }
-    }
-
-    private static final class DeafultAuthenticationProvider implements DefaultProvider<Boolean> {
-        @Override
-        public Boolean getDefault() {
-            return Boolean.TRUE;
-        }
-    }
-
-    private static final class DeafultSecurityProvider implements DefaultProvider<ConnectionSecurity> {
-        @Override
-        public ConnectionSecurity getDefault() {
-            return ConnectionSecurity.NONE;
-        }
-    }
 }
