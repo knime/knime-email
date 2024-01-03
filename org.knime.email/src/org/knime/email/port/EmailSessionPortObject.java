@@ -48,6 +48,7 @@
  */
 package org.knime.email.port;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -62,6 +63,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
+import org.knime.core.webui.node.port.PortViewManager;
 import org.knime.email.session.EmailIncomingSession;
 import org.knime.email.session.EmailSessionKey;
 
@@ -70,8 +72,8 @@ import org.knime.email.session.EmailSessionKey;
  * via the {@link EmailSessionKey}.
  * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
  */
+@SuppressWarnings("restriction")
 public class EmailSessionPortObject extends AbstractSimplePortObject implements EmailSessionProvider {
-
 
     /**
      * Serializer class
@@ -83,7 +85,18 @@ public class EmailSessionPortObject extends AbstractSimplePortObject implements 
      * The type of this port.
      */
     @SuppressWarnings("hiding")
-    public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(EmailSessionPortObject.class);
+    public static final PortType TYPE;
+    private static final String PORT_NAME = "Email Connection";
+
+    static {
+        TYPE = PortTypeRegistry.getInstance().getPortType(EmailSessionPortObject.class);
+        PortViewManager.registerPortViews(TYPE, //
+            List.of(
+                new PortViewManager.PortViewDescriptor(PORT_NAME, EmailSessionPortViewFactories.PORT_SPEC_VIEW_FACTORY),
+                new PortViewManager.PortViewDescriptor(PORT_NAME, EmailSessionPortViewFactories.PORT_VIEW_FACTORY)),
+            List.of(0), //
+            List.of(1));
+    }
 
     private EmailSessionPortObjectSpec m_spec;
 

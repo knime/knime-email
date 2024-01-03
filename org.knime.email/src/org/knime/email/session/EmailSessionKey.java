@@ -48,11 +48,21 @@
  */
 package org.knime.email.session;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.util.CheckUtils;
+
+import com.google.common.collect.ImmutableMap;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.Session;
@@ -154,6 +164,49 @@ public final class EmailSessionKey {
     public EmailOutgoingSession connectOutgoing() throws MessagingException {
         //TODO: implement
         return new EmailOutgoingSession(null);
+    }
+
+    /** An optional titled map, return type of {@link EmailSessionKey#toViewContent()}. */
+    public record ViewContentSection(String header, Optional<Map<String, String>> properties) {}
+
+    /** Provides the content of the port view in a collection of named maps. Not to be called by clients. */
+    public Collection<ViewContentSection> toViewContent() {
+        List<ViewContentSection> result = new ArrayList<>();
+        Map<String, String> imapPropMap = null;
+        if (StringUtils.isNotBlank(m_imapHost)) {
+            imapPropMap = ImmutableMap.of( // NOSONAR, guava order preserving
+                "IMAP Host", m_imapHost, //
+                "IMAP Port", Integer.toString(m_imapPort), //
+                "IMAP Secure Connection", Boolean.toString(m_imapUseSecurePortocol));
+        }
+        result.add(new ViewContentSection("Incoming (IMAP)", Optional.ofNullable(imapPropMap)));
+
+        Map<String, String> smtpPropMap = null;
+        if (StringUtils.isNotBlank(m_smtpHost)) {
+            smtpPropMap = ImmutableMap.of( // NOSONAR, guava order preserving
+                "SMTP Host", m_smtpHost, //
+                "SMTP Port", Integer.toString(m_smtpPort), //
+                "SMTP EMail Address", m_smtpEmailAddress, //
+                "SMTP Security", m_smtpConnectionSecurity.name());
+        }
+        result.add(new ViewContentSection("Outgoing (SMTP)", Optional.ofNullable(smtpPropMap)));
+
+        Map<String, String> authPropMap = null;
+        if (StringUtils.isNotBlank(m_user)) {
+            authPropMap = ImmutableMap.of( // NOSONAR, guava order preserving
+                "User", m_user, //
+                "Password", StringUtils.isEmpty(m_password) ? "<none>" : StringUtils.repeat('\u2022', 5));
+        }
+        result.add(new ViewContentSection("Authentication", Optional.ofNullable(authPropMap)));
+
+        Map<String, String> propertiesPropMap = null;
+        if (m_properties != null && !m_properties.isEmpty()) {
+            propertiesPropMap = m_properties.entrySet().stream() //
+                .collect(Collectors.toMap(Objects::toString, Objects::toString, (s1, s2) -> s1, LinkedHashMap::new));
+        }
+        result.add(new ViewContentSection("Additional Properties", Optional.ofNullable(propertiesPropMap)));
+
+        return result;
     }
 
     /**
@@ -289,7 +342,7 @@ public final class EmailSessionKey {
 
         @Override
         public EmailSessionKey build() {
-            CheckUtils.checkArgument(StringUtils.isNotBlank(m_imapHost) && StringUtils.isNotBlank(m_smtpHost),
+            CheckUtils.checkArgument(StringUtils.isNotBlank(m_imapHost) || StringUtils.isNotBlank(m_smtpHost),
                 "One of SMTP or IMAP connection must be specified");
             return new EmailSessionKey(this);
         }
