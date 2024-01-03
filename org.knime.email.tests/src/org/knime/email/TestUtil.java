@@ -164,7 +164,7 @@ public final class TestUtil {
         final String subFolderName)
                 throws MessagingException {
         String resultFolderName = null;
-        try (EmailIncomingSession session = mailSessionKey.connectIncoming();) {
+        try (EmailIncomingSession session = mailSessionKey.connectIncoming()) {
             final Folder inbox = session.openFolderForWriting(parentFolder);
             final Folder subFolder = createSubFolder(inbox, subFolderName);
             resultFolderName = subFolder.getFullName();
