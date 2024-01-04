@@ -76,6 +76,15 @@ import jakarta.mail.Session;
 @SuppressWarnings("javadoc")
 public final class EmailSessionKey {
 
+    /**
+     * Default connect timeout in seconds. Default is {@value #DEF_TIMEOUT_CONNECT_S}.
+     */
+    public static final int DEF_TIMEOUT_CONNECT_S = 2;
+    /**
+     * Default read timeout in seconds. Default is {@value #DEF_TIMEOUT_READ_S}.
+     */
+    public static final int DEF_TIMEOUT_READ_S = 10;
+
     /** SMTP Connection Security as specified in the builder. */
     public enum SmtpConnectionSecurity {
         NONE,
@@ -92,6 +101,8 @@ public final class EmailSessionKey {
     private final String m_smtpEmailAddress;
     private final SmtpConnectionSecurity m_smtpConnectionSecurity;
 
+    private final int m_connectTimeoutS;
+    private final int m_readTimeoutS;
     private Properties m_properties;
 
     private final String m_user;
@@ -109,6 +120,9 @@ public final class EmailSessionKey {
 
         m_user = builder.m_user;
         m_password = builder.m_password;
+
+        m_connectTimeoutS = builder.m_connectTimeoutS;
+        m_readTimeoutS = builder.m_readTimeoutS;
         m_properties = builder.m_properties;
     }
 
@@ -122,13 +136,15 @@ public final class EmailSessionKey {
      * @return a new {@link EmailIncomingSession} which should be closed when done
      * @throws MessagingException if the connection fails
      */
-    @SuppressWarnings("resource")
+    @SuppressWarnings({"resource", "java:S1192"}) // java:S1192 - string duplication of "mail."
     public EmailIncomingSession connectIncoming() throws MessagingException {
         final var protocol = m_imapUseSecurePortocol ? "imaps" : "imap";
         final var props = new Properties();
         props.put("mail.store.protocol", protocol);
         props.put("mail." + protocol + ".host", m_imapHost);
         props.put("mail." + protocol + ".port", m_imapPort);
+        props.put("mail." + protocol + ".connectiontimeout", String.valueOf(1000 * m_connectTimeoutS));
+        props.put("mail." + protocol + ".timeout", String.valueOf(1000 * m_readTimeoutS));
         //use the user settings last to allow for more flexibility by allowing users to overwrite our standard settings
         props.putAll(m_properties);
         EmailIncomingSession.LOGGER.debugWithFormat(
@@ -205,9 +221,8 @@ public final class EmailSessionKey {
             properties.setProperty("mail." + protocol + ".host", m_smtpHost);
             properties.setProperty("mail." + protocol + ".port", Integer.toString(m_smtpPort));
             properties.setProperty("mail." + protocol + ".auth", Boolean.toString(isRequireAuth));
-    //        properties.setProperty(mail + protocol + ".connectiontimeout",
-    //            String.valueOf(1000 * smtpSettings.m_smtpConnectTimeoutS));
-    //        properties.setProperty(mail + protocol + ".timeout", String.valueOf(1000 * smtpSettings.m_smtpReadTimeoutS));
+            properties.setProperty("mail." + protocol + ".connectiontimeout", String.valueOf(1000 * m_connectTimeoutS));
+            properties.setProperty("mail." + protocol + ".timeout", String.valueOf(1000 * m_readTimeoutS));
             final var session = Session.getInstance(properties);
             final var transport = session.getTransport();
             if (isRequireAuth) {
@@ -278,6 +293,8 @@ public final class EmailSessionKey {
 
         Builder withAuth(String user, String password);
 
+        Builder withTimeouts(int connectTimeoutS, int readTimeoutS);
+
         Builder withImap(Function<WithImapBaseBuilder, WithImapFinalBuilder> builderFunction);
 
     }
@@ -326,6 +343,8 @@ public final class EmailSessionKey {
         private String m_user;
         private String m_password;
 
+        private int m_readTimeoutS = DEF_TIMEOUT_READ_S;
+        private int m_connectTimeoutS = DEF_TIMEOUT_CONNECT_S;
         private Properties m_properties;
 
         @Override
@@ -390,6 +409,13 @@ public final class EmailSessionKey {
         }
 
         @Override
+        public Builder withTimeouts(final int connectTimeoutS, final int readTimeoutS) {
+            m_connectTimeoutS = connectTimeoutS;
+            m_readTimeoutS = readTimeoutS;
+            return this;
+        }
+
+        @Override
         public Builder withProperties(final Properties properties) {
             m_properties = properties;
             return this;
@@ -404,3 +430,4 @@ public final class EmailSessionKey {
 
     }
 }
+

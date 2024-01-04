@@ -67,6 +67,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.NumberInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.email.session.EmailSessionKey;
 import org.knime.email.session.EmailSessionKey.SmtpConnectionSecurity;
 
 /**
@@ -75,7 +76,6 @@ import org.knime.email.session.EmailSessionKey.SmtpConnectionSecurity;
  */
 @SuppressWarnings("restriction")
 public class EmailConnectorSettings implements DefaultNodeSettings {
-
 
     @Widget(title = "Connection type", description =
             """
@@ -180,6 +180,19 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     @After(AuthenticationSection.class)
     interface ConnectionPropertySection {}
 
+    @Layout(ConnectionPropertySection.class)
+    @Widget(title = "Connection timeout", advanced = true,
+        description = "Timeout in seconds to establish a connection.")
+    @NumberInputWidget(min = 1)
+    @Persist(optional = true)
+    int m_connectTimeout = EmailSessionKey.DEF_TIMEOUT_CONNECT_S;
+
+    @Layout(ConnectionPropertySection.class)
+    @Widget(title = "Read timeout", advanced = true,
+    description = "Timeout in seconds to read a server response from a connection.")
+    @NumberInputWidget(min = 1)
+    @Persist(optional = true)
+    int m_readTimeout = EmailSessionKey.DEF_TIMEOUT_READ_S;
 
     @Widget(title = "Custom properties", description =
             "Allows to define additional connection properties. For details about the supported properties see "

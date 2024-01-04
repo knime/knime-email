@@ -151,7 +151,8 @@ public class GetEmailNodeProcessorTest {
         BufferedDataTable table = getMessagesTable(exec, settings, mailSessionKey);
         final List<Message> msgs = extractMessages(table, false, null, false);
 
-        mailSessionKey = TestUtil.getSessionKey(greenMail, TestUtil.USER3, TestUtil.PWD3);
+        mailSessionKey = TestUtil.newEmailSessionKeyBuilder(greenMail) //
+                .withAuth(TestUtil.USER3, TestUtil.PWD3).build();
         processor = new EmailReaderNodeProcessor(mailSessionKey, settings);
         processor.readEmailsAndFillTable(exec);
         table = processor.getMsgTable();

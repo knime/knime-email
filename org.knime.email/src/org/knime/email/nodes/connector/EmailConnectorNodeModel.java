@@ -68,8 +68,6 @@ import org.knime.email.port.EmailSessionPortObjectSpec;
 import org.knime.email.session.EmailSessionCache;
 import org.knime.email.session.EmailSessionKey;
 
-import jakarta.mail.MessagingException;
-
 /**
  * Node model implementation which provides a generic email connector where the user has to specify all
  * connection details e.g. host and port.
@@ -109,12 +107,13 @@ public class EmailConnectorNodeModel extends WebUINodeModel<EmailConnectorSettin
         return new PortObject[]{new EmailSessionPortObject(m_cacheId)};
     }
 
-    private static final EmailSessionKey createKey(final EmailConnectorSettings settings) throws MessagingException {
+    private static final EmailSessionKey createKey(final EmailConnectorSettings settings) {
         return EmailSessionKey.builder() //
             .withImap(b -> b //
                 .imapHost(settings.m_server, settings.m_port) //
                 .imapSecureConnection(settings.m_useSecureProtocol)) //
             .withAuth(settings.m_login.getUsername(), settings.m_login.getPassword()) //
+            .withTimeouts(settings.m_connectTimeout, settings.m_readTimeout) //
             .withProperties(extractProperties(settings.m_properties)) //
             .build();
     }
@@ -128,14 +127,9 @@ public class EmailConnectorNodeModel extends WebUINodeModel<EmailConnectorSettin
     }
 
     @Override
-    protected void validateSettings(final EmailConnectorSettings settings) throws InvalidSettingsException {
-        super.validateSettings(settings);
-    }
-
-    @Override
     protected void onLoadInternals(final File nodeInternDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
-        setWarningMessage("Please re-execute the node to resstore the email session.");
+        setWarningMessage("Please re-execute the node to restore the email session.");
     }
 
     @Override
@@ -150,12 +144,8 @@ public class EmailConnectorNodeModel extends WebUINodeModel<EmailConnectorSettin
 
     private void removeFromCache() {
         if (m_cacheId != null) {
-            try {
-                EmailSessionCache.delete(m_cacheId);
-                m_cacheId = null;
-            } catch (MessagingException ex) {
-                throw new RuntimeException(ex);
-            }
+            EmailSessionCache.delete(m_cacheId);
+            m_cacheId = null;
         }
     }
 }

@@ -53,8 +53,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import jakarta.mail.MessagingException;
-
 /**
  * Allows retrieving {@link EmailIncomingSession}s via unique id.
  *
@@ -98,11 +96,9 @@ public class EmailSessionCache {
     /**
      * Deletes the credential stored under the give id from cache.
      *
-     * @param cacheId
-     *            The cache id.
-     * @throws MessagingException if the session cannot be closed
+     * @param cacheId The cache id.
      */
-    public static synchronized void delete(final UUID cacheId) throws MessagingException {
+    public static synchronized void delete(final UUID cacheId) {
         INSTANCE.m_session.remove(cacheId);
     }
 

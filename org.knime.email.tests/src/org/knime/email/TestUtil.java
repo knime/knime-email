@@ -58,6 +58,7 @@ import java.util.regex.Pattern;
 
 import org.knime.email.session.EmailIncomingSession;
 import org.knime.email.session.EmailSessionKey;
+import org.knime.email.session.EmailSessionKey.Builder;
 import org.knime.email.util.EmailUtil;
 import org.knime.email.util.Message;
 
@@ -113,21 +114,31 @@ public final class TestUtil {
     /** Pattern that identifies a KNIME generated message id. */
     public static final Pattern KNIME_M_ID_PATTERN = Pattern.compile(EmailUtil.KNIME_PREFIX + ".*");
 
-    public static EmailSessionKey getSessionKeyUser1(final GreenMailExtension greenMail) {
-        return getSessionKey(greenMail, USER1, PWD1);
-    }
-
-    public static EmailSessionKey getSessionKey(final GreenMailExtension greenMail, final String user,
-        final String pwd) {
+    /**
+     * A Builder for incoming/imap linked to the address of the argument.
+     * 
+     * @param greenMail props
+     * @return A new builder
+     */
+    public static Builder newEmailSessionKeyBuilder(final GreenMailExtension greenMail) {
         final ImapServer imap = greenMail.getImap();
         final ServerSetup serverSetup = imap.getServerSetup();
-        final var mailSessionKey = EmailSessionKey.builder() //
+        final var mailSessionKeyBuilder = EmailSessionKey.builder() //
             .withImap(b -> b //
                 .imapHost(serverSetup.getBindAddress(), serverSetup.getPort()) //
                 .imapSecureConnection(false)) //
-            .withAuth(user, pwd) //
-            .withProperties(new Properties()).build();
-        return mailSessionKey;
+            .withTimeouts(EmailSessionKey.DEF_TIMEOUT_CONNECT_S, EmailSessionKey.DEF_TIMEOUT_READ_S) //
+            .withProperties(new Properties());
+        return mailSessionKeyBuilder;
+    }
+
+    /** 
+     * A new EmailSessionKey for incoming/imap for {@link #USER1}.
+     * @param greenMail To get address from
+     * @return A new email session key
+     */
+    public static EmailSessionKey getSessionKeyUser1(final GreenMailExtension greenMail) {
+        return newEmailSessionKeyBuilder(greenMail).withAuth(USER1, PWD1).build();
     }
 
     public static EmailIncomingSession getSessionUser1(final GreenMailExtension greenMail) {
