@@ -48,6 +48,9 @@
  */
 package org.knime.email.nodes.connector;
 
+import org.apache.commons.lang3.StringUtils;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.HorizontalLayout;
@@ -112,6 +115,7 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     @Layout(IncomingServerSection.class)
     @Widget(title = "Server", description = "The address of the incoming email server (IMAP) e.g. <i>imap.web.de.</i>")
     @TextInputWidget(pattern = "[^ ]+")
+    @Persist(optional = true)
     String m_server;
 
 
@@ -147,7 +151,7 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     @Layout(OutgoingServerSection.class)
     @Widget(title = "Port",
         description = "The port of the outgoing email server (e.g. 25 (non-secure), 465 (secure) or 587 (secure)).")
-    @NumberInputWidget(min = 1)
+    @NumberInputWidget(min = 1, max = 0xFFFF) // 65635
     @Persist(optional = true)
     int m_smtpPort = 587;
 
@@ -171,8 +175,8 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     interface AuthenticationSection {}
     /**The email server login.*/
     @Layout(AuthenticationSection.class)
-    @Widget(title = "Login", description = "The email server login.")
-    Credentials m_login;
+    @Widget(title = "Login", description = "The optional email server login.")
+    Credentials m_login = new Credentials(); //set to empty credentials to prevent "No login set message"
 
 
 //  CONNECTION PROPERTIES
@@ -267,5 +271,29 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     }
 
     interface SMTPRequiresAuthentication {}
+
+    void validate() throws InvalidSettingsException {
+        switch (m_type) {
+            case INCOMING:
+                validateIncoming();
+                break;
+            case OUTGOING:
+                validateOutgoing();
+                break;
+            case INCOMING_OUTGOING:
+                validateIncoming();
+                validateOutgoing();
+                break;
+        }
+    }
+
+    private void validateIncoming() throws InvalidSettingsException {
+        CheckUtils.checkSetting(StringUtils.isNoneBlank(m_server), "No incoming mail server set");
+    }
+
+    private void validateOutgoing() throws InvalidSettingsException {
+        CheckUtils.checkSetting(StringUtils.isNoneBlank(m_smtpHost), "No outgoing mail server set");
+    }
+
 
 }

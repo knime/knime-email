@@ -107,6 +107,11 @@ public class EmailConnectorNodeModel extends WebUINodeModel<EmailConnectorSettin
         return new PortObject[]{new EmailSessionPortObject(m_cacheId)};
     }
 
+    @Override
+    protected void validateSettings(final EmailConnectorSettings settings) throws InvalidSettingsException {
+        settings.validate();
+    }
+
     private static final EmailSessionKey createKey(final EmailConnectorSettings settings) {
         return EmailSessionKey.builder() //
             .withImap(b -> b //
