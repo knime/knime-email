@@ -160,7 +160,12 @@ public final class EmailSessionKey {
             final var emailSession = Session.getInstance(props);
             final var emailStore = emailSession.getStore();
             try {
-                emailStore.connect(m_user, m_password);
+                final boolean isRequireAuth = StringUtils.isNotBlank(m_user);
+                if (isRequireAuth) {
+                    emailStore.connect(m_user, m_password);
+                } else {
+                    emailStore.connect();
+                }
                 return new EmailIncomingSession(emailStore);
             } catch (MessagingException me) {
                 emailStore.close();
