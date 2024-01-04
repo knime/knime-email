@@ -77,9 +77,27 @@ import org.knime.email.session.EmailSessionKey.SmtpConnectionSecurity;
 public class EmailConnectorSettings implements DefaultNodeSettings {
 
 
-    @Widget(title = "Connection type", description = "Choose the type of connection.")
-    @Signal(id = IncomingServerSection.class, condition = IsReadSelected.class)
-    @Signal(id = OutgoingServerSection.class, condition = IsWriteSelected.class)
+    @Widget(title = "Connection type", description =
+            """
+            Choose the type of connection you want to create. Depending on the selected connection type you will be
+            able to work with your email and/or send email.
+            <ul>
+            <li>
+            Select "Incoming" if you want to work with your email e.g. by using the
+            <a href="https://hub.knime.com/knime/extensions/org.knime.features.email/latest/org.knime.email.nodes.reader.EmailReaderNodeFactory/">Email Reader</a> node
+            to read your email or the
+            <a href="https://hub.knime.com/knime/extensions/org.knime.features.email/latest/org.knime.email.nodes.mover.EmailMoverNodeFactory/">Email Mover</a> node
+            to move email to different folders.
+            </li>
+            <li>
+            Select "Outgoing" if you only want to send email via the SMTP protocol by using the
+            <a href="https://hub.knime.com/knime/extensions/org.knime.features.email/latest/org.knime.email.nodes.sender.EmailSenderNodeFactory/">Email Sender</a> node.
+            </li>
+            <li>Select "Incoming &amp; Outgoing" if you want to read and send email.</li>
+            </ul>
+            """)
+    @Signal(id = IncomingServerSection.class, condition = IsIncomingSelected.class)
+    @Signal(id = OutgoingServerSection.class, condition = IsOutgoingSelected.class)
     @Persist(optional = true)
     @ValueSwitchWidget()
     ConnectionType m_type = ConnectionType.INCOMING;
@@ -92,19 +110,20 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
 
 
     @Layout(IncomingServerSection.class)
-    @Widget(title = "Server", description = "The address of the incoming email server (IMAP).") //
+    @Widget(title = "Server", description = "The address of the incoming email server (IMAP) e.g. <i>imap.web.de.</i>")
     @TextInputWidget(pattern = "[^ ]+")
     String m_server;
 
 
     @Layout(IncomingServerSection.class)
-    @Widget(title = "Port", description = "The port of the incoming email server (e.g. 993).") //
+    @Widget(title = "Port",
+        description = "The port of the incoming email server (e.g. 143 (non-secure) or 993 (secure)).") //
     @NumberInputWidget(min = 1, max = 0xFFFF) // 65635
     int m_port = 993;
 
     @Layout(IncomingServerSection.class)
     @Widget(title = "Use secure protocol",
-            description = "Choose whether to use an encrypted or unencrypted connection.", advanced = true)
+            description = "Choose whether to use an encrypted or unencrypted connection.")
     boolean m_useSecureProtocol = true;
 
 
@@ -116,29 +135,30 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
 
     @Layout(OutgoingServerSection.class)
     @Widget(title = "Email address", description = "Some SMTP servers require the sender's email address, other "
-        + "accept this to be not specified will automatically derive it from the user account")
+        + "accept this to be not specified and will automatically derive it from the user account.")
     @Persist(optional = true)
     String m_smtpEmailAddress;
     @Layout(OutgoingServerSection.class)
-    @Widget(title = "Server", description = "The address of the outgoing email server (SMTP).")
+    @Widget(title = "Server", description = "The address of the outgoing email server (SMTP) e.g. <i>smtp.web.de.</i>")
     @TextInputWidget(pattern = "^\\w[\\w\\.]*")
     @Persist(optional = true)
     String m_smtpHost;
 
     @Layout(OutgoingServerSection.class)
-    @Widget(title = "Port", description = "The port of the incoming email server (e.g. 587).")
+    @Widget(title = "Port",
+        description = "The port of the outgoing email server (e.g. 25 (non-secure), 465 (secure) or 587 (secure)).")
     @NumberInputWidget(min = 1)
     @Persist(optional = true)
     int m_smtpPort = 587;
 
     @Layout(OutgoingServerSection.class)
-    @Widget(title = "Outgoing mail server requires authentication")
+    @Widget(title = "Outgoing mail server requires authentication.")
     @Persist(optional = true)
     @Signal(id=SMTPRequiresAuthentication.class, condition = TrueCondition.class)
     boolean m_smtpRequiresAuthentication = true;
 
     @Layout(OutgoingServerSection.class)
-    @Widget(title = "Connection Security")
+    @Widget(title = "Connection Security", description="")
     @ValueSwitchWidget
     @Persist(optional = true)
     ConnectionSecurity m_smtpSecurity = ConnectionSecurity.NONE;
@@ -219,14 +239,14 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
 
     }
 
-    static class IsReadSelected extends OneOfEnumCondition<ConnectionType> {
+    static class IsIncomingSelected extends OneOfEnumCondition<ConnectionType> {
         @Override
         public ConnectionType[] oneOf() {
             return new ConnectionType[]{ConnectionType.INCOMING, ConnectionType.INCOMING_OUTGOING};
         }
     }
 
-    static class IsWriteSelected extends OneOfEnumCondition<ConnectionType> {
+    static class IsOutgoingSelected extends OneOfEnumCondition<ConnectionType> {
         @Override
         public ConnectionType[] oneOf() {
             return new ConnectionType[]{ConnectionType.OUTGOING, ConnectionType.INCOMING_OUTGOING};

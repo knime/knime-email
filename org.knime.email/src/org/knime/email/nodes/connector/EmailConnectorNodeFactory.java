@@ -62,12 +62,31 @@ public class EmailConnectorNodeFactory extends WebUINodeFactory<EmailConnectorNo
     private static final WebUINodeConfiguration CONFIG = WebUINodeConfiguration.builder()//
             .name("Email Connector (Labs)")//
             .icon("./emailConnector.png")//
-            .shortDescription("Connects to an email account using the IMAP protocol.")//
-            .fullDescription("Connects to an email account using the IMAP protocol.")//
+            .shortDescription("Connects to an email server using the IMAP and/or SMPT protocol.")//
+            .fullDescription(
+                """
+                <p>
+                Connects to an email server using the entered account. Once connected you can use various nodes to
+                work with your email such as the
+                <a href="https://hub.knime.com/knime/extensions/org.knime.features.email/latest/org.knime.email.nodes.reader.EmailReaderNodeFactory/">Email Reader</a> node
+                to read email or the
+                <a href="https://hub.knime.com/knime/extensions/org.knime.features.email/latest/org.knime.email.nodes.sender.EmailSenderNodeFactory/">Email Sender</a> node
+                to send email.
+                </p>
+                <p>
+                The Email Connector node uses the <a href="https://jakartaee.github.io/mail-api/">Jakarta Mail API</a>
+                and the <a href="https://eclipse-ee4j.github.io/angus-mail/">Angus Mail implementation</a> to interact
+                with compatible email servers.
+                </p>
+                <p>
+                <b>Please notice that the node only supports email server that support the IMAP protocol for
+                reading email and the SMTP protocol for sending email.</b>
+                </p>
+                """)//
             .modelSettingsClass(EmailConnectorSettings.class)//
             .nodeType(NodeType.Source)//
-            .addOutputPort("Email Session", EmailSessionPortObject.TYPE, "The email session.")//
-            .keywords("Email", "IMAP")//
+            .addOutputPort("Email Session", EmailSessionPortObject.TYPE, "The email session to use in subsequent nodes.")//
+            .keywords("Email", "IMAP", "SMPT")//
             .sinceVersion(5, 2, 0).build();
 
     /**
