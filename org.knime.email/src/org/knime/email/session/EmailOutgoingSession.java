@@ -51,6 +51,7 @@ package org.knime.email.session;
 import org.knime.core.node.NodeLogger;
 
 import jakarta.mail.MessagingException;
+import jakarta.mail.Session;
 import jakarta.mail.Transport;
 
 /**
@@ -62,9 +63,12 @@ public final class EmailOutgoingSession implements AutoCloseable {
 
     static final NodeLogger LOGGER = NodeLogger.getLogger(EmailOutgoingSession.class);
 
+    private final Session m_session;
+
     private final Transport m_emailTransport;
 
-    EmailOutgoingSession(final Transport emailTransport) {
+    EmailOutgoingSession(final Session session, final Transport emailTransport) {
+        m_session = session;
         m_emailTransport = emailTransport;
     }
 
@@ -73,6 +77,13 @@ public final class EmailOutgoingSession implements AutoCloseable {
      */
     public Transport getEmailTransport() {
         return m_emailTransport;
+    }
+
+    /**
+     * @return the Session object.
+     */
+    public Session getSession() {
+        return m_session;
     }
 
     @Override

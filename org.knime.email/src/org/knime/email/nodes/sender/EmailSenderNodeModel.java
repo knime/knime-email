@@ -65,6 +65,8 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.report.IReportPortObject;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.email.port.EmailSessionPortObject;
+import org.knime.email.util.EmailNodeUtil;
 
 /**
  * The node model of the node.
@@ -99,14 +101,16 @@ final class EmailSenderNodeModel extends NodeModel implements FlowVariableProvid
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
         throws InvalidSettingsException {
         m_settings.validate();
+        EmailNodeUtil.checkOutgoingAvailable(inSpecs);
         return new PortObjectSpec[]{};
     }
 
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
-        IReportPortObject report = Arrays.stream(inObjects).filter(IReportPortObject.class::isInstance)
+        final EmailSessionPortObject emailSessionPO = (EmailSessionPortObject)inObjects[0];
+        final IReportPortObject report = Arrays.stream(inObjects).filter(IReportPortObject.class::isInstance)
             .map(IReportPortObject.class::cast).findFirst().orElse(null);
-        final var sender = new EmailSender(m_settings);
+        final var sender = new EmailSender(emailSessionPO.getEmailSessionKey().orElseThrow(), m_settings);
         sender.addReport(report);
         sender.send(this);
         return new PortObject[]{};

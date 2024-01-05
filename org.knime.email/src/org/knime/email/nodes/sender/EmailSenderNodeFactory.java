@@ -55,7 +55,6 @@ import org.knime.core.node.NodeDescription;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.context.NodeCreationConfiguration;
-import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.report.IReportPortObject;
 import org.knime.core.webui.node.dialog.NodeDialog;
 import org.knime.core.webui.node.dialog.NodeDialogFactory;
@@ -63,6 +62,7 @@ import org.knime.core.webui.node.dialog.SettingsType;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeDialog;
 import org.knime.core.webui.node.impl.WebUINodeConfiguration;
 import org.knime.core.webui.node.impl.WebUINodeFactory;
+import org.knime.email.port.EmailSessionPortObject;
 
 /**
  *
@@ -76,7 +76,7 @@ public final class EmailSenderNodeFactory extends ConfigurableNodeFactory<EmailS
             Sends Emails to a list of recipients, supporting html content, reports, file attachments etc.
             """;
 
-    private static final String INPUT_FLOWVAR_IDENTIFIER = "Flow Variables";
+    private static final String INPUT_EMAIL_SESSION_IDENTIFIER = "Email Session";
 
     private static final String INPUT_REPORT_IDENTIFIER = "Report";
 
@@ -87,8 +87,8 @@ public final class EmailSenderNodeFactory extends ConfigurableNodeFactory<EmailS
         .fullDescription(FULL_DESCRIPTION) //
         .modelSettingsClass(EmailSenderNodeSettings.class) //
         .nodeType(NodeType.Other) //
-        .addInputPort(INPUT_FLOWVAR_IDENTIFIER, FlowVariablePortObject.TYPE,
-            "Any types of variables that can be used in the email body", true) //
+        .addInputPort(INPUT_EMAIL_SESSION_IDENTIFIER, EmailSessionPortObject.TYPE,
+            "Email session defining outgoing mail server and connection properties.") //
         .addInputPort(INPUT_REPORT_IDENTIFIER, IReportPortObject.TYPE, "A report defining the content of the email. " //
             + "In case the email is sent in text format, the report is attached as PDF file", true) //
         .sinceVersion(5, 3, 0) //
@@ -123,8 +123,7 @@ public final class EmailSenderNodeFactory extends ConfigurableNodeFactory<EmailS
     @Override
     protected Optional<PortsConfigurationBuilder> createPortsConfigBuilder() {
         final var b = new PortsConfigurationBuilder();
-        b.addOptionalInputPortGroupWithDefault(INPUT_FLOWVAR_IDENTIFIER, FlowVariablePortObject.TYPE,
-            FlowVariablePortObject.TYPE);
+        b.addFixedInputPortGroup(INPUT_EMAIL_SESSION_IDENTIFIER, EmailSessionPortObject.TYPE);
         b.addOptionalInputPortGroup(INPUT_REPORT_IDENTIFIER, IReportPortObject.TYPE);
         return Optional.of(b);
     }

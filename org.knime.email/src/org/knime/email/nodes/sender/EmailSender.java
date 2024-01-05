@@ -61,7 +61,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.function.Consumer;
 
 import org.apache.commons.io.FileUtils;
@@ -79,6 +78,7 @@ import org.knime.core.util.FileUtil;
 import org.knime.core.util.Pointer;
 import org.knime.email.nodes.sender.MessageSettings.Attachment;
 import org.knime.email.nodes.sender.MessageUtil.DocumentAndContentType;
+import org.knime.email.session.EmailSessionKey;
 import org.knime.email.util.EmailUtil;
 import org.knime.filehandling.core.connections.FSConnection;
 import org.knime.filehandling.core.connections.FSFileSystem;
@@ -101,6 +101,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.Multipart;
 import jakarta.mail.Part;
 import jakarta.mail.Session;
+import jakarta.mail.Transport;
 import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeBodyPart;
@@ -127,9 +128,13 @@ final class EmailSender {
 
     private final EmailSenderNodeSettings m_settings;
 
+    private final EmailSessionKey m_emailSessionKey;
+
     private IReportPortObject m_reportPortObject;
 
-    EmailSender(final EmailSenderNodeSettings settings) {
+
+    EmailSender(final EmailSessionKey emailSessionKey, final EmailSenderNodeSettings settings) {
+        m_emailSessionKey = emailSessionKey;
         m_settings = CheckUtils.checkArgumentNotNull(settings);
     }
 
@@ -178,31 +183,25 @@ final class EmailSender {
     void send(final FlowVariableProvider flowVarResolver)
         throws MessagingException, IOException, InvalidSettingsException {
         final var messageAndContentType = readMessage(flowVarResolver);
-        final var properties = new Properties(System.getProperties());
-        final var protocol = addPropertiesAndGetProtocol(properties);
-
-        // Make sure TLS is used. Available protocols can be obtained via:
-        // SSLContext.getDefault().getSupportedSSLParameters().getProtocols()
-        addMailProtocol(properties, protocol);
 
         // make sure to set class loader to jakarta.mail - this has caused problems in the past, see bug 5316
-        try (final var closeable = EmailUtil.runWithContextClassloader(Session.class)) {
-            final var session = Session.getInstance(properties, null);
+        try (final var closeable = EmailUtil.runWithContextClassloader(Session.class);
+                final var outgoingSession = m_emailSessionKey.connectOutgoing();
+                final var transport = outgoingSession.getEmailTransport()) {
+            final var session = outgoingSession.getSession();
             final var mimeMessage = initMessage(session);
 
             // text or html message part
             final Multipart mp = initMessageBody(messageAndContentType, m_reportPortObject);
-
-            send(protocol, session, mimeMessage, mp);
+            send(transport, mimeMessage, mp);
         }
     }
 
-    private void send(final String protocol, final Session session,
-        final MimeMessage message, final Multipart mp)
+    private void send(final Transport transport, final MimeMessage message, final Multipart mp)
         throws IOException, InvalidSettingsException, MessagingException {
         List<File> tempDirs = new ArrayList<>();
         // make sure to set class loader to jakarta.mail - this has caused problems in the past, see bug 5316
-        try (final var closeable = EmailUtil.runWithContextClassloader(Session.class)) {
+        try {
             final Attachment[] attachments = m_settings.m_messageSettings.m_attachments;
             for (var i = 0; i < attachments.length; i++) {
                 final var fsLocation = attachments[i].m_attachment.getFSLocation();
@@ -214,7 +213,8 @@ final class EmailSender {
                     addAttachments(mp, localFile, Integer.toString(i));
                 }
             }
-            sendMail(protocol, session, message, mp);
+            message.setContent(mp);
+            transport.sendMessage(message, message.getAllRecipients());
         } catch (MessagingException e) {
             var isSocketTimeout = e.getCause() instanceof SocketTimeoutException;
             var errorMessage = isSocketTimeout ? e.getMessage() : e.toString();
@@ -248,54 +248,6 @@ final class EmailSender {
         }
         final Document messageDoc = Jsoup.parse(messageHtml);
         return new DocumentAndContentType(messageDoc, m_settings.m_messageSettings.m_format);
-    }
-
-    private String addPropertiesAndGetProtocol(final Properties properties) {
-        var protocol = "smtp";
-        switch (m_settings.m_smtpServerSettings.m_smtpSecurity) {
-            case NONE:
-                break;
-            case STARTTLS:
-                properties.setProperty("mail.smtp.starttls.enable", "true");
-                // we need to require STARTTLS as well to enforce a TLS connection -- fixes AP-19571
-                properties.setProperty("mail.smtp.starttls.required", "true");
-                break;
-            case SSL:
-                // this is the way to do it in javax.mail 1.4.5+ (default is currently (Aug '13) 1.4.0):
-                // www.oracle.com/technetwork/java/javamail145sslnotes-1562622.html
-                // 'First, and perhaps the simplest, is to set a property to enable use
-                // of SSL.  For example, to enable use of SSL for SMTP connections, set
-                // the property "mail.smtp.ssl.enable" to "true".'
-                properties.setProperty("mail.smtp.ssl.enable", "true");
-                // this is an alternative/backup, which works also:
-                // http://javakiss.blogspot.ch/2010/10/smtp-in-java-with-javaxmail.html
-                // I verify it's actually using SSL:
-                //  - it hid a breakpoint in sun.security.ssl.SSLSocketFactoryImpl
-                //  - Hostpoint (knime.com mail server) is rejecting any smtp request on their ssl port (465)
-                //    without this property
-                properties.setProperty("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-                // a third (and most transparent) option would be to use a different protocol:
-                protocol = "smtps";
-                break;
-            default:
-        }
-        return protocol;
-    }
-
-    private void addMailProtocol(final Properties properties, final String protocol) {
-
-        final SmtpServerSettings smtpSettings = m_settings.m_smtpServerSettings;
-        final var mail = "mail.";
-        // only support secure versions of TLS -- changed with AP-19572
-        properties.setProperty(mail + "smtp.ssl.protocols", "TLSv1.2 TLSv1.3");
-
-        properties.setProperty(mail + protocol + ".host", smtpSettings.m_smtpHost);
-        properties.setProperty(mail + protocol + ".port", Integer.toString(smtpSettings.m_smtpPort));
-        properties.setProperty(mail + protocol + ".auth", Boolean.toString(smtpSettings.m_smtpRequiresAuthentication));
-
-        properties.setProperty(mail + protocol + ".connectiontimeout",
-            String.valueOf(1000 * smtpSettings.m_smtpConnectTimeoutS));
-        properties.setProperty(mail + protocol + ".timeout", String.valueOf(1000 * smtpSettings.m_smtpReadTimeoutS));
     }
 
     private MimeMessage initMessage(final Session session) throws MessagingException, InvalidSettingsException {
@@ -419,22 +371,6 @@ final class EmailSender {
         CheckUtils.check(file.canRead(), IOException::new, () -> String
             .format("The KNIME AP does not have the permissions to read the file attachment at \"%s\".", path));
         return file;
-    }
-
-    private void sendMail(final String protocol, final Session session,
-        final MimeMessage message, final Multipart mp) throws MessagingException {
-        try (final var transport = session.getTransport(protocol)) {
-            final var smtpServerSettings = m_settings.m_smtpServerSettings;
-            if (smtpServerSettings.m_smtpRequiresAuthentication) {
-                String user = smtpServerSettings.m_smtpCredentials.getUsername();
-                String pass = smtpServerSettings.m_smtpCredentials.getPassword();
-                transport.connect(user, pass);
-            } else {
-                transport.connect();
-            }
-            message.setContent(mp);
-            transport.sendMessage(message, message.getAllRecipients());
-        }
     }
 
     /**

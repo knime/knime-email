@@ -253,7 +253,7 @@ public final class EmailSessionKey {
             } else {
                 transport.connect();
             }
-            return new EmailOutgoingSession(transport);
+            return new EmailOutgoingSession(session, transport);
         } finally {
             Thread.currentThread().setContextClassLoader(oldContextClassloader);
         }

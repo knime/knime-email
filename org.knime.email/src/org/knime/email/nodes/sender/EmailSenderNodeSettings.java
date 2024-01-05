@@ -56,7 +56,6 @@ import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
 import org.knime.email.nodes.sender.EmailSenderNodeSettings.Sections.MessageSection;
 import org.knime.email.nodes.sender.EmailSenderNodeSettings.Sections.RecipientsSection;
-import org.knime.email.nodes.sender.EmailSenderNodeSettings.Sections.SmtpServerSection;
 
 /**
  * Node settings of the node.
@@ -67,11 +66,7 @@ import org.knime.email.nodes.sender.EmailSenderNodeSettings.Sections.SmtpServerS
 final class EmailSenderNodeSettings implements DefaultNodeSettings {
 
     interface Sections {
-        @Section(title = "Outgoing Email Server (SMTP)")
-        interface SmtpServerSection {}
-
         @Section(title = "Recipients")
-        @After(SmtpServerSection.class)
         interface RecipientsSection {}
 
         @Section(title = "Message")
@@ -79,10 +74,6 @@ final class EmailSenderNodeSettings implements DefaultNodeSettings {
         interface MessageSection {}
 
     }
-
-    @Layout(SmtpServerSection.class)
-    @Persist(configKey = "smtpServer")
-    SmtpServerSettings m_smtpServerSettings = new SmtpServerSettings();
 
     @Layout(RecipientsSection.class)
     @Persist(configKey = "recipients")
@@ -95,7 +86,6 @@ final class EmailSenderNodeSettings implements DefaultNodeSettings {
     void validate() throws InvalidSettingsException {
         m_messageSettings.validate();
         m_recipientsSettings.validate();
-        m_smtpServerSettings.validate();
     }
 
 }
