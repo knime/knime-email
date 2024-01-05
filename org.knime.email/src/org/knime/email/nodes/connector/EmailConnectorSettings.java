@@ -140,11 +140,6 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     interface OutgoingServerSection {}
 
     @Layout(OutgoingServerSection.class)
-    @Widget(title = "Email address", description = "Some SMTP servers require the sender's email address, other "
-        + "accept this to be not specified and will automatically derive it from the user account.")
-    @Persist(optional = true)
-    String m_smtpEmailAddress;
-    @Layout(OutgoingServerSection.class)
     @Widget(title = "Server", description = "The address of the outgoing email server (SMTP) e.g. <i>smtp.web.de.</i>")
     @TextInputWidget(pattern = "^\\w[\\w\\.]*")
     @Persist(optional = true)
@@ -156,6 +151,12 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     @NumberInputWidget(min = 1, max = 0xFFFF) // 65635
     @Persist(optional = true)
     int m_smtpPort = 587;
+
+    @Layout(OutgoingServerSection.class)
+    @Widget(title = "Email address", description = "Some SMTP servers require the sender's email address, other "
+            + "accept this to be not specified and will automatically derive it from the user account.")
+    @Persist(optional = true)
+    String m_smtpEmailAddress;
 
     @Layout(OutgoingServerSection.class)
     @Widget(title = "Outgoing mail server requires authentication.")
