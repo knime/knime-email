@@ -78,6 +78,7 @@ import org.knime.core.util.FileUtil;
 import org.knime.core.util.Pointer;
 import org.knime.email.nodes.sender.MessageSettings.Attachment;
 import org.knime.email.nodes.sender.MessageUtil.DocumentAndContentType;
+import org.knime.email.session.EmailOutgoingSession;
 import org.knime.email.session.EmailSessionKey;
 import org.knime.email.util.EmailUtil;
 import org.knime.filehandling.core.connections.FSConnection;
@@ -188,8 +189,7 @@ final class EmailSender {
         try (final var closeable = EmailUtil.runWithContextClassloader(Session.class);
                 final var outgoingSession = m_emailSessionKey.connectOutgoing();
                 final var transport = outgoingSession.getEmailTransport()) {
-            final var session = outgoingSession.getSession();
-            final var mimeMessage = initMessage(session);
+            final var mimeMessage = initMessage(outgoingSession);
 
             // text or html message part
             final Multipart mp = initMessageBody(messageAndContentType, m_reportPortObject);
@@ -250,15 +250,22 @@ final class EmailSender {
         return new DocumentAndContentType(messageDoc, m_settings.m_messageSettings.m_format);
     }
 
-    private MimeMessage initMessage(final Session session) throws MessagingException, InvalidSettingsException {
+    private MimeMessage initMessage(final EmailOutgoingSession outgoingSession) throws MessagingException, InvalidSettingsException {
 
+        Session session = outgoingSession.getSession();
         final var recipientSettings = m_settings.m_recipientsSettings;
         final var message = new MimeMessage(session);
 
+        final Optional<String> from = outgoingSession.getEmailAddress();
         final String to = recipientSettings.getToNotNull();
         final String cc = recipientSettings.getCCNotNull();
         final String bcc = recipientSettings.getBCCNotNull();
         final String replyTo = recipientSettings.getReplyToNotNull();
+        if (from.isPresent()) {
+            message.setFrom(new InternetAddress(from.get()));
+        } else {
+            message.setFrom();
+        }
         if (!Strings.isNullOrEmpty(to)) {
             message.addRecipients(Message.RecipientType.TO, parseAndValidateRecipients(to));
         }

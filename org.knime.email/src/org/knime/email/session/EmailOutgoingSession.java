@@ -48,6 +48,8 @@
  */
 package org.knime.email.session;
 
+import java.util.Optional;
+
 import org.knime.core.node.NodeLogger;
 
 import jakarta.mail.MessagingException;
@@ -67,9 +69,12 @@ public final class EmailOutgoingSession implements AutoCloseable {
 
     private final Transport m_emailTransport;
 
-    EmailOutgoingSession(final Session session, final Transport emailTransport) {
+    private Optional<String> m_emailAddress;
+
+    EmailOutgoingSession(final Session session, final Transport emailTransport, final Optional<String> emailAddress) {
         m_session = session;
         m_emailTransport = emailTransport;
+        m_emailAddress = emailAddress;
     }
 
     /**
@@ -84,6 +89,14 @@ public final class EmailOutgoingSession implements AutoCloseable {
      */
     public Session getSession() {
         return m_session;
+    }
+
+    /**
+     *
+     * @return the optional email address to use in the from field
+     */
+    public Optional<String> getEmailAddress() {
+        return m_emailAddress;
     }
 
     @Override

@@ -99,7 +99,7 @@ public final class EmailSessionKey {
 
     private final String m_smtpHost;
     private final int m_smtpPort;
-    private final String m_smtpEmailAddress;
+    private final Optional<String> m_smtpEmailAddress;
     private final SmtpConnectionSecurity m_smtpConnectionSecurity;
 
     private final int m_connectTimeoutS;
@@ -116,7 +116,11 @@ public final class EmailSessionKey {
 
         m_smtpHost = builder.m_smtpHost;
         m_smtpPort = builder.m_smtpPort;
-        m_smtpEmailAddress = builder.m_smtpEmailAddress;
+        if (StringUtils.isBlank(builder.m_smtpEmailAddress)) {
+            m_smtpEmailAddress = Optional.empty();
+        } else {
+            m_smtpEmailAddress = Optional.of(builder.m_smtpEmailAddress);
+        }
         m_smtpConnectionSecurity = builder.m_smtpConnectionSecurity;
 
         m_user = builder.m_user;
@@ -253,7 +257,7 @@ public final class EmailSessionKey {
             } else {
                 transport.connect();
             }
-            return new EmailOutgoingSession(session, transport);
+            return new EmailOutgoingSession(session, transport, m_smtpEmailAddress);
         } finally {
             Thread.currentThread().setContextClassLoader(oldContextClassloader);
         }
@@ -266,7 +270,7 @@ public final class EmailSessionKey {
     public Collection<ViewContentSection> toViewContent() {
         List<ViewContentSection> result = new ArrayList<>();
         Map<String, String> imapPropMap = null;
-        if (StringUtils.isNotBlank(m_imapHost)) {
+        if (incomingAvailable()) {
             imapPropMap = ImmutableMap.of( // NOSONAR, guava order preserving
                 "IMAP Host", m_imapHost, //
                 "IMAP Port", Integer.toString(m_imapPort), //
@@ -275,11 +279,11 @@ public final class EmailSessionKey {
         result.add(new ViewContentSection("Incoming (IMAP)", Optional.ofNullable(imapPropMap)));
 
         Map<String, String> smtpPropMap = null;
-        if (StringUtils.isNotBlank(m_smtpHost)) {
+        if (outgoingAvailable()) {
             smtpPropMap = ImmutableMap.of( // NOSONAR, guava order preserving
                 "SMTP Host", m_smtpHost, //
                 "SMTP Port", Integer.toString(m_smtpPort), //
-                "SMTP EMail Address", m_smtpEmailAddress, //
+                "SMTP EMail Address", m_smtpEmailAddress.orElse(""), //
                 "SMTP Security", m_smtpConnectionSecurity.name());
         }
         result.add(new ViewContentSection("Outgoing (SMTP)", Optional.ofNullable(smtpPropMap)));
