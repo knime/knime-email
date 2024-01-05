@@ -60,6 +60,7 @@ import org.knime.core.webui.node.impl.WebUINodeConfiguration;
 import org.knime.core.webui.node.impl.WebUINodeModel;
 import org.knime.email.port.EmailSessionPortObject;
 import org.knime.email.session.EmailSessionKey;
+import org.knime.email.util.EmailNodeUtil;
 
 /**
  */
@@ -82,6 +83,7 @@ public class EmailMoverNodeModel extends WebUINodeModel<EmailMoverNodeSettings> 
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs, final EmailMoverNodeSettings modelSettings)
         throws InvalidSettingsException {
+        EmailNodeUtil.checkIncomingAvailable(inSpecs);
         return new DataTableSpec[]{};
     }
 
@@ -93,7 +95,7 @@ public class EmailMoverNodeModel extends WebUINodeModel<EmailMoverNodeSettings> 
         final EmailSessionKey mailSessionKey =
             in.getEmailSessionKey().orElseThrow(() -> new InvalidSettingsException("No mail session available"));
         final var table = (BufferedDataTable) inObjects[1];
-        CheckUtils.checkSetting(table.getSpec().findColumnIndex(modelSettings.m_messageIds) >= 0, 
+        CheckUtils.checkSetting(table.getSpec().findColumnIndex(modelSettings.m_messageIds) >= 0,
                 "Please specify an existing column for the Message-IDs.");
         final var processor = new EmailMoverNodeProcessor(mailSessionKey, modelSettings);
         processor.moveMessages(exec, table);

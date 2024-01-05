@@ -131,13 +131,25 @@ public final class EmailSessionKey {
     }
 
     /**
+     * Specifies if an incoming connection is available.
+     * @return <code>true</code> if an incoming connection is available
+     */
+    public boolean incomingAvailable() {
+        return StringUtils.isNotBlank(m_imapHost);
+    }
+
+    /**
      * Connects to the underlying email store and returns the incoming session to work with it.
      * Please close the session once the work is done!
      * @return a new {@link EmailIncomingSession} which should be closed when done
      * @throws MessagingException if the connection fails
+     * @see #incomingAvailable()
      */
     @SuppressWarnings({"resource", "java:S1192"}) // java:S1192 - string duplication of "mail."
     public EmailIncomingSession connectIncoming() throws MessagingException {
+        if (!incomingAvailable()) {
+            throw new MessagingException("No incoming server settings available");
+        }
         final var protocol = m_imapUseSecurePortocol ? "imaps" : "imap";
         final var props = new Properties();
         props.put("mail.store.protocol", protocol);
@@ -177,13 +189,25 @@ public final class EmailSessionKey {
     }
 
     /**
+     * Specifies if an outgoing connection is available.
+     * @return <code>true</code> if an outgoing connection is available
+     */
+    public boolean outgoingAvailable() {
+        return StringUtils.isNotBlank(m_smtpHost);
+    }
+
+    /**
      * Connects to the underlying email transport and returns the outgoing session to work with it.
      * Please close the session once the work is done!
      * @return a new {@link EmailIncomingSession} which should be closed when done
      * @throws MessagingException if the connection fails
+     * @see #outgoingAvailable()
      */
     @SuppressWarnings({"resource", "java:S1192"}) // java:S1192 - string duplication of "mail."
     public EmailOutgoingSession connectOutgoing() throws MessagingException {
+        if (!outgoingAvailable()) {
+            throw new MessagingException("No outgoing server settings available");
+        }
         final var oldContextClassloader = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(Session.class.getClassLoader());
         try {
@@ -290,18 +314,20 @@ public final class EmailSessionKey {
      */
     public sealed interface Builder permits EmailSessionKeyBuilder {
 
-        Builder withSmtp(Function<WithSmtpBaseBuilder, WithSmtpFinalBuilder> builderFunction);
+        WithImapFinalBuilder withImap(Function<WithImapBaseBuilder, WithImapFinalBuilder> builderFunction);
+
+        WithSmtpFinalBuilder withSmtp(Function<WithSmtpBaseBuilder, WithSmtpFinalBuilder> builderFunction);
+
+    }
+
+    public sealed interface OptionalBuilder permits WithImapFinalBuilder, WithSmtpFinalBuilder {
+        OptionalBuilder withProperties(Properties properties);
+
+        OptionalBuilder withAuth(String user, String password);
+
+        OptionalBuilder withTimeouts(int connectTimeoutS, int readTimeoutS);
 
         EmailSessionKey build();
-
-        Builder withProperties(Properties properties);
-
-        Builder withAuth(String user, String password);
-
-        Builder withTimeouts(int connectTimeoutS, int readTimeoutS);
-
-        Builder withImap(Function<WithImapBaseBuilder, WithImapFinalBuilder> builderFunction);
-
     }
 
     public sealed interface WithImapBaseBuilder permits EmailSessionKeyBuilder {
@@ -312,7 +338,9 @@ public final class EmailSessionKey {
         WithImapFinalBuilder imapSecureConnection(final boolean isUseSecure);
     }
 
-    public sealed interface WithImapFinalBuilder permits EmailSessionKeyBuilder {
+    public sealed interface WithImapFinalBuilder extends OptionalBuilder permits EmailSessionKeyBuilder {
+
+        WithSmtpFinalBuilder withSmtp(Function<WithSmtpBaseBuilder, WithSmtpFinalBuilder> builderFunction);
 
     }
 
@@ -328,13 +356,15 @@ public final class EmailSessionKey {
         WithSmtpFinalBuilder security(SmtpConnectionSecurity security);
     }
 
-    public sealed interface WithSmtpFinalBuilder {
+    public sealed interface WithSmtpFinalBuilder extends OptionalBuilder permits EmailSessionKeyBuilder {
+
+        WithImapFinalBuilder withImap(Function<WithImapBaseBuilder, WithImapFinalBuilder> builderFunction);
 
     }
 
     private static final class EmailSessionKeyBuilder
-        implements Builder, WithImapBaseBuilder, WithImapFinalBuilder, WithImapProtocolBuilder, WithSmtpBaseBuilder,
-        WithSmtpEMailAddressBuilder, WithSmtpSecurityBuilder, WithSmtpFinalBuilder {
+        implements Builder, WithImapBaseBuilder, WithImapFinalBuilder, WithImapProtocolBuilder,
+        WithSmtpBaseBuilder, WithSmtpEMailAddressBuilder, WithSmtpSecurityBuilder, WithSmtpFinalBuilder {
 
         private String m_imapHost;
         private int m_imapPort;
@@ -353,10 +383,9 @@ public final class EmailSessionKey {
         private Properties m_properties;
 
         @Override
-        public Builder
+        public WithImapFinalBuilder
             withImap(final Function<WithImapBaseBuilder, WithImapFinalBuilder> builderFunction) {
-            builderFunction.apply(this);
-            return this;
+            return builderFunction.apply(this);
         }
 
         @Override
@@ -379,10 +408,9 @@ public final class EmailSessionKey {
         }
 
         @Override
-        public Builder
+        public WithSmtpFinalBuilder
             withSmtp(final Function<WithSmtpBaseBuilder, WithSmtpFinalBuilder> builderFunction) {
-            builderFunction.apply(this);
-            return this;
+            return builderFunction.apply(this);
         }
 
         @Override
@@ -407,29 +435,27 @@ public final class EmailSessionKey {
         }
 
         @Override
-        public Builder withAuth(final String user, final String password) {
+        public OptionalBuilder withAuth(final String user, final String password) {
             m_user = user;
             m_password = password;
             return this;
         }
 
         @Override
-        public Builder withTimeouts(final int connectTimeoutS, final int readTimeoutS) {
+        public OptionalBuilder withTimeouts(final int connectTimeoutS, final int readTimeoutS) {
             m_connectTimeoutS = connectTimeoutS;
             m_readTimeoutS = readTimeoutS;
             return this;
         }
 
         @Override
-        public Builder withProperties(final Properties properties) {
+        public OptionalBuilder withProperties(final Properties properties) {
             m_properties = properties;
             return this;
         }
 
         @Override
         public EmailSessionKey build() {
-            CheckUtils.checkArgument(StringUtils.isNotBlank(m_imapHost) || StringUtils.isNotBlank(m_smtpHost),
-                "One of SMTP or IMAP connection must be specified");
             return new EmailSessionKey(this);
         }
 

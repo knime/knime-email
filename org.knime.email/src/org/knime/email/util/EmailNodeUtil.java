@@ -44,24 +44,65 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   27 Sep 2023 (Tobias): created
+ *   5 Jan 2024 (Tobias): created
  */
-package org.knime.email.port;
+package org.knime.email.util;
 
-import java.util.Optional;
-
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.message.Message;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.email.port.EmailSessionProvider;
 import org.knime.email.session.EmailSessionKey;
 
 /**
+ * Utility class with helper methods for email node processing.
  *
  * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
  */
-public interface EmailSessionProvider {
+public final class EmailNodeUtil {
+
+    private EmailNodeUtil() {
+        // utility method
+    }
 
     /**
-     * Returns the optional {@link EmailSessionKey}.
-     * @return the optional {@link EmailSessionKey}
+     * Checks that the given mail session at the first input port has a configured incoming mail server configuration.
+     * @param inSpecs
+     * @throws InvalidSettingsException
      */
-    Optional<EmailSessionKey> getEmailSessionKey();
+    public static void checkIncomingAvailable(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        checkConfig(inSpecs, true);
+    }
 
+    /**
+     * Checks that the given mail session at the first input port has a configured outgoing mail server configuration.
+     * @param inSpecs
+     * @throws InvalidSettingsException
+     */
+    public static void checkOutgoingAvailable(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        checkConfig(inSpecs, false);
+    }
+
+    private static void checkConfig(final PortObjectSpec[] inSpecs, final boolean incoming)
+            throws InvalidSettingsException {
+        final EmailSessionProvider provider = (EmailSessionProvider)inSpecs[0];
+        final EmailSessionKey key = provider.getEmailSessionKey().orElseThrow(() ->
+            Message.builder().withSummary("No mail session available.").addResolutions(
+                "Re-execute the upstream connector node.") .build().orElseThrow().toInvalidSettingsException());
+        if (incoming) {
+            if (!key.incomingAvailable()) {
+                throw Message.builder().withSummary("No incoming mail server configured in mail session.")
+                .addResolutions("Change the connection type of the upstream connector node and specify the "
+                    + "incoming mail server settings.")
+                .build().orElseThrow().toInvalidSettingsException();
+            }
+        } else {
+            if (!key.outgoingAvailable()) {
+                throw Message.builder().withSummary("No outgoing mail server configured in mail session.")
+                .addResolutions("Change the connection type of the upstream connector node and specify the "
+                    + "outgoing mail server settings.")
+                .build().orElseThrow().toInvalidSettingsException();
+            }
+        }
+    }
 }

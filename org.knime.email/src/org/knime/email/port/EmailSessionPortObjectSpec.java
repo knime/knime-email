@@ -90,9 +90,6 @@ public class EmailSessionPortObjectSpec extends AbstractSimplePortObjectSpec imp
         m_cacheId = cacheId ;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Optional<EmailSessionKey> getEmailSessionKey() {
         return EmailSessionCache.get(m_cacheId);

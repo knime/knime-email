@@ -57,9 +57,9 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.message.Message;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.impl.WebUINodeConfiguration;
 import org.knime.core.webui.node.impl.WebUINodeModel;
 import org.knime.email.nodes.connector.EmailConnectorSettings.ConnectionProperties;
@@ -67,6 +67,7 @@ import org.knime.email.port.EmailSessionPortObject;
 import org.knime.email.port.EmailSessionPortObjectSpec;
 import org.knime.email.session.EmailSessionCache;
 import org.knime.email.session.EmailSessionKey;
+import org.knime.email.session.EmailSessionKey.OptionalBuilder;
 
 /**
  * Node model implementation which provides a generic email connector where the user has to specify all
@@ -90,9 +91,7 @@ public class EmailConnectorNodeModel extends WebUINodeModel<EmailConnectorSettin
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs, final EmailConnectorSettings modelSettings)
         throws InvalidSettingsException {
-        CheckUtils.checkSettingNotNull(modelSettings.m_login, "No login available.");
-        CheckUtils.checkSettingNotNull(modelSettings.m_server, "No server set.");
-//        CheckUtils.checkSettingNotNull(modelSettings.m_protocol, "No protocol set.");
+        modelSettings.validate();
         return new PortObjectSpec[]{new EmailSessionPortObjectSpec()};
     }
 
@@ -100,8 +99,19 @@ public class EmailConnectorNodeModel extends WebUINodeModel<EmailConnectorSettin
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec,
         final EmailConnectorSettings modelSettings) throws Exception {
         final var mailSessionKey = createKey(modelSettings);
-        try (final var mailSession = mailSessionKey.connectIncoming()) {
-            // try connect
+        //test incoming if set...
+        if (mailSessionKey.incomingAvailable()) {
+            exec.setMessage("Validating incoming mail server settings...");
+            try (final var mailSession = mailSessionKey.connectIncoming()) {
+                // try connect
+            }
+        }
+        //...and/or outgoing if set
+        if (mailSessionKey.outgoingAvailable()) {
+            exec.setMessage("Validating outgoing mail server settings...");
+            try (final var mailSession = mailSessionKey.connectOutgoing()) {
+                // try connect
+            }
         }
         m_cacheId = EmailSessionCache.store(mailSessionKey);
         return new PortObject[]{new EmailSessionPortObject(m_cacheId)};
@@ -113,11 +123,32 @@ public class EmailConnectorNodeModel extends WebUINodeModel<EmailConnectorSettin
     }
 
     private static final EmailSessionKey createKey(final EmailConnectorSettings settings) {
-        return EmailSessionKey.builder() //
-            .withImap(b -> b //
-                .imapHost(settings.m_server, settings.m_port) //
-                .imapSecureConnection(settings.m_useSecureProtocol)) //
-            .withAuth(settings.m_login.getUsername(), settings.m_login.getPassword()) //
+        final OptionalBuilder optinalBuilder;
+        switch (settings.m_type) {
+            case INCOMING:
+                optinalBuilder = EmailSessionKey.builder().withImap(b -> b //
+                    .imapHost(settings.m_imapServer, settings.m_imapPort) //
+                    .imapSecureConnection(settings.m_imapUseSecureProtocol)); //
+                break;
+            case OUTGOING:
+                optinalBuilder = EmailSessionKey.builder().withSmtp(b -> b //
+                    .smtpHost(settings.m_smtpHost, settings.m_smtpPort) //
+                    .smtpEmailAddress(settings.m_smtpEmailAddress) //
+                    .security(settings.m_smtpSecurity.toSmtpConnectionSecurity()));
+                break;
+            case INCOMING_OUTGOING:
+                optinalBuilder = EmailSessionKey.builder().withImap(b -> b //
+                    .imapHost(settings.m_imapServer, settings.m_imapPort) //
+                    .imapSecureConnection(settings.m_imapUseSecureProtocol)).withSmtp(b -> b //
+                        .smtpHost(settings.m_smtpHost, settings.m_smtpPort) //
+                        .smtpEmailAddress(settings.m_smtpEmailAddress) //
+                        .security(settings.m_smtpSecurity.toSmtpConnectionSecurity())); //
+                break;
+            default:
+                throw new IllegalStateException("Unknown email connection type");
+        }
+
+        return optinalBuilder.withAuth(settings.m_login.getUsername(), settings.m_login.getPassword()) //
             .withTimeouts(settings.m_connectTimeout, settings.m_readTimeout) //
             .withProperties(extractProperties(settings.m_properties)) //
             .build();
@@ -134,7 +165,8 @@ public class EmailConnectorNodeModel extends WebUINodeModel<EmailConnectorSettin
     @Override
     protected void onLoadInternals(final File nodeInternDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
-        setWarningMessage("Please re-execute the node to restore the email session.");
+        setWarning(Message.builder().withSummary("Email session is invalid.")
+            .addResolutions("Re-execute the node to restore the email session.").build().orElseThrow());
     }
 
     @Override

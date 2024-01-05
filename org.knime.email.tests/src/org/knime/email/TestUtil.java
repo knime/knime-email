@@ -58,7 +58,7 @@ import java.util.regex.Pattern;
 
 import org.knime.email.session.EmailIncomingSession;
 import org.knime.email.session.EmailSessionKey;
-import org.knime.email.session.EmailSessionKey.Builder;
+import org.knime.email.session.EmailSessionKey.OptionalBuilder;
 import org.knime.email.util.EmailUtil;
 import org.knime.email.util.Message;
 
@@ -116,23 +116,23 @@ public final class TestUtil {
 
     /**
      * A Builder for incoming/imap linked to the address of the argument.
-     * 
+     *
      * @param greenMail props
      * @return A new builder
      */
-    public static Builder newEmailSessionKeyBuilder(final GreenMailExtension greenMail) {
+    public static OptionalBuilder newEmailSessionKeyBuilder(final GreenMailExtension greenMail) {
         final ImapServer imap = greenMail.getImap();
         final ServerSetup serverSetup = imap.getServerSetup();
         final var mailSessionKeyBuilder = EmailSessionKey.builder() //
-            .withImap(b -> b //
-                .imapHost(serverSetup.getBindAddress(), serverSetup.getPort()) //
-                .imapSecureConnection(false)) //
-            .withTimeouts(EmailSessionKey.DEF_TIMEOUT_CONNECT_S, EmailSessionKey.DEF_TIMEOUT_READ_S) //
-            .withProperties(new Properties());
+                .withImap(b -> b //
+                    .imapHost(serverSetup.getBindAddress(), serverSetup.getPort()) //
+                    .imapSecureConnection(false)) //
+                .withTimeouts(EmailSessionKey.DEF_TIMEOUT_CONNECT_S, EmailSessionKey.DEF_TIMEOUT_READ_S) //
+                .withProperties(new Properties());
         return mailSessionKeyBuilder;
     }
 
-    /** 
+    /**
      * A new EmailSessionKey for incoming/imap for {@link #USER1}.
      * @param greenMail To get address from
      * @return A new email session key

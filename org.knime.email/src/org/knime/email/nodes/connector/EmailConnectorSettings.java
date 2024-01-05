@@ -115,20 +115,22 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     @Layout(IncomingServerSection.class)
     @Widget(title = "Server", description = "The address of the incoming email server (IMAP) e.g. <i>imap.web.de.</i>")
     @TextInputWidget(pattern = "[^ ]+")
-    @Persist(optional = true)
-    String m_server;
+    @Persist(optional = true, configKey = "server")
+    String m_imapServer;
 
 
     @Layout(IncomingServerSection.class)
     @Widget(title = "Port",
         description = "The port of the incoming email server (e.g. 143 (non-secure) or 993 (secure)).") //
     @NumberInputWidget(min = 1, max = 0xFFFF) // 65635
-    int m_port = 993;
+    @Persist(optional = true, configKey = "port")
+    int m_imapPort = 993;
 
     @Layout(IncomingServerSection.class)
     @Widget(title = "Use secure protocol",
             description = "Choose whether to use an encrypted or unencrypted connection.")
-    boolean m_useSecureProtocol = true;
+    @Persist(optional = true, configKey = "useSecureProtocol")
+    boolean m_imapUseSecureProtocol = true;
 
 
 //  OUTGOING SERVER SETTINGS
@@ -288,7 +290,7 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     }
 
     private void validateIncoming() throws InvalidSettingsException {
-        CheckUtils.checkSetting(StringUtils.isNoneBlank(m_server), "No incoming mail server set");
+        CheckUtils.checkSetting(StringUtils.isNoneBlank(m_imapServer), "No incoming mail server set");
     }
 
     private void validateOutgoing() throws InvalidSettingsException {

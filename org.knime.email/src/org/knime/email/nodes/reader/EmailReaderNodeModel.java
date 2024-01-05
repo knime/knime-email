@@ -53,6 +53,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -64,10 +65,12 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.context.ports.PortsConfiguration;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.impl.WebUINodeConfiguration;
 import org.knime.email.port.EmailSessionPortObject;
 import org.knime.email.session.EmailSessionKey;
+import org.knime.email.util.EmailNodeUtil;
 
 /**
  * Get email node model.
@@ -94,20 +97,8 @@ public class EmailReaderNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
         throws InvalidSettingsException {
-        if (m_settings.m_folder == null || m_settings.m_folder.isBlank()) {
-            throw new InvalidSettingsException("Email folder name not selected");
-        }
-//        final List<PortObjectSpec> list = new ArrayList<>();
-//        list.add(GetEmailNodeProcessor.MSG_TABLE_SPEC);
-//        if (m_settings.m_retrieveHeaders) {
-//            list.add(GetEmailNodeProcessor.ATTACH_TABLE_SPEC);
-//        }
-//        if (m_settings.m_retrieveAttachments) {
-//            list.add(GetEmailNodeProcessor.HEADER_TABLE_SPEC);
-//        }
-//        return list.toArray(PortObjectSpec[]::new);
-        //TODO: Configure gets called earlier with the updated settings than the OnApplyNodeModifier in the
-        //NodeFactory resulting in an error message of invalid spec length
+        CheckUtils.checkSetting(StringUtils.isNotBlank(m_settings.m_folder), "Email folder name not selected");
+        EmailNodeUtil.checkIncomingAvailable(inSpecs);
         return null;
     }
 

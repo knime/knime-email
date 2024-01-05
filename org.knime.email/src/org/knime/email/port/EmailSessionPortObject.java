@@ -65,6 +65,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.webui.node.port.PortViewManager;
 import org.knime.email.session.EmailIncomingSession;
+import org.knime.email.session.EmailOutgoingSession;
 import org.knime.email.session.EmailSessionKey;
 
 /**
