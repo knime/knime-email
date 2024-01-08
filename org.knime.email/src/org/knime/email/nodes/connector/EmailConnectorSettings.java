@@ -107,7 +107,7 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
 
 
 //  INCOMING SERVER SETTINGS
-    @Section(title = "Incoming Mail Server")
+    @Section(title = "Incoming Mail Server (IMAP)")
     @Effect(signals = IncomingServerSection.class, type = EffectType.SHOW)
     interface IncomingServerSection {}
 
@@ -134,7 +134,7 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
 
 
 //  OUTGOING SERVER SETTINGS
-    @Section(title = "Outgoing Mail Server")
+    @Section(title = "Outgoing Mail Server (SMTP)")
     @After(IncomingServerSection.class)
     @Effect(signals = OutgoingServerSection.class, type = EffectType.SHOW)
     interface OutgoingServerSection {}
