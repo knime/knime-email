@@ -65,6 +65,7 @@ import java.util.function.Consumer;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -72,6 +73,7 @@ import org.knime.base.util.flowvariable.FlowVariableProvider;
 import org.knime.base.util.flowvariable.FlowVariableResolver;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.KNIMEException;
 import org.knime.core.node.port.report.IReportPortObject;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.FileUtil;
@@ -180,9 +182,10 @@ final class EmailSender {
      * @throws MessagingException ... when sending fails, also authorization exceptions etc.
      * @throws IOException SSL problems or when copying remote URLs to temp local file.
      * @throws InvalidSettingsException on invalid referenced flow vars
+     * @throws KNIMEException Any type of send message failure (e.g. timeout)
      */
     void send(final FlowVariableProvider flowVarResolver)
-        throws MessagingException, IOException, InvalidSettingsException {
+        throws MessagingException, IOException, InvalidSettingsException, KNIMEException {
         final var messageAndContentType = readMessage(flowVarResolver);
 
         // make sure to set class loader to jakarta.mail - this has caused problems in the past, see bug 5316
@@ -198,7 +201,7 @@ final class EmailSender {
     }
 
     private void send(final Transport transport, final MimeMessage message, final Multipart mp)
-        throws IOException, InvalidSettingsException, MessagingException {
+        throws IOException, InvalidSettingsException, KNIMEException {
         List<File> tempDirs = new ArrayList<>();
         // make sure to set class loader to jakarta.mail - this has caused problems in the past, see bug 5316
         try {
@@ -217,10 +220,18 @@ final class EmailSender {
             transport.sendMessage(message, message.getAllRecipients());
         } catch (MessagingException e) {
             var isSocketTimeout = e.getCause() instanceof SocketTimeoutException;
-            var errorMessage = isSocketTimeout ? e.getMessage() : e.toString();
-            var resolutionMessage = isSocketTimeout ? " Try adjusting the SMTP timeout settings." : "";
-            throw new InvalidSettingsException("This error occurred while communicating with the SMTP server: \""
-                + errorMessage + "\"." + resolutionMessage, e);
+            final var errorMessageBuilder = org.knime.core.node.message.Message.builder();
+            if (isSocketTimeout) {
+                errorMessageBuilder.withSummary("Unable to send mesage");
+            } else {
+                errorMessageBuilder //
+                .withSummary("SMTP timeout occurred") //
+                .addResolutions("Increase timeout values in node configuration (advanced settings)");
+            }
+            errorMessageBuilder //
+                .addResolutions("Review network configuration (such as proxy settings etc)") //
+                .addTextIssue(ExceptionUtils.getRootCauseMessage(e));
+            throw errorMessageBuilder.build().orElseThrow().toKNIMEException(e);
         } finally {
             for (File d : tempDirs) {
                 FileUtils.deleteQuietly(d);
@@ -250,9 +261,10 @@ final class EmailSender {
         return new DocumentAndContentType(messageDoc, m_settings.m_messageSettings.m_format);
     }
 
-    private MimeMessage initMessage(final EmailOutgoingSession outgoingSession) throws MessagingException, InvalidSettingsException {
+    private MimeMessage initMessage(final EmailOutgoingSession outgoingSession)
+        throws MessagingException, InvalidSettingsException {
 
-        Session session = outgoingSession.getSession();
+        final var session = outgoingSession.getSession();
         final var recipientSettings = m_settings.m_recipientsSettings;
         final var message = new MimeMessage(session);
 
@@ -279,7 +291,8 @@ final class EmailSender {
             message.setReplyTo(parseAndValidateRecipients(replyTo));
         }
         if (message.getAllRecipients() == null) {
-            throw new InvalidSettingsException("No recipients were specified. Set them in the configuration dialog.");
+            throw org.knime.core.node.message.Message.fromSummaryWithResolution("No recipients were specified.",
+                "Provide at least one of To, CC, or BCC in the node configuration").toInvalidSettingsException();
         }
 
         message.setHeader("X-Mailer", "KNIME/" + KNIMEConstants.VERSION);

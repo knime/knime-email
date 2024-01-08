@@ -75,15 +75,18 @@ final class RecipientsSettings implements DefaultNodeSettings, LayoutGroup {
      */
     private static final String EMAIL_ADDRESS_PATTERN = "^(.+)@(.+)$";
 
-    @Widget(title = "To", description = "Recipients email addresses (To)")
+    @Widget(title = "To", description = //
+            "Email address of the intended recipient (To). Use a comma separator to specify multiple recipients.")
     @TextInputWidget(pattern = EMAIL_ADDRESS_PATTERN)
     String m_to;
 
-    @Widget(title = "CC", description = "Recipients email addresses (CC)")
+    @Widget(title = "CC", description = //
+            "CC (Carbon Copy) - secondary recipients (use comma to list multiple addresses).")
     @ArrayWidget
     String m_cc;
 
-    @Widget(title = "BCC", advanced = true, description = "Blind copy email addresses (BCC)")
+    @Widget(title = "BCC", advanced = true, description = "BCC (Blind Carbon Copy) - additional recipients to "
+        + "receive the message (the primary recipients will not see who is copied in BCC).")
     @ArrayWidget
     String m_bcc;
 
