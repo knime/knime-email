@@ -82,7 +82,7 @@ public final class EmailSenderNodeFactory extends ConfigurableNodeFactory<EmailS
 
     private static final WebUINodeConfiguration CONFIGURATION = WebUINodeConfiguration.builder() //
         .name("Email Sender (Labs)") //
-        .icon("mailsend.png") //
+        .icon("emailsender.png") //
         .shortDescription("Sends Emails to a recipient list.") //
         .fullDescription(FULL_DESCRIPTION) //
         .modelSettingsClass(EmailSenderNodeSettings.class) //
