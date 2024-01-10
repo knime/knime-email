@@ -70,16 +70,16 @@ final class MessageSettings implements DefaultNodeSettings {
 
     /** EMail priority. */
     enum EMailPriority {
+            @Label("Lowest")
+            LOWEST("5 (Lowest)"), //
+            @Label("Low")
+            LOW("4 (Low)"), //
+            @Label("Normal")
+            NORMAL("3 (Normal)"), //
             @Label("Highest")
             HIGHEST("1 (Highest)"), //
             @Label("High")
-            HIGH("2 (High)"), //
-            @Label("Normal")
-            NORMAL("3 (Normal)"), //
-            @Label("Low")
-            LOW("4 (Low)"), //
-            @Label("Lowest")
-            LOWEST("5 (Lowest)");
+            HIGH("2 (High)"); //
 
         private final String m_xPriority;
 
