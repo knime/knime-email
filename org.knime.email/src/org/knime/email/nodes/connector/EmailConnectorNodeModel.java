@@ -163,7 +163,7 @@ public class EmailConnectorNodeModel extends WebUINodeModel<EmailConnectorSettin
     }
 
     @Override
-    protected void onLoadInternals(final File nodeInternDir, final ExecutionMonitor exec)
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
         setWarning(Message.builder().withSummary("Email session is invalid.")
             .addResolutions("Re-execute the node to restore the email session.").build().orElseThrow());
@@ -175,7 +175,7 @@ public class EmailConnectorNodeModel extends WebUINodeModel<EmailConnectorSettin
     }
 
     @Override
-    protected void onReset() {
+    protected void reset() {
         removeFromCache();
     }
 
