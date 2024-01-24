@@ -50,13 +50,12 @@ package org.knime.email.nodes.sender;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.layout.LayoutGroup;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.WidgetGroup;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.PersistableSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Strings;
 
 /**
@@ -64,7 +63,7 @@ import com.google.common.base.Strings;
  * @author wiswedel
  */
 @SuppressWarnings("restriction")
-final class RecipientsSettings implements DefaultNodeSettings, LayoutGroup {
+final class RecipientsSettings implements WidgetGroup, PersistableSettings {
 
     /** (Weak) pattern for email addresses, should match...
      * <pre>
@@ -99,22 +98,18 @@ final class RecipientsSettings implements DefaultNodeSettings, LayoutGroup {
             "No recipient specified");
     }
 
-    @JsonIgnore
     String getToNotNull() {
         return Strings.nullToEmpty(m_to);
     }
 
-    @JsonIgnore
     String getCCNotNull() {
         return Strings.nullToEmpty(m_cc);
     }
 
-    @JsonIgnore
     String getBCCNotNull() {
         return Strings.nullToEmpty(m_bcc);
     }
 
-    @JsonIgnore
     String getReplyToNotNull() {
         return Strings.nullToEmpty(m_replyTo);
     }

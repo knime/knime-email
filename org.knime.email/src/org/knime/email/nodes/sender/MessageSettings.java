@@ -51,7 +51,8 @@ package org.knime.email.nodes.sender;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.layout.LayoutGroup;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.WidgetGroup;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.PersistableSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.setting.filechooser.FileChooser;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
@@ -60,14 +61,12 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 import org.knime.filehandling.core.connections.FSLocation;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 /**
  *
  * @author wiswedel
  */
 @SuppressWarnings("restriction")
-final class MessageSettings implements DefaultNodeSettings, LayoutGroup {
+final class MessageSettings implements DefaultNodeSettings {
 
     /** EMail priority. */
     enum EMailPriority {
@@ -137,12 +136,11 @@ final class MessageSettings implements DefaultNodeSettings, LayoutGroup {
         CheckUtils.checkSettingNotNull(m_format, "Format must not be null");
     }
 
-    static final class Attachment implements DefaultNodeSettings {
+    static final class Attachment implements WidgetGroup, PersistableSettings {
 
         @Widget
         FileChooser m_attachment = new FileChooser();
 
-        @JsonIgnore
         FSLocation toFSLocation() {
             return m_attachment.getFSLocation();
         }
