@@ -10,6 +10,7 @@ Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Fragment-Host: org.knime.email;bundle-version="5.2.0"
 Require-Bundle: junit-jupiter-api;bundle-version="[5.9.2,6.0.0)",
  org.knime.testing;bundle-version="[5.3.0,6.0.0)",
- org.slf4j.api;bundle-version="[1.7.30,2.0.0)"
+ org.slf4j.api;bundle-version="[1.7.30,2.0.0)",
+ org.knime.core.ui.testing;bundle-version="[5.3.0,6.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Automatic-Module-Name: org.knime.email.tests

@@ -1,0 +1,69 @@
+{
+  "data" : {
+    "model" : {
+      "messageIds" : "Email ID"
+    }
+  },
+  "schema" : {
+    "type" : "object",
+    "properties" : {
+      "model" : {
+        "type" : "object",
+        "properties" : {
+          "messageIds" : {
+            "type" : "string",
+            "title" : "Email-ID column",
+            "description" : "Column containing the id of the emails. This is mostlikely the 'Email ID' from the Read Email table.",
+            "default" : "Email ID"
+          },
+          "sourceFolder" : {
+            "type" : "string",
+            "title" : "Source folder",
+            "description" : "The full path of the email source folder to search for the email ids e.g. 'INBOX' or Folder.Subfolder."
+          },
+          "targetFolder" : {
+            "type" : "string",
+            "title" : "Target folder",
+            "description" : "The full path of the email target folder to move the emails to e.g. 'TRASH' or Folder.Subfolder."
+          }
+        }
+      }
+    }
+  },
+  "ui_schema" : {
+    "elements" : [ {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/sourceFolder",
+      "options" : {
+        "choicesProviderClass" : "org.knime.email.util.UIChoices$FolderProvider",
+        "format" : "dropDown",
+        "showNoneColumn" : false,
+        "showRowKeys" : false,
+        "showSearch" : true,
+        "showMode" : true
+      }
+    }, {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/messageIds",
+      "options" : {
+        "choicesProviderClass" : "org.knime.email.util.UIChoices$MessageIDColumnChoicesProvider",
+        "format" : "dropDown",
+        "showNoneColumn" : false,
+        "showRowKeys" : false,
+        "showSearch" : true,
+        "showMode" : true
+      }
+    }, {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/targetFolder",
+      "options" : {
+        "choicesProviderClass" : "org.knime.email.util.UIChoices$FolderProvider",
+        "format" : "dropDown",
+        "showNoneColumn" : false,
+        "showRowKeys" : false,
+        "showSearch" : true,
+        "showMode" : true
+      }
+    } ]
+  }
+}

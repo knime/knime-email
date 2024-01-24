@@ -1,0 +1,204 @@
+{
+  "data" : {
+    "model" : {
+      "recipientsSettings" : { },
+      "messageSettings" : {
+        "format" : "HTML",
+        "priority" : "NORMAL",
+        "attachments" : [ ]
+      }
+    }
+  },
+  "schema" : {
+    "type" : "object",
+    "properties" : {
+      "model" : {
+        "type" : "object",
+        "properties" : {
+          "messageSettings" : {
+            "type" : "object",
+            "properties" : {
+              "attachments" : {
+                "title" : "Attachments",
+                "description" : "The path to the file to be attached to the email.",
+                "default" : [ ],
+                "type" : "array",
+                "items" : {
+                  "type" : "object",
+                  "properties" : {
+                    "attachment" : {
+                      "type" : "object",
+                      "properties" : {
+                        "path" : {
+                          "type" : "object",
+                          "default" : {
+                            "fsCategory" : "LOCAL",
+                            "path" : "",
+                            "timeout" : 1000
+                          }
+                        }
+                      },
+                      "default" : {
+                        "path" : {
+                          "fsCategory" : "LOCAL",
+                          "path" : "",
+                          "timeout" : 1000
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "format" : {
+                "oneOf" : [ {
+                  "const" : "HTML",
+                  "title" : "HTML"
+                }, {
+                  "const" : "TEXT",
+                  "title" : "Text"
+                } ],
+                "title" : "Content type",
+                "description" : "The mail body's content encoded as plain text or html.",
+                "default" : "HTML"
+              },
+              "message" : {
+                "type" : "string",
+                "title" : "Message",
+                "description" : "The email's message body. Formatting options can be selected in the menu bar on the top of the editor.\nThe contents of flow variables can be inserted by using the replacement syntax\n\"$${<i>&lt;TYPE&gt;&lt;flow-variable-name&gt;</i>}$$\". The leading &lt;TYPE&gt; is one of\n<i>I</i> (integer), <i>D</i> (double) or <i>S</i> (string), depending on the type of variable.\n"
+              },
+              "priority" : {
+                "oneOf" : [ {
+                  "const" : "HIGHEST",
+                  "title" : "Highest"
+                }, {
+                  "const" : "HIGH",
+                  "title" : "High"
+                }, {
+                  "const" : "NORMAL",
+                  "title" : "Normal"
+                }, {
+                  "const" : "LOW",
+                  "title" : "Low"
+                }, {
+                  "const" : "LOWEST",
+                  "title" : "Lowest"
+                } ],
+                "title" : "Priority",
+                "description" : "The 'X-Priority' field that is understood by some email clients to denote a priority of an email. If unsure, leave unchanged ('Normal' priority).",
+                "default" : "NORMAL"
+              },
+              "subject" : {
+                "type" : "string",
+                "title" : "Subject",
+                "description" : "The email's subject line."
+              }
+            },
+            "default" : {
+              "format" : "HTML",
+              "priority" : "NORMAL",
+              "attachments" : [ ]
+            },
+            "configKeys" : [ "message" ]
+          },
+          "recipientsSettings" : {
+            "type" : "object",
+            "properties" : {
+              "bcc" : {
+                "type" : "string",
+                "title" : "BCC",
+                "description" : "BCC (Blind Carbon Copy) - additional recipients to receive the message (the primary recipients will not see who is copied in BCC)."
+              },
+              "cc" : {
+                "type" : "string",
+                "title" : "CC",
+                "description" : "CC (Carbon Copy) - secondary recipients (use comma to list multiple addresses)."
+              },
+              "replyTo" : {
+                "type" : "string",
+                "title" : "Reply To",
+                "description" : "ReplyTo field. By default, a reply to an email will be addressed to the sender of the original email. This field allows changing the reply to address."
+              },
+              "to" : {
+                "type" : "string",
+                "title" : "To",
+                "description" : "Email address of the intended recipient (To). Use a comma separator to specify multiple recipients.",
+                "pattern" : "^(.+)@(.+)$"
+              }
+            },
+            "default" : { },
+            "configKeys" : [ "recipients" ]
+          }
+        }
+      }
+    }
+  },
+  "ui_schema" : {
+    "elements" : [ {
+      "label" : "Recipients",
+      "type" : "Section",
+      "elements" : [ {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/recipientsSettings/properties/to",
+        "options" : {
+          "hideOnNull" : false
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/recipientsSettings/properties/cc"
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/recipientsSettings/properties/bcc",
+        "options" : {
+          "isAdvanced" : true
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/recipientsSettings/properties/replyTo",
+        "options" : {
+          "isAdvanced" : true
+        }
+      } ]
+    }, {
+      "label" : "Message",
+      "type" : "Section",
+      "elements" : [ {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/messageSettings/properties/subject"
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/messageSettings/properties/message",
+        "options" : {
+          "format" : "richTextInput"
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/messageSettings/properties/format",
+        "options" : {
+          "isAdvanced" : true,
+          "format" : "valueSwitch"
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/messageSettings/properties/priority",
+        "options" : {
+          "isAdvanced" : true,
+          "format" : "valueSwitch"
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/messageSettings/properties/attachments",
+        "options" : {
+          "detail" : [ {
+            "type" : "Control",
+            "scope" : "#/properties/attachment",
+            "options" : {
+              "format" : "fileChooser"
+            }
+          } ],
+          "addButtonText" : "Add attachment",
+          "showSortButtons" : true
+        }
+      } ]
+    } ]
+  }
+}

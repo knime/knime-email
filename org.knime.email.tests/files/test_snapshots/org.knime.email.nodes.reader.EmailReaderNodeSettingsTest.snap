@@ -1,0 +1,187 @@
+{
+  "data" : {
+    "model" : {
+      "messageSeenStatus" : "Unread",
+      "messageAnsweredStatus" : "Unanswered",
+      "messageSelector" : "Newest",
+      "limitMessagesCount" : 100,
+      "outputAttachments" : false,
+      "outputHeaders" : false,
+      "markAsRead" : true
+    }
+  },
+  "schema" : {
+    "type" : "object",
+    "properties" : {
+      "model" : {
+        "type" : "object",
+        "properties" : {
+          "folder" : {
+            "type" : "string",
+            "title" : "Folder",
+            "description" : "The full path to the email folder to read from e.g. 'INBOX' or Folder.Subfolder"
+          },
+          "limitMessagesCount" : {
+            "type" : "integer",
+            "format" : "int32",
+            "title" : "Maximum number of emails",
+            "description" : "The number of messages to retrieve at most.",
+            "default" : 100,
+            "minimum" : 1,
+            "maximum" : 2147483647
+          },
+          "markAsRead" : {
+            "type" : "boolean",
+            "title" : "Mark read emails as read",
+            "description" : "By default all loaded emails are flagged as read. To prevent this, unselect this option in which case the node will reset the read status of all loaded emails after downloading their content.",
+            "default" : true
+          },
+          "messageAnsweredStatus" : {
+            "oneOf" : [ {
+              "const" : "Unanswered",
+              "title" : "Unanswered"
+            }, {
+              "const" : "Answered",
+              "title" : "Answered"
+            }, {
+              "const" : "All",
+              "title" : "All"
+            } ],
+            "title" : "Answered status",
+            "description" : "Defines if only unanswered, answered or all messages are retrieved from the server.",
+            "default" : "Unanswered"
+          },
+          "messageSeenStatus" : {
+            "oneOf" : [ {
+              "const" : "Unread",
+              "title" : "Unread"
+            }, {
+              "const" : "Read",
+              "title" : "Read"
+            }, {
+              "const" : "All",
+              "title" : "All"
+            } ],
+            "title" : "Read status",
+            "description" : "Defines if only unseen, seen or all messages are retrieved from the server.",
+            "default" : "Unread"
+          },
+          "messageSelector" : {
+            "oneOf" : [ {
+              "const" : "Newest",
+              "title" : "Newest"
+            }, {
+              "const" : "Oldest",
+              "title" : "Oldest"
+            }, {
+              "const" : "All",
+              "title" : "All"
+            } ],
+            "title" : "Limit number of emails",
+            "description" : "Select if the oldest, newest or all emails should be retrieved.",
+            "default" : "Newest"
+          },
+          "outputAttachments" : {
+            "type" : "boolean",
+            "title" : "Output attachments table",
+            "description" : "If checked, the node will provide all email attachments in an additional output table. The table can be joined with the original email table via the Email ID column.",
+            "default" : false
+          },
+          "outputHeaders" : {
+            "type" : "boolean",
+            "title" : "Output header table",
+            "description" : "If checked, the node will provide all email header in an additional output table. The table can be joined with the original email table via the Email ID column.",
+            "default" : false
+          }
+        }
+      }
+    }
+  },
+  "ui_schema" : {
+    "elements" : [ {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/folder",
+      "options" : {
+        "choicesProviderClass" : "org.knime.email.util.UIChoices$FolderProvider",
+        "format" : "dropDown",
+        "showNoneColumn" : false,
+        "showRowKeys" : false,
+        "showSearch" : true,
+        "showMode" : true
+      }
+    }, {
+      "label" : "Filtering",
+      "type" : "Section",
+      "elements" : [ {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/messageSeenStatus",
+        "options" : {
+          "format" : "valueSwitch"
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/messageAnsweredStatus",
+        "options" : {
+          "format" : "valueSwitch"
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/messageSelector",
+        "options" : {
+          "format" : "valueSwitch"
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/limitMessagesCount",
+        "rule" : {
+          "effect" : "SHOW",
+          "condition" : {
+            "scope" : "#/properties/model/properties/messageSelector",
+            "schema" : {
+              "oneOf" : [ {
+                "const" : "Newest"
+              }, {
+                "const" : "Oldest"
+              } ]
+            }
+          }
+        }
+      } ]
+    }, {
+      "label" : "Output",
+      "type" : "Section",
+      "options" : {
+        "isAdvanced" : true
+      },
+      "elements" : [ {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/outputAttachments",
+        "options" : {
+          "format" : "checkbox",
+          "isAdvanced" : true
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/outputHeaders",
+        "options" : {
+          "format" : "checkbox",
+          "isAdvanced" : true
+        }
+      } ]
+    }, {
+      "label" : "Advanced",
+      "type" : "Section",
+      "options" : {
+        "isAdvanced" : true
+      },
+      "elements" : [ {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/markAsRead",
+        "options" : {
+          "format" : "checkbox",
+          "isAdvanced" : true
+        }
+      } ]
+    } ]
+  }
+}
