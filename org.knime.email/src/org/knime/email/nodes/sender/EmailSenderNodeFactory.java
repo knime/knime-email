@@ -50,6 +50,7 @@ package org.knime.email.nodes.sender;
 
 import java.util.Optional;
 
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ConfigurableNodeFactory;
 import org.knime.core.node.NodeDescription;
 import org.knime.core.node.NodeDialogPane;
@@ -58,6 +59,7 @@ import org.knime.core.node.context.NodeCreationConfiguration;
 import org.knime.core.node.port.report.IReportPortObject;
 import org.knime.core.webui.node.dialog.NodeDialog;
 import org.knime.core.webui.node.dialog.NodeDialogFactory;
+import org.knime.core.webui.node.dialog.NodeDialogManager;
 import org.knime.core.webui.node.dialog.SettingsType;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeDialog;
 import org.knime.core.webui.node.impl.WebUINodeConfiguration;
@@ -80,6 +82,8 @@ public final class EmailSenderNodeFactory extends ConfigurableNodeFactory<EmailS
 
     private static final String INPUT_REPORT_IDENTIFIER = "Report";
 
+    private static final String INPUT_ATTACHMENT_TABLE_IDENTIFIER = "Attachments";
+
     private static final WebUINodeConfiguration CONFIGURATION = WebUINodeConfiguration.builder() //
         .name("Email Sender (Labs)") //
         .icon("emailsender.png") //
@@ -91,6 +95,11 @@ public final class EmailSenderNodeFactory extends ConfigurableNodeFactory<EmailS
             "Email session defining outgoing mail server and connection properties.") //
         .addInputPort(INPUT_REPORT_IDENTIFIER, IReportPortObject.TYPE, "A report defining the content of the email. " //
             + "In case the email is sent in text format, the report is attached as PDF file", true) //
+        .addInputPort(INPUT_ATTACHMENT_TABLE_IDENTIFIER, BufferedDataTable.TYPE,
+            "A table with file attachments defined in a path column (currently only local files are supported). " //
+                + "Alternatively, if this port is not enabled, attachments can also be individually selected " //
+                + "in the node's configuration dialog. In order to create a path columns, use nodes such as "
+                + "<i>String to Path</i>", true) //
         .sinceVersion(5, 3, 0) //
         .build();
 
@@ -102,12 +111,12 @@ public final class EmailSenderNodeFactory extends ConfigurableNodeFactory<EmailS
 
     @Override
     protected boolean hasDialog() {
-        return false;
+        return true;
     }
 
     @Override
     protected NodeDialogPane createNodeDialogPane(final NodeCreationConfiguration creationConfig) {
-        return null; // not used
+        return NodeDialogManager.createLegacyFlowVariableNodeDialog(createNodeDialog());
     }
 
     @Override
@@ -125,6 +134,7 @@ public final class EmailSenderNodeFactory extends ConfigurableNodeFactory<EmailS
         final var b = new PortsConfigurationBuilder();
         b.addFixedInputPortGroup(INPUT_EMAIL_SESSION_IDENTIFIER, EmailSessionPortObject.TYPE);
         b.addOptionalInputPortGroup(INPUT_REPORT_IDENTIFIER, IReportPortObject.TYPE);
+        b.addOptionalInputPortGroup(INPUT_ATTACHMENT_TABLE_IDENTIFIER, BufferedDataTable.TYPE);
         return Optional.of(b);
     }
 

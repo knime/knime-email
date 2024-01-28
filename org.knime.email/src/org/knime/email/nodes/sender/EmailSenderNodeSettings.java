@@ -48,7 +48,12 @@
  */
 package org.knime.email.nodes.sender;
 
+import java.util.Optional;
+import java.util.function.IntFunction;
+
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
@@ -85,6 +90,12 @@ final class EmailSenderNodeSettings implements DefaultNodeSettings {
 
     void validate() throws InvalidSettingsException {
         m_messageSettings.validate();
+        m_recipientsSettings.validate();
+    }
+
+    void validateDuringConfiguration(final PortType[] inTypes,
+        final IntFunction<? extends Optional<PortObjectSpec>> specSupplier) throws InvalidSettingsException {
+        m_messageSettings.validateDuringConfiguration(inTypes, specSupplier);
         m_recipientsSettings.validate();
     }
 

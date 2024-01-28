@@ -46,18 +46,62 @@
  */
 package org.knime.email.nodes.sender;
 
-import java.util.Map;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.text.MatchesPattern.matchesPattern;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.Map;
+import java.util.Optional;
+
+import org.junit.jupiter.api.Test;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.port.PortType;
 import org.knime.core.webui.node.dialog.SettingsType;
+import org.knime.email.port.EmailSessionPortObject;
+import org.knime.filehandling.core.data.location.cell.SimpleFSLocationCellFactory;
 import org.knime.testing.node.dialog.DefaultNodeSettingsSnapshotTest;
 
 /**
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public class EmailSenderNodeSettingsTest extends DefaultNodeSettingsSnapshotTest {
+@SuppressWarnings("java:S5960")
+final class EmailSenderNodeSettingsTest extends DefaultNodeSettingsSnapshotTest {
 
-    protected EmailSenderNodeSettingsTest() {
+    EmailSenderNodeSettingsTest() {
         super(Map.of(SettingsType.MODEL, EmailSenderNodeSettings.class));
+    }
+    
+    /** 
+     * Some additional verification against the input table. Large parts are tested in the workflow test(s) but 
+     * it's missing some corner cases.
+     */
+    @SuppressWarnings("static-method")
+    @Test
+    void testInputValidation() {
+        EmailSenderNodeSettings settings = new EmailSenderNodeSettings();
+        settings.m_messageSettings.m_attachmentColumn = "path";
+        settings.m_messageSettings.m_message = "ignored message";
+        settings.m_messageSettings.m_subject = "ignored subject";
+        settings.m_recipientsSettings.m_to = "ignored@recipient";
+        assertDoesNotThrow(() -> settings.validate(), "Settings validation"); // NOSONAR
+        
+        final InvalidSettingsException e1 = assertThrows(InvalidSettingsException.class, 
+            () -> settings.validateDuringConfiguration(new PortType[] {EmailSessionPortObject.TYPE}, i -> null),
+            "exception when input has no attachment table");
+        assertThat("exception detail matches", e1.getMessage(), matchesPattern(".*input.*connected.*"));
+        
+        final InvalidSettingsException e2 = assertThrows(InvalidSettingsException.class,
+            () -> settings.validateDuringConfiguration(
+                new PortType[]{EmailSessionPortObject.TYPE, BufferedDataTable.TYPE},
+                i -> i == 1 ? Optional.ofNullable(new DataTableSpec(
+                    new DataColumnSpecCreator("other-path", SimpleFSLocationCellFactory.TYPE).createSpec())) : null),
+            "exception when input table but no matching column");
+        assertThat("exception detail matches", e2.getMessage(), matchesPattern(".*'path'.*not present.*"));
+        
     }
 
 }

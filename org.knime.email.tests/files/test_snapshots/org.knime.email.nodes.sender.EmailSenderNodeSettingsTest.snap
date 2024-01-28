@@ -18,6 +18,11 @@
           "messageSettings" : {
             "type" : "object",
             "properties" : {
+              "attachmentColumn" : {
+                "type" : "string",
+                "title" : "Attachment Column",
+                "description" : "The column in the attachment input table, if enabled, containing the list of attachment locations (the column needs to be of type \"path\"."
+              },
               "attachments" : {
                 "title" : "Attachments",
                 "description" : "The path to the file to be attached to the email.",
@@ -68,20 +73,20 @@
               },
               "priority" : {
                 "oneOf" : [ {
+                  "const" : "LOWEST",
+                  "title" : "Lowest"
+                }, {
+                  "const" : "LOW",
+                  "title" : "Low"
+                }, {
+                  "const" : "NORMAL",
+                  "title" : "Normal"
+                }, {
                   "const" : "HIGHEST",
                   "title" : "Highest"
                 }, {
                   "const" : "HIGH",
                   "title" : "High"
-                }, {
-                  "const" : "NORMAL",
-                  "title" : "Normal"
-                }, {
-                  "const" : "LOW",
-                  "title" : "Low"
-                }, {
-                  "const" : "LOWEST",
-                  "title" : "Lowest"
                 } ],
                 "title" : "Priority",
                 "description" : "The 'X-Priority' field that is understood by some email clients to denote a priority of an email. If unsure, leave unchanged ('Normal' priority).",
@@ -176,6 +181,14 @@
         "options" : {
           "isAdvanced" : true,
           "format" : "valueSwitch"
+        },
+        "rule" : {
+          "effect" : "DISABLE",
+          "condition" : {
+            "schema" : {
+              "const" : true
+            }
+          }
         }
       }, {
         "type" : "Control",
@@ -197,6 +210,34 @@
           } ],
           "addButtonText" : "Add attachment",
           "showSortButtons" : true
+        },
+        "rule" : {
+          "effect" : "DISABLE",
+          "condition" : {
+            "schema" : {
+              "const" : true
+            }
+          }
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/messageSettings/properties/attachmentColumn",
+        "options" : {
+          "isAdvanced" : true,
+          "possibleValues" : [ ],
+          "format" : "dropDown",
+          "showNoneColumn" : true,
+          "showRowKeys" : false,
+          "showSearch" : true,
+          "showMode" : true
+        },
+        "rule" : {
+          "effect" : "ENABLE",
+          "condition" : {
+            "schema" : {
+              "const" : true
+            }
+          }
         }
       } ]
     } ]

@@ -51,6 +51,8 @@ package org.knime.email.nodes.sender;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Optional;
+import java.util.stream.IntStream;
 
 import org.knime.base.util.flowvariable.FlowVariableProvider;
 import org.knime.core.node.CanceledExecutionException;
@@ -63,6 +65,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.context.ports.PortsConfiguration;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.report.IReportPortObject;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.email.port.EmailSessionPortObject;
@@ -80,6 +83,10 @@ final class EmailSenderNodeModel extends NodeModel implements FlowVariableProvid
 
     EmailSenderNodeModel(final PortsConfiguration portsConfiguration) {
         super(portsConfiguration.getInputPorts(), portsConfiguration.getOutputPorts());
+    }
+
+    private PortType[] getInputTypes() {
+        return IntStream.range(0, getNrInPorts()).mapToObj(this::getInPortType).toArray(PortType[]::new);
     }
 
     @Override
@@ -100,7 +107,7 @@ final class EmailSenderNodeModel extends NodeModel implements FlowVariableProvid
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
         throws InvalidSettingsException {
-        m_settings.validate();
+        m_settings.validateDuringConfiguration(getInputTypes(), i -> Optional.ofNullable(inSpecs[i]));
         EmailNodeUtil.checkOutgoingAvailable(inSpecs);
         return new PortObjectSpec[]{};
     }
@@ -112,6 +119,8 @@ final class EmailSenderNodeModel extends NodeModel implements FlowVariableProvid
             .map(IReportPortObject.class::cast).findFirst().orElse(null);
         final var sender = new EmailSender(emailSessionPO.getEmailSessionKey().orElseThrow(), m_settings);
         sender.addReport(report);
+        m_settings.m_messageSettings.readAttachmentsFromInputTable(getInputTypes(), exec, inObjects) //
+            .ifPresent(sender::setAttachmentsFromInputColumn);
         sender.send(this);
         return new PortObject[]{};
     }

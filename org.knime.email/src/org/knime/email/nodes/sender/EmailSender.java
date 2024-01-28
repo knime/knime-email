@@ -62,13 +62,13 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.knime.base.util.flowvariable.FlowVariableProvider;
 import org.knime.base.util.flowvariable.FlowVariableResolver;
 import org.knime.core.node.InvalidSettingsException;
@@ -79,6 +79,7 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.Pointer;
 import org.knime.email.nodes.sender.MessageSettings.Attachment;
+import org.knime.email.nodes.sender.MessageSettings.EMailFormat;
 import org.knime.email.nodes.sender.MessageUtil.DocumentAndContentType;
 import org.knime.email.session.EmailOutgoingSession;
 import org.knime.email.session.EmailSessionKey;
@@ -135,6 +136,7 @@ final class EmailSender {
 
     private IReportPortObject m_reportPortObject;
 
+    private FSLocation[] m_attachmentsFromInputColumn;
 
     EmailSender(final EmailSessionKey emailSessionKey, final EmailSenderNodeSettings settings) {
         m_emailSessionKey = emailSessionKey;
@@ -143,6 +145,11 @@ final class EmailSender {
 
     void addReport(final IReportPortObject report) {
         m_reportPortObject = report;
+    }
+
+    /** Sets the attachment list as per input column. If set (not null) it will be used as attachment list. */
+    void setAttachmentsFromInputColumn(final FSLocation[] attachmentsFromInputColumn) {
+        m_attachmentsFromInputColumn = attachmentsFromInputColumn;
     }
 
     /**
@@ -203,13 +210,17 @@ final class EmailSender {
     private void send(final Transport transport, final MimeMessage message, final Multipart mp)
         throws IOException, InvalidSettingsException, KNIMEException {
         List<File> tempDirs = new ArrayList<>();
-        // make sure to set class loader to jakarta.mail - this has caused problems in the past, see bug 5316
+        final FSLocation[] attachmentLocations;
+        if (m_attachmentsFromInputColumn != null) {
+            attachmentLocations = m_attachmentsFromInputColumn;
+        } else {
+            attachmentLocations = Stream.of(m_settings.m_messageSettings.m_attachments).map(Attachment::toFSLocation)
+                .toArray(FSLocation[]::new);
+        }
         try {
-            final Attachment[] attachments = m_settings.m_messageSettings.m_attachments;
-            for (var i = 0; i < attachments.length; i++) {
-                final var fsLocation = attachments[i].m_attachment.getFSLocation();
+            for (var i = 0; i < attachmentLocations.length; i++) {
                 final Pointer<StatusMessage> messagePointer = new Pointer<>();
-                try (final var pathAccessor = new FSLocationPathAccessor(fsLocation);
+                try (final var pathAccessor = new FSLocationPathAccessor(attachmentLocations[i]);
                         final var fsConnection = pathAccessor.getConnection()) {
                     final var fsPath = pathAccessor.getRootPath(messagePointer::set);
                     final var localFile = toLocalFile(tempDirs, fsPath, fsConnection);
@@ -316,13 +327,11 @@ final class EmailSender {
             try {
                 final Document reportDocument = appendReport(mp, report);
                 if (StringUtils.isNotBlank(document.text())) {
-                    reportDocument.body() //
-                        .insertChildren(0, new Element("hr")) //
-                        .insertChildren(0, document.body().children());
+                    reportDocument.body().insertChildren(0, document.body().children());
                 }
-                // There are 95% of the document are style definition, making very simple reports as large as 200+kB
+                // 95% of the document are style definition, making very simple reports as large as 200+kB
                 // (GMail has a limitation of 120kB - mail body larger than that are clipped)
-                // TODO: review and discuss with UIEXT team
+                // TODO: changes as soon UIEXT-1576 is addressed
                 if (!Boolean.getBoolean("knime.email.report.keep.style")) {
                     reportDocument.select("style").remove();
                 }
@@ -331,11 +340,8 @@ final class EmailSender {
                 throw new MessagingException("Unable to append report to email body: " + ioe.getMessage(), ioe);
             }
         }
-        final String content = switch (messageRecord.format()) {
-            case HTML -> document.html();
-            case TEXT -> MessageUtil.documentToPlainText(document);
-            default -> throw new IllegalStateException("Unknown message type");
-        };
+        final boolean useHtmlFormat = report != null || messageRecord.format() == EMailFormat.HTML;
+        final String content = useHtmlFormat ? document.html() : MessageUtil.documentToPlainText(document);
         contentBody.setContent(content, messageRecord.contentType());
         return mp;
     }
