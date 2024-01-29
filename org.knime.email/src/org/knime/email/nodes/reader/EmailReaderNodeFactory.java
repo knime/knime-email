@@ -91,6 +91,9 @@ public final class EmailReaderNodeFactory extends ConfigurableNodeFactory<EmailR
         public void onApply(final NativeNodeContainer nnc, final NodeSettingsRO previousModelSettings,
             final NodeSettingsRO updatedModelSettings, final NodeSettingsRO previousViewSettings,
             final NodeSettingsRO updatedViewSettings) {
+            if (updatedModelSettings == null) {
+                return;
+            }
             var creationConfig = nnc.getNode().getCopyOfCreationConfig().get();
             Optional<ModifiablePortsConfiguration> portConfig = creationConfig.getPortConfig();
             if (portConfig.isEmpty()) {
