@@ -55,7 +55,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.Map;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -79,8 +78,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.email.session.EmailSessionKey;
 import org.knime.email.util.EmailUtil;
-
-import com.google.common.collect.ImmutableMap;
 
 import jakarta.mail.Address;
 import jakarta.mail.Flags;
@@ -132,16 +129,6 @@ public final class EmailReaderNodeProcessor {
         }
         return specCreator.createSpec();
     }
-
-    private static Map<String, Flag> FLAGS_MAP = ImmutableMap.<String, Flag> builder() //
-        .put("ANSWERED", Flag.ANSWERED) //
-        .put("DELETED", Flag.DELETED) //
-        .put("DRAFT", Flag.DRAFT) //
-        .put("FLAGGED", Flag.FLAGGED) //
-        .put("RECENT", Flag.RECENT) //
-        .put("SEEN", Flag.SEEN) //
-        .put("USER", Flag.USER) //
-        .build();
 
     static final DataTableSpec ATTACH_TABLE_SPEC = new DataTableSpecCreator() //
         .addColumns(new DataColumnSpecCreator(COL_EMAIL_ID, StringCell.TYPE).createSpec()) //
@@ -208,7 +195,7 @@ public final class EmailReaderNodeProcessor {
                 default:
                     throw new IllegalStateException("Invalid message selector");
             }
-            final List<Message> readMessages = new ArrayList<>();
+            final List<Message> previouslyUnreadMessages = new ArrayList<>();
             long rowKey = 0;
             for (int i = indexStart; i <= indexEnd;) {
                 final var batchEnd = Math.min(i + 10, count);
@@ -225,20 +212,23 @@ public final class EmailReaderNodeProcessor {
                 context.checkCanceled();
                 final Message message = messages[i - 1];
                 if (!message.isExpunged()) {
+                    if (!m_settings.m_markAsRead && !message.isSet(Flags.Flag.SEEN)) {
+                        //Store only the previously unread messages if they need to be reset later
+                        previouslyUnreadMessages.add(message);
+                    }
                     final var msgRowWrite = msgWriteCursor.forward();
                     msgRowWrite.setRowKey(RowKey.createRowKey(rowKey++));
                     // message ID
                     final var messageId = EmailUtil.getMessageId(message);
                     writeMessageAndAttachments(context, factory, messageId, message, msgRowWrite, attachWriteCursor);
                     writeHeader(messageId, message, headerWriteCursor);
-                    readMessages.add(message);
                 }
                 i++;
             }
-            if (!m_settings.m_markAsRead) {
+            if (!previouslyUnreadMessages.isEmpty()) {
                 //explicitly mark message as un-seen since they are automatically set to seen when content is
                 //downloaded https://jakarta.ee/specifications/mail/1.6/apidocs/javax/mail/flags.flag#SEEN
-                EmailUtil.flagMessages(folder, readMessages.toArray(new Message[0]), Flags.Flag.SEEN, false);
+                EmailUtil.flagMessages(folder, previouslyUnreadMessages.toArray(new Message[0]), Flags.Flag.SEEN, false);
             }
             m_msgTable = msgRowContainer.finish();
             m_attachTable = attachRowContainer.finish();
@@ -366,28 +356,6 @@ public final class EmailReaderNodeProcessor {
         } else {
             rowWrite.<StringListWriteValue> getWriteValue(index++).setValue(cc);
         }
-
-        // flags are not supported
-//        if (m_settings.m_retrieveFlags) {
-//            // Flags
-//            rowWrite.<StringListWriteValue> getWriteValue(index++).setValue(extractFlags(message));
-//        }
-    }
-
-    private String[] extractFlags(final Message message) throws MessagingException {
-        List<String> flags = new ArrayList<>();
-        for (var entry : FLAGS_MAP.entrySet()) {
-            final String value;
-            if (!m_settings.m_markAsRead && entry.getKey().equals("SEEN")) {
-                //if this flag is enabled we will overwrite the SEEN Flag once down to false!
-                value = "false";
-            } else {
-                value = Boolean.toString(message.isSet(entry.getValue()));
-            }
-            String flagStr = entry.getKey() + ": " + value;
-            flags.add(flagStr);
-        }
-        return flags.toArray(String[]::new);
     }
 
     private void writePart(final ExecutionContext context, final BinaryObjectCellFactory factory, final String messageId,
