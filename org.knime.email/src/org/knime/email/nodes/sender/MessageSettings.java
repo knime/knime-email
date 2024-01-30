@@ -104,10 +104,10 @@ final class MessageSettings implements DefaultNodeSettings {
             LOW("4 (Low)"), //
             @Label("Normal")
             NORMAL("3 (Normal)"), //
-            @Label("Highest")
-            HIGHEST("1 (Highest)"), //
             @Label("High")
-            HIGH("2 (High)"); //
+            HIGH("2 (High)"), //
+            @Label("Highest")
+            HIGHEST("1 (Highest)"); //
 
         private final String m_xPriority;
 

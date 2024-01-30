@@ -82,11 +82,11 @@
                   "const" : "NORMAL",
                   "title" : "Normal"
                 }, {
-                  "const" : "HIGHEST",
-                  "title" : "Highest"
-                }, {
                   "const" : "HIGH",
                   "title" : "High"
+                }, {
+                  "const" : "HIGHEST",
+                  "title" : "Highest"
                 } ],
                 "title" : "Priority",
                 "description" : "The 'X-Priority' field that is understood by some email clients to denote a priority of an email. If unsure, leave unchanged ('Normal' priority).",
