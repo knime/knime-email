@@ -4,7 +4,6 @@
       "recipientsSettings" : { },
       "messageSettings" : {
         "format" : "HTML",
-        "priority" : "NORMAL",
         "attachments" : [ ]
       }
     }
@@ -71,27 +70,6 @@
                 "title" : "Message",
                 "description" : "The email's message body. Formatting options can be selected in the menu bar on the top of the editor.\nThe contents of flow variables can be inserted by using the replacement syntax\n\"$${<i>&lt;TYPE&gt;&lt;flow-variable-name&gt;</i>}$$\". The leading &lt;TYPE&gt; is one of\n<i>I</i> (integer), <i>D</i> (double) or <i>S</i> (string), depending on the type of variable.\n"
               },
-              "priority" : {
-                "oneOf" : [ {
-                  "const" : "LOWEST",
-                  "title" : "Lowest"
-                }, {
-                  "const" : "LOW",
-                  "title" : "Low"
-                }, {
-                  "const" : "NORMAL",
-                  "title" : "Normal"
-                }, {
-                  "const" : "HIGH",
-                  "title" : "High"
-                }, {
-                  "const" : "HIGHEST",
-                  "title" : "Highest"
-                } ],
-                "title" : "Priority",
-                "description" : "The 'X-Priority' field that is understood by some email clients to denote a priority of an email. If unsure, leave unchanged ('Normal' priority).",
-                "default" : "NORMAL"
-              },
               "subject" : {
                 "type" : "string",
                 "title" : "Subject",
@@ -100,7 +78,6 @@
             },
             "default" : {
               "format" : "HTML",
-              "priority" : "NORMAL",
               "attachments" : [ ]
             },
             "configKeys" : [ "message" ]
@@ -189,13 +166,6 @@
               "const" : true
             }
           }
-        }
-      }, {
-        "type" : "Control",
-        "scope" : "#/properties/model/properties/messageSettings/properties/priority",
-        "options" : {
-          "isAdvanced" : true,
-          "format" : "valueSwitch"
         }
       }, {
         "type" : "Control",

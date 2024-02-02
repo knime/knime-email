@@ -95,31 +95,6 @@ import org.knime.filehandling.core.data.location.FSLocationValue;
 @SuppressWarnings("restriction")
 final class MessageSettings implements DefaultNodeSettings {
 
-    /** EMail priority. */
-    enum EMailPriority {
-            @Label("Lowest")
-            LOWEST("5 (Lowest)"), //
-            @Label("Low")
-            LOW("4 (Low)"), //
-            @Label("Normal")
-            NORMAL("3 (Normal)"), //
-            @Label("High")
-            HIGH("2 (High)"), //
-            @Label("Highest")
-            HIGHEST("1 (Highest)"); //
-
-        private final String m_xPriority;
-
-        EMailPriority(final String xPriority) {
-            m_xPriority = xPriority;
-        }
-
-        /** @return for instance "1 (Highest)". */
-        String toXPriority() {
-            return m_xPriority;
-        }
-    }
-
     public static final class ReportIsConnectedInputSignal implements ConstantSignal {
         @Override
         public boolean applies(final DefaultNodeSettingsContext context) {
@@ -180,11 +155,6 @@ final class MessageSettings implements DefaultNodeSettings {
     @Effect(signals = ReportIsConnectedInputSignal.class, type = EffectType.DISABLE)
     EMailFormat m_format = EMailFormat.HTML;
 
-    @Widget(title = "Priority", advanced = true, description = "The 'X-Priority' field that is understood by some "
-        + "email clients to denote a priority of an email. If unsure, leave unchanged ('Normal' priority).")
-    @ValueSwitchWidget
-    EMailPriority m_priority = EMailPriority.NORMAL;
-
     @Widget(title = "Attachments", //
             description = "The path to the file to be attached to the email.")
     @Effect(signals = AttachmentPortIsConnectedInputSignal.class, type = EffectType.HIDE)
@@ -201,7 +171,6 @@ final class MessageSettings implements DefaultNodeSettings {
     void validate() throws InvalidSettingsException {
         CheckUtils.checkSettingNotNull(m_subject, "Subject must not be null");
         CheckUtils.checkSettingNotNull(m_message, "Message must not be null");
-        CheckUtils.checkSettingNotNull(m_priority, "Priority must not be null");
         CheckUtils.checkSettingNotNull(m_format, "Format must not be null");
     }
 

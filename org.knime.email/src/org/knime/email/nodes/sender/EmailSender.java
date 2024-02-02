@@ -309,7 +309,6 @@ final class EmailSender {
         message.setHeader("X-Mailer", "KNIME/" + KNIMEConstants.VERSION);
 
         final var messageSettings = m_settings.m_messageSettings;
-        message.setHeader("X-Priority", messageSettings.m_priority.toXPriority());
         message.setSentDate(new Date()); // NOSONAR
         message.setSubject(messageSettings.m_subject, StandardCharsets.UTF_8.name());
 
