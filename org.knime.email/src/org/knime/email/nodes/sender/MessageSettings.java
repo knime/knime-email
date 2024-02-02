@@ -49,7 +49,6 @@
 package org.knime.email.nodes.sender;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -188,16 +187,15 @@ final class MessageSettings implements DefaultNodeSettings {
 
     @Widget(title = "Attachments", //
             description = "The path to the file to be attached to the email.")
-    @Effect(signals = AttachmentPortIsConnectedInputSignal.class, type = EffectType.DISABLE)
+    @Effect(signals = AttachmentPortIsConnectedInputSignal.class, type = EffectType.HIDE)
     @ArrayWidget(showSortButtons = true, addButtonText = "Add attachment")
     Attachment[] m_attachments = new Attachment[] {};
 
-    @Widget(title = "Attachment Column",
+    @Widget(title = "Attachments",
         description = "The column in the attachment input table, if enabled, "
-            + "containing the list of attachment locations (the column needs to be of type \"path\".",
-        advanced = true)
-    @Effect(signals = AttachmentPortIsConnectedInputSignal.class, type = EffectType.ENABLE)
-    @ChoicesWidget(choices = AttachmentColumnProvider.class, showNoneColumn = true)
+            + "containing the list of attachment locations (the column needs to be of type \"path\".")
+    @Effect(signals = AttachmentPortIsConnectedInputSignal.class, type = EffectType.SHOW)
+    @ChoicesWidget(choices = AttachmentColumnProvider.class)
     String m_attachmentColumn;
 
     void validate() throws InvalidSettingsException {
@@ -212,19 +210,8 @@ final class MessageSettings implements DefaultNodeSettings {
         validate();
         if (m_attachmentColumn != null) {
             final Optional<DataColumnSpec[]> validPathColumns = getValidPathColumnNames(inTypes, specSupplier);
-            if (validPathColumns.isEmpty()) {
-                throw org.knime.core.node.message.Message.builder() //
-                .withSummary("No 'attachment' input table connected.") //
-                .addTextIssue(String.format("The node is configured to use an input table with column '%s' to "
-                    + "specifying email attachment paths but no input table is provided", m_attachmentColumn)) //
-                .addResolutions("Re-configure the node, unsetting the currently selected attachment column.") //
-                .addResolutions("Enable the attachment table input and provide an appropriate table.") //
-                .build().orElseThrow() //
-                .toInvalidSettingsException();
-            }
-            CheckUtils.checkSetting(
-                validPathColumns.stream().flatMap(Arrays::stream)
-                    .anyMatch(col -> col.getName().equals(m_attachmentColumn)),
+            CheckUtils.checkSetting(validPathColumns.isEmpty() || //
+                Stream.of(validPathColumns.get()).map(DataColumnSpec::getName).anyMatch(m_attachmentColumn::equals),
                 "Selected path column ('%s') not present in attachment input column or not of correct (path) type",
                 m_attachmentColumn);
         }

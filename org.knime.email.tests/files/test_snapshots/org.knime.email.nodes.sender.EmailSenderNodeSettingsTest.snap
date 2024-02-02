@@ -20,7 +20,7 @@
             "properties" : {
               "attachmentColumn" : {
                 "type" : "string",
-                "title" : "Attachment Column",
+                "title" : "Attachments",
                 "description" : "The column in the attachment input table, if enabled, containing the list of attachment locations (the column needs to be of type \"path\"."
               },
               "attachments" : {
@@ -212,7 +212,7 @@
           "showSortButtons" : true
         },
         "rule" : {
-          "effect" : "DISABLE",
+          "effect" : "HIDE",
           "condition" : {
             "schema" : {
               "const" : true
@@ -223,16 +223,15 @@
         "type" : "Control",
         "scope" : "#/properties/model/properties/messageSettings/properties/attachmentColumn",
         "options" : {
-          "isAdvanced" : true,
           "possibleValues" : [ ],
           "format" : "dropDown",
-          "showNoneColumn" : true,
+          "showNoneColumn" : false,
           "showRowKeys" : false,
           "showSearch" : true,
           "showMode" : true
         },
         "rule" : {
-          "effect" : "ENABLE",
+          "effect" : "SHOW",
           "condition" : {
             "schema" : {
               "const" : true

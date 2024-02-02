@@ -89,11 +89,6 @@ final class EmailSenderNodeSettingsTest extends DefaultNodeSettingsSnapshotTest 
         settings.m_recipientsSettings.m_to = "ignored@recipient";
         assertDoesNotThrow(() -> settings.validate(), "Settings validation"); // NOSONAR
         
-        final InvalidSettingsException e1 = assertThrows(InvalidSettingsException.class, 
-            () -> settings.validateDuringConfiguration(new PortType[] {EmailSessionPortObject.TYPE}, i -> null),
-            "exception when input has no attachment table");
-        assertThat("exception detail matches", e1.getMessage(), matchesPattern(".*input.*connected.*"));
-        
         final InvalidSettingsException e2 = assertThrows(InvalidSettingsException.class,
             () -> settings.validateDuringConfiguration(
                 new PortType[]{EmailSessionPortObject.TYPE, BufferedDataTable.TYPE},
