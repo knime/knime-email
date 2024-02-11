@@ -46,39 +46,30 @@
  * History
  *   27 Sep 2023 (Tobias): created
  */
-package org.knime.email.nodes.connector;
+package org.knime.email.nodes.provider.gmail;
 
-import org.apache.commons.lang3.StringUtils;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.HorizontalLayout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.OneOfEnumCondition;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Or;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Signal;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.TrueCondition;
 import org.knime.core.webui.node.dialog.defaultdialog.setting.credentials.Credentials;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.NumberInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.email.nodes.connector.EmailConnectorSettings.ConnectionSecurity;
+import org.knime.email.nodes.connector.EmailConnectorSettings.ConnectionType;
 import org.knime.email.session.EmailSessionKey;
-import org.knime.email.session.EmailSessionKey.SmtpConnectionSecurity;
 
 /**
  * Settings class.
  * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction")
-public class EmailConnectorSettings implements DefaultNodeSettings {
+public class GmailConnectorSettings implements DefaultNodeSettings {
 
     @Widget(title = "Connection type", description =
             """
@@ -99,82 +90,27 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
             <li>Select "Incoming &amp; Outgoing" if you want to read and send email.</li>
             </ul>
             """)
-    @Signal(id = IncomingServerSection.class, condition = IsIncomingSelected.class)
-    @Signal(id = OutgoingServerSection.class, condition = IsOutgoingSelected.class)
     @Persist(optional = true)
     @ValueSwitchWidget()
     ConnectionType m_type = ConnectionType.INCOMING;
 
-
 //  INCOMING SERVER SETTINGS
-    @Section(title = "Incoming Mail Server (IMAP)")
-    @Effect(signals = IncomingServerSection.class, type = EffectType.SHOW)
-    interface IncomingServerSection {}
-
-
-    @Layout(IncomingServerSection.class)
-    @Widget(title = "Server", description = "The address of the incoming email server (IMAP) e.g. <i>imap.web.de.</i>")
-    @TextInputWidget(pattern = "[^ ]+")
-    @Persist(optional = true, configKey = "server")
-    String m_imapServer;
-
-
-    @Layout(IncomingServerSection.class)
-    @Widget(title = "Port",
-        description = "The port of the incoming email server (e.g. 143 (non-secure) or 993 (secure)).") //
-    @NumberInputWidget(min = 1, max = 0xFFFF) // 65635
-    @Persist(optional = true, configKey = "port")
+    String m_imapServer = "imap.gmail.com";
     int m_imapPort = 993;
-
-    @Layout(IncomingServerSection.class)
-    @Widget(title = "Use secure protocol",
-            description = "Choose whether to use an encrypted or unencrypted connection.")
-    @Persist(optional = true, configKey = "useSecureProtocol")
     boolean m_imapUseSecureProtocol = true;
 
 
 //  OUTGOING SERVER SETTINGS
-    @Section(title = "Outgoing Mail Server (SMTP)")
-    @After(IncomingServerSection.class)
-    @Effect(signals = OutgoingServerSection.class, type = EffectType.SHOW)
-    interface OutgoingServerSection {}
-
-    @Layout(OutgoingServerSection.class)
-    @Widget(title = "Server", description = "The address of the outgoing email server (SMTP) e.g. <i>smtp.web.de.</i>")
-    @TextInputWidget(pattern = "^\\w[\\w\\.]*")
-    @Persist(optional = true)
-    String m_smtpHost;
-
-    @Layout(OutgoingServerSection.class)
-    @Widget(title = "Port",
-        description = "The port of the outgoing email server (e.g. 25 (non-secure), 465 (secure) or 587 (secure)).")
-    @NumberInputWidget(min = 1, max = 0xFFFF) // 65635
-    @Persist(optional = true)
-    int m_smtpPort = 587;
-
-    @Layout(OutgoingServerSection.class)
     @Widget(title = "Email address", description = "Some SMTP servers require the sender's email address, other "
             + "accept this to be not specified and will automatically derive it from the user account.")
-    @Persist(optional = true)
+
     String m_smtpEmailAddress;
-
-    @Layout(OutgoingServerSection.class)
-    @Widget(title = "Outgoing mail server requires authentication.")
-    @Persist(optional = true)
-    @Signal(id=SMTPRequiresAuthentication.class, condition = TrueCondition.class)
+    String m_smtpHost = "smtp.gmail.com";
+    int m_smtpPort = 587;
     boolean m_smtpRequiresAuthentication = true;
-
-    @Layout(OutgoingServerSection.class)
-    @Widget(title = "Connection Security", description="")
-    @ValueSwitchWidget
-    @Persist(optional = true)
-    ConnectionSecurity m_smtpSecurity = ConnectionSecurity.NONE;
+    ConnectionSecurity m_smtpSecurity = ConnectionSecurity.STARTTLS;
 
 
-    @Section(title = "Authentication")
-    @Effect(signals = {IncomingServerSection.class, SMTPRequiresAuthentication.class}, type = EffectType.SHOW,
-        operation = Or.class)
-    @After(OutgoingServerSection.class)
     interface AuthenticationSection {}
     /**The email server login.*/
     @Layout(AuthenticationSection.class)
@@ -226,77 +162,4 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
         @Layout(ConnectionPropertiesLayout.class)
         public String m_value;
     }
-
-
-//  HELPER SECTION
-    public enum ConnectionType {
-        @Label("Incoming")
-        INCOMING,
-        @Label("Outgoing")
-        OUTGOING,
-        @Label("Incoming & Outgoing")
-        INCOMING_OUTGOING
-    }
-
-    // OUTGOING SERVER SETTINGS
-    public enum ConnectionSecurity {
-        @Label("None")
-        NONE(SmtpConnectionSecurity.NONE),
-        @Label("SSL")
-        SSL(SmtpConnectionSecurity.SSL),
-        @Label("STARTTLS")
-        STARTTLS(SmtpConnectionSecurity.STARTTLS);
-
-        private final SmtpConnectionSecurity m_smtpConnectionSecurity;
-
-        ConnectionSecurity(final SmtpConnectionSecurity sec) {
-            m_smtpConnectionSecurity = sec;
-        }
-
-        public SmtpConnectionSecurity toSmtpConnectionSecurity() {
-            return m_smtpConnectionSecurity;
-        }
-
-    }
-
-    static class IsIncomingSelected extends OneOfEnumCondition<ConnectionType> {
-        @Override
-        public ConnectionType[] oneOf() {
-            return new ConnectionType[]{ConnectionType.INCOMING, ConnectionType.INCOMING_OUTGOING};
-        }
-    }
-
-    static class IsOutgoingSelected extends OneOfEnumCondition<ConnectionType> {
-        @Override
-        public ConnectionType[] oneOf() {
-            return new ConnectionType[]{ConnectionType.OUTGOING, ConnectionType.INCOMING_OUTGOING};
-        }
-    }
-
-    interface SMTPRequiresAuthentication {}
-
-    void validate() throws InvalidSettingsException {
-        switch (m_type) {
-            case INCOMING:
-                validateIncoming();
-                break;
-            case OUTGOING:
-                validateOutgoing();
-                break;
-            case INCOMING_OUTGOING:
-                validateIncoming();
-                validateOutgoing();
-                break;
-        }
-    }
-
-    private void validateIncoming() throws InvalidSettingsException {
-        CheckUtils.checkSetting(StringUtils.isNoneBlank(m_imapServer), "No incoming mail server set");
-    }
-
-    private void validateOutgoing() throws InvalidSettingsException {
-        CheckUtils.checkSetting(StringUtils.isNoneBlank(m_smtpHost), "No outgoing mail server set");
-    }
-
-
 }

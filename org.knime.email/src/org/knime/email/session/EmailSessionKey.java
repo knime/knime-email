@@ -93,6 +93,12 @@ public final class EmailSessionKey {
         STARTTLS
     }
 
+    enum AuthType {
+        USERNAME_PASSWORD,
+        OAUTH,
+        NONE;
+    }
+
     private final String m_imapHost;
     private final int m_imapPort;
     private final boolean m_imapUseSecurePortocol;
@@ -106,8 +112,10 @@ public final class EmailSessionKey {
     private final int m_readTimeoutS;
     private Properties m_properties;
 
+
+    private final AuthType m_authType;
     private final String m_user;
-    private final String m_password;
+    private final String m_passwordOrToken;
 
     private EmailSessionKey(final EmailSessionKeyBuilder builder) {
         m_imapHost = builder.m_imapHost;
@@ -123,8 +131,9 @@ public final class EmailSessionKey {
         }
         m_smtpConnectionSecurity = builder.m_smtpConnectionSecurity;
 
+        m_authType = builder.m_authType;
         m_user = builder.m_user;
-        m_password = builder.m_password;
+        m_passwordOrToken = builder.m_passwordOrToken;
 
         m_connectTimeoutS = builder.m_connectTimeoutS;
         m_readTimeoutS = builder.m_readTimeoutS;
@@ -156,27 +165,33 @@ public final class EmailSessionKey {
             throw new MessagingException("No incoming server settings available");
         }
         final var protocol = m_imapUseSecurePortocol ? "imaps" : "imap";
-        final var props = new Properties();
-        props.put("mail.store.protocol", protocol);
-        props.put("mail." + protocol + ".host", m_imapHost);
-        props.put("mail." + protocol + ".port", m_imapPort);
-        props.put("mail." + protocol + ".connectiontimeout", String.valueOf(1000 * m_connectTimeoutS));
-        props.put("mail." + protocol + ".timeout", String.valueOf(1000 * m_readTimeoutS));
+        final var properties = new Properties();
+        properties.put("mail.store.protocol", protocol);
+        properties.put("mail." + protocol + ".host", m_imapHost);
+        properties.put("mail." + protocol + ".port", m_imapPort);
+        properties.put("mail." + protocol + ".connectiontimeout", String.valueOf(1000 * m_connectTimeoutS));
+        properties.put("mail." + protocol + ".timeout", String.valueOf(1000 * m_readTimeoutS));
         //use the user settings last to allow for more flexibility by allowing users to overwrite our standard settings
-        props.putAll(m_properties);
+        properties.putAll(m_properties);
         EmailIncomingSession.LOGGER.debugWithFormat(
             "Connecting email client to %s:%d via %s using following properties %s", m_imapHost, m_imapPort, protocol,
             m_properties);
 
         try (final var closeable = EmailUtil.runWithContextClassloader(Session.class)) {
-            final var emailSession = Session.getInstance(props);
+            final var emailSession = Session.getInstance(properties);
             final var emailStore = emailSession.getStore();
             try {
-                final boolean isRequireAuth = StringUtils.isNotBlank(m_user);
-                if (isRequireAuth) {
-                    emailStore.connect(m_user, m_password);
-                } else {
-                    emailStore.connect();
+                switch (m_authType) {
+                    case NONE:
+                        emailStore.connect();
+                    case OAUTH:
+                        properties.put("mail.imap.auth.mechanisms", "XOAUTH2");
+                        emailStore.connect(m_user, m_passwordOrToken);
+                        break;
+                    case USERNAME_PASSWORD:
+                        emailStore.connect(m_user, m_passwordOrToken);
+                    default:
+                        throw new IllegalStateException(m_authType + " not implemented");
                 }
                 return new EmailIncomingSession(emailStore);
             } catch (MessagingException me) {
@@ -240,22 +255,28 @@ public final class EmailSessionKey {
                 default:
                     throw new IllegalStateException("unsupported connection security: " + m_smtpConnectionSecurity);
             }
-            final boolean isRequireAuth = StringUtils.isNotBlank(m_user);
 
             properties.setProperty("mail.transport.protocol", protocol);
             // only support secure versions of TLS -- changed with AP-19572
             properties.setProperty("mail.smtp.ssl.protocols", "TLSv1.2 TLSv1.3");
             properties.setProperty("mail." + protocol + ".host", m_smtpHost);
             properties.setProperty("mail." + protocol + ".port", Integer.toString(m_smtpPort));
-            properties.setProperty("mail." + protocol + ".auth", Boolean.toString(isRequireAuth));
+            properties.setProperty("mail." + protocol + ".auth", Boolean.toString(AuthType.NONE == m_authType));
             properties.setProperty("mail." + protocol + ".connectiontimeout", String.valueOf(1000 * m_connectTimeoutS));
             properties.setProperty("mail." + protocol + ".timeout", String.valueOf(1000 * m_readTimeoutS));
             final var session = Session.getInstance(properties);
             final var transport = session.getTransport();
-            if (isRequireAuth) {
-                transport.connect(m_user, m_password);
-            } else {
-                transport.connect();
+            switch (m_authType) {
+                case NONE:
+                    transport.connect();
+                case OAUTH:
+                    properties.put("mail.imap.auth.mechanisms", "XOAUTH2");
+                    transport.connect(m_user, m_passwordOrToken);
+                    break;
+                case USERNAME_PASSWORD:
+                    transport.connect(m_user, m_passwordOrToken);
+                default:
+                    throw new IllegalStateException(m_authType + " not implemented");
             }
             return new EmailOutgoingSession(session, transport, m_smtpEmailAddress);
         } finally {
@@ -292,7 +313,7 @@ public final class EmailSessionKey {
         if (StringUtils.isNotBlank(m_user)) {
             authPropMap = ImmutableMap.of( // NOSONAR, guava order preserving
                 "User", m_user, //
-                "Password", StringUtils.isEmpty(m_password) ? "<none>" : StringUtils.repeat('\u2022', 5));
+                "Password", StringUtils.isEmpty(m_passwordOrToken) ? "<none>" : StringUtils.repeat('\u2022', 5));
         }
         result.add(new ViewContentSection("Authentication", Optional.ofNullable(authPropMap)));
 
@@ -322,6 +343,8 @@ public final class EmailSessionKey {
         OptionalBuilder withProperties(Properties properties);
 
         OptionalBuilder withAuth(String user, String password);
+
+        OptionalBuilder withOAuth(String user, String token);
 
         OptionalBuilder withTimeouts(int connectTimeoutS, int readTimeoutS);
 
@@ -373,8 +396,9 @@ public final class EmailSessionKey {
         private String m_smtpEmailAddress;
         private SmtpConnectionSecurity m_smtpConnectionSecurity;
 
+        private AuthType m_authType = AuthType.NONE;
         private String m_user;
-        private String m_password;
+        private String m_passwordOrToken;
 
         private int m_readTimeoutS = DEF_TIMEOUT_READ_S;
         private int m_connectTimeoutS = DEF_TIMEOUT_CONNECT_S;
@@ -434,8 +458,21 @@ public final class EmailSessionKey {
 
         @Override
         public OptionalBuilder withAuth(final String user, final String password) {
+            if (StringUtils.isNotBlank(user)) {
+                m_authType = AuthType.NONE;
+            } else {
+                m_authType = AuthType.USERNAME_PASSWORD;
+            }
             m_user = user;
-            m_password = password;
+            m_passwordOrToken = password;
+            return this;
+        }
+
+        @Override
+        public OptionalBuilder withOAuth(final String user, final String password) {
+            m_authType = AuthType.OAUTH;
+            m_user = user;
+            m_passwordOrToken = password;
             return this;
         }
 

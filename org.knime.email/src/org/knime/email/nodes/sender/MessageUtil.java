@@ -81,16 +81,13 @@ final class MessageUtil {
     }
 
     record DocumentAndContentType(Document messageDocument, MessageSettings.EMailFormat format) {
+    }
 
-        String contentType() {
-            return switch (format) {
-                case HTML -> "text/html; charset=\"utf-8\"";
-                case TEXT -> "text/plain; charset=\"utf-8\"";
-                default -> throw new IllegalArgumentException("The unsupported email format \"" + format
-                    + "\" was specified. Valid formats are only \"HTML\" and \"TEXT\".");
-            };
+    static String contentType(final boolean isHtml) {
+        if (isHtml) {
+            return "text/html; charset=\"utf-8\"";
         }
-
+        return "text/plain; charset=\"utf-8\"";
     }
 
     /** jsoup visitor handing <p>, <br> and header (h1, etc) by replacing them with new line. */
