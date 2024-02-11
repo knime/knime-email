@@ -46,7 +46,7 @@
  * History
  *   27 Sep 2023 (Tobias): created
  */
-package org.knime.email.nodes.connector;
+package org.knime.email.nodes.provider.gmail;
 
 import java.io.File;
 import java.io.IOException;
@@ -68,57 +68,58 @@ import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.credentials.base.CredentialPortObject;
 import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.credentials.base.oauth.api.AccessTokenAccessor;
-import org.knime.email.nodes.connector.EmailConnectorSettings.ConnectionProperties;
+import org.knime.email.nodes.provider.gmail.GmailConnectorSettings.ConnectionProperties;
 import org.knime.email.port.EmailSessionPortObject;
-import org.knime.email.port.EmailSessionPortObjectSpec;
 import org.knime.email.session.EmailSessionCache;
 import org.knime.email.session.EmailSessionKey;
 import org.knime.email.session.EmailSessionKey.OptionalBuilder;
 
 /**
- * Node model implementation which provides a generic email connector where the user has to specify all
- * connection details e.g. host and port.
+ * Node model implementation which provides a Gmail Connector.
  *
  * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction")
-public class EmailConnectorNodeModel extends NodeModel {
+public class GmailConnectorNodeModel extends NodeModel {
 
     private UUID m_cacheId;
 
-    private EmailConnectorSettings m_settings = new EmailConnectorSettings();
+    private GmailConnectorSettings m_settings = new GmailConnectorSettings();
 
-    /**
-     * Constructor.
-     * @param portsConfiguration the ports configuration
-     */
-    protected EmailConnectorNodeModel(final PortsConfiguration portsConfiguration) {
+    GmailConnectorNodeModel(final PortsConfiguration portsConfiguration) {
         super(portsConfiguration.getInputPorts(), portsConfiguration.getOutputPorts());
     }
 
+//    private PortType[] getInputTypes() {
+//        return IntStream.range(0, getNrInPorts()).mapToObj(this::getInPortType).toArray(PortType[]::new);
+//    }
+
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        DefaultNodeSettings.loadSettings(settings, EmailConnectorSettings.class).validate();
+//        DefaultNodeSettings.loadSettings(settings, GmailConnectorSettings.class).validate();
     }
 
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_settings = DefaultNodeSettings.loadSettings(settings, EmailConnectorSettings.class);
+        m_settings = DefaultNodeSettings.loadSettings(settings, GmailConnectorSettings.class);
     }
 
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        DefaultNodeSettings.saveSettings(EmailConnectorSettings.class, m_settings, settings);
+        DefaultNodeSettings.saveSettings(GmailConnectorSettings.class, m_settings, settings);
     }
+
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
         throws InvalidSettingsException {
-        m_settings.validate();
-        return new PortObjectSpec[]{new EmailSessionPortObjectSpec()};
+//        m_settings.validateDuringConfiguration(getInputTypes(), i -> Optional.ofNullable(inSpecs[i]));
+//        EmailNodeUtil.checkOutgoingAvailable(inSpecs);
+        return new PortObjectSpec[]{};
     }
 
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
+
         final var mailSessionKey = createKey(inObjects, m_settings);
         //test incoming if set...
         if (mailSessionKey.incomingAvailable()) {
@@ -139,7 +140,7 @@ public class EmailConnectorNodeModel extends NodeModel {
     }
 
     private static final EmailSessionKey createKey(final PortObject[] inObjects,
-        final EmailConnectorSettings settings) throws NoSuchCredentialException {
+        final GmailConnectorSettings settings) throws NoSuchCredentialException {
         final OptionalBuilder optionalBuilder;
         switch (settings.m_type) {
             case INCOMING:
@@ -167,7 +168,7 @@ public class EmailConnectorNodeModel extends NodeModel {
 
         if (inObjects.length == 1) {
             final CredentialPortObject in = (CredentialPortObject) inObjects[0];
-            optionalBuilder.withOAuth(settings.m_oauthUser, in.getSpec().toAccessor(AccessTokenAccessor.class));
+            optionalBuilder.withOAuth(settings.m_smtpEmailAddress, in.getSpec().toAccessor(AccessTokenAccessor.class));
         } else {
             optionalBuilder.withAuth(settings.m_login.getUsername(), settings.m_login.getPassword());
         }
@@ -194,7 +195,7 @@ public class EmailConnectorNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
-        // nothing to save
+        // empty
     }
 
     @Override

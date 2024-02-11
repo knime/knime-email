@@ -20,6 +20,12 @@
             factory-class="org.knime.email.nodes.connector.EmailConnectorNodeFactory" />
       <node category-path="/labs/email"
             factory-class="org.knime.email.nodes.mover.EmailMoverNodeFactory" />
+      <node
+            category-path="/labs/email"
+            deprecated="false"
+            factory-class="org.knime.email.nodes.provider.gmail.GmailConnectorNodeFactory"
+            hidden="false">
+      </node>
    </extension>
    <extension
          point="org.knime.core.PortType">

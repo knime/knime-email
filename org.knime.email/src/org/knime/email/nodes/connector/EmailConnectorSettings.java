@@ -48,8 +48,11 @@
  */
 package org.knime.email.nodes.connector;
 
+import java.util.Arrays;
+
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
@@ -77,6 +80,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.ValueRefere
 import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.NumberInputWidgetValidation.MaxValidation;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.NumberInputWidgetValidation.MinValidation.IsPositiveIntegerValidation;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.TextInputWidgetValidation.PatternValidation;
+import org.knime.credentials.base.CredentialPortObject;
 import org.knime.email.session.EmailSessionKey;
 import org.knime.email.session.EmailSessionKey.SmtpConnectionSecurity;
 
@@ -87,6 +91,20 @@ import org.knime.email.session.EmailSessionKey.SmtpConnectionSecurity;
  */
 @SuppressWarnings("restriction")
 public class EmailConnectorSettings implements DefaultNodeSettings {
+
+    private static boolean hasCredentialPort(final PortType[] types) {
+        return Arrays.stream(types).anyMatch(CredentialPortObject.TYPE::equals);
+    }
+
+    /**
+     * Constant signal to indicate whether the user has added a credential port or not.
+     */
+    static final class CredentialInputConnected implements PredicateProvider {
+        @Override
+        public Predicate init(final PredicateInitializer i) {
+            return i.getConstant(context -> hasCredentialPort(context.getInPortTypes()));
+        }
+    }
 
     interface ConnectionTypeRef extends Reference<ConnectionType> {
     }
@@ -138,6 +156,12 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     }
 
     private static final class ImapServerPatternValidation extends PatternValidation {
+
+        @Override
+        public String getErrorMessage() {
+            return "IMAP host must start with a letter and can only contain letters, digits, dots, and underscores.";
+        }
+
         @Override
         protected String getPattern() {
             return "[^ ]+";
@@ -181,6 +205,12 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     }
 
     private static final class SmtpHostPatternValidation extends PatternValidation {
+
+        @Override
+        public String getErrorMessage() {
+            return "SMTP host must start with a letter and can only contain letters, digits, dots, and underscores.";
+        }
+
         @Override
         protected String getPattern() {
             return "^\\w[\\w\\.]*";
@@ -242,8 +272,15 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
 
     /** The email server login. */
     @Layout(AuthenticationSection.class)
+    @Effect(predicate = CredentialInputConnected.class, type = EffectType.HIDE)
     @Widget(title = "Login", description = "The optional email server login.")
     Credentials m_login = new Credentials(); //set to empty credentials to prevent "No login set message"
+
+    @Layout(AuthenticationSection.class)
+    @Effect(predicate = CredentialInputConnected.class, type = EffectType.SHOW)
+    @Widget(title = "OAuth2 user", description = "The optional user name to use with the given OAuth2 access token.")
+    @Migrate(loadDefaultIfAbsent = true)
+    String m_oauthUser = "";
 
     //  CONNECTION PROPERTIES
     @Section(title = "Connection Properties")
@@ -299,20 +336,24 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
         public String m_value;
     }
 
-    //  HELPER SECTION
-    enum ConnectionType {
-            @Label("Incoming")
-            INCOMING, @Label("Outgoing")
-            OUTGOING, @Label("Incoming & Outgoing")
-            INCOMING_OUTGOING
+//  HELPER SECTION
+    public enum ConnectionType {
+        @Label("Incoming")
+        INCOMING,
+        @Label("Outgoing")
+        OUTGOING,
+        @Label("Incoming & Outgoing")
+        INCOMING_OUTGOING
     }
 
     // OUTGOING SERVER SETTINGS
-    enum ConnectionSecurity {
-            @Label("None")
-            NONE(SmtpConnectionSecurity.NONE), @Label("SSL")
-            SSL(SmtpConnectionSecurity.SSL), @Label("STARTTLS")
-            STARTTLS(SmtpConnectionSecurity.STARTTLS);
+    public enum ConnectionSecurity {
+        @Label("None")
+        NONE(SmtpConnectionSecurity.NONE),
+        @Label("SSL")
+        SSL(SmtpConnectionSecurity.SSL),
+        @Label("STARTTLS")
+        STARTTLS(SmtpConnectionSecurity.STARTTLS);
 
         private final SmtpConnectionSecurity m_smtpConnectionSecurity;
 
@@ -320,7 +361,7 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
             m_smtpConnectionSecurity = sec;
         }
 
-        SmtpConnectionSecurity toSmtpConnectionSecurity() {
+        public SmtpConnectionSecurity toSmtpConnectionSecurity() {
             return m_smtpConnectionSecurity;
         }
 
