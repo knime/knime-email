@@ -44,75 +44,123 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   18 Jul 2025 (Tobias): created
+ *   27 Sep 2023 (Tobias): created
  */
 package org.knime.email.nodes.connector;
 
-<<<<<<< Upstream, based on origin/master
+import java.util.Arrays;
+
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.node.parameters.NodeParameters;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.HorizontalLayout;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.WidgetGroup;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Migrate;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Persist;
+import org.knime.core.webui.node.dialog.defaultdialog.setting.credentials.Credentials;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.Advanced;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget.ElementLayout;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.NumberInputWidget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.BooleanReference;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect.EffectType;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Predicate;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.PredicateProvider;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Reference;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.ValueReference;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.NumberInputWidgetValidation.MaxValidation;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.NumberInputWidgetValidation.MinValidation.IsPositiveIntegerValidation;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.TextInputWidgetValidation.PatternValidation;
+import org.knime.credentials.base.CredentialPortObject;
 import org.knime.email.session.EmailSessionKey;
 import org.knime.email.session.EmailSessionKey.SmtpConnectionSecurity;
-import org.knime.node.parameters.Advanced;
-import org.knime.node.parameters.Widget;
-import org.knime.node.parameters.array.ArrayWidget;
-import org.knime.node.parameters.array.ArrayWidget.ElementLayout;
-import org.knime.node.parameters.layout.After;
-import org.knime.node.parameters.layout.HorizontalLayout;
-import org.knime.node.parameters.layout.Layout;
-import org.knime.node.parameters.layout.Section;
-import org.knime.node.parameters.migration.Migrate;
-import org.knime.node.parameters.persistence.Persist;
-import org.knime.node.parameters.updates.Effect;
-import org.knime.node.parameters.updates.EffectPredicate;
-import org.knime.node.parameters.updates.EffectPredicateProvider;
-import org.knime.node.parameters.updates.ParameterReference;
-import org.knime.node.parameters.updates.ValueReference;
-import org.knime.node.parameters.updates.Effect.EffectType;
-import org.knime.node.parameters.updates.util.BooleanReference;
-import org.knime.node.parameters.widget.choices.Label;
-import org.knime.node.parameters.widget.choices.ValueSwitchWidget;
-import org.knime.node.parameters.widget.credentials.Credentials;
-import org.knime.node.parameters.widget.number.NumberInputWidget;
-import org.knime.node.parameters.widget.number.NumberInputWidgetValidation.MaxValidation;
-import org.knime.node.parameters.widget.number.NumberInputWidgetValidation.MinValidation.IsPositiveIntegerValidation;
-import org.knime.node.parameters.widget.text.TextInputWidget;
-import org.knime.node.parameters.widget.text.TextInputWidgetValidation.PatternValidation;
 
-=======
->>>>>>> 7f30dcf AP-21007: Gmail connector and support for OAuth in Generic
 /**
+ * Settings class.
  *
  * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction")
-<<<<<<< Upstream, based on origin/master
-public class EmailConnectorSettings implements NodeParameters {
-=======
-public class EmailConnectorSettings extends AbstractEmailConnectorSettings {
->>>>>>> 7f30dcf AP-21007: Gmail connector and support for OAuth in Generic
+public abstract class AbstractEmailConnectorSettings implements DefaultNodeSettings {
 
-<<<<<<< Upstream, based on origin/master
-    interface ConnectionTypeRef extends ParameterReference<ConnectionType> {
-=======
-    EmailConnectorSettings() {
->>>>>>> 7f30dcf AP-21007: Gmail connector and support for OAuth in Generic
+    public abstract static class ChangeAdvancedAnnotation implements WidgetGroup.Modifier {
+
+        private interface AdvancedSettingsRef extends Modification.Reference {
+        }
+
+        @Override
+        public void modify(final WidgetGroupModifier group) {
+            group.find(AdvancedSettingsRef.class).removeAnnotation(Advanced.class);
+        }
     }
 
-<<<<<<< Upstream, based on origin/master
-    static final class IsIncomingServerConnection implements EffectPredicateProvider {
+    protected AbstractEmailConnectorSettings(){
+
+    }
+
+
+    protected AbstractEmailConnectorSettings(final String imapServer, final int imapPort,
+        final boolean imapUseSecureProtocol, final String smtpHost, final int smptPort, final boolean smtpRequiresAuthentication,
+        final ConnectionSecurity smtpSecurity) {
+        m_imapServer = imapServer;
+        m_imapPort = imapPort;
+        m_imapUseSecureProtocol = imapUseSecureProtocol;
+        m_smtpHost = smtpHost;
+        m_smtpPort = smptPort;
+        m_smtpRequiresAuthentication = smtpRequiresAuthentication;
+        m_smtpSecurity = smtpSecurity;
+    }
+
+
+//    public abstract String getImapServer();
+
+
+    @Layout(IncomingServerSection.class)
+    @Widget(title = "Server", description = "The address of the incoming email server (IMAP) e.g. <i>imap.web.de.</i>")
+    @TextInputWidget(patternValidation = ImapServerPatternValidation.class)
+    @Persist(configKey = "server")
+    @Migrate(loadDefaultIfAbsent = true)
+    @Modification.WidgetReference(ChangeAdvancedAnnotation.AdvancedSettingsRef.class)
+    String m_imapServer;
+
+    private static boolean hasCredentialPort(final PortType[] types) {
+        return Arrays.stream(types).anyMatch(CredentialPortObject.TYPE::equals);
+    }
+
+    /**
+     * Constant signal to indicate whether the user has added a credential port or not.
+     */
+    static final class CredentialInputConnected implements PredicateProvider {
         @Override
-        public EffectPredicate init(final PredicateInitializer i) {
+        public Predicate init(final PredicateInitializer i) {
+            return i.getConstant(context -> hasCredentialPort(context.getInPortTypes()));
+        }
+    }
+
+    interface ConnectionTypeRef extends Reference<ConnectionType> {
+    }
+
+    static final class IsIncomingServerConnection implements PredicateProvider {
+        @Override
+        public Predicate init(final PredicateInitializer i) {
             return i.getEnum(ConnectionTypeRef.class).isOneOf(ConnectionType.INCOMING,
                 ConnectionType.INCOMING_OUTGOING);
         }
     }
 
-    static final class IsOutgoingServerConnection implements EffectPredicateProvider {
+    static final class IsOutgoingServerConnection implements PredicateProvider {
         @Override
-        public EffectPredicate init(final PredicateInitializer i) {
+        public Predicate init(final PredicateInitializer i) {
             return i.getEnum(ConnectionTypeRef.class).isOneOf(ConnectionType.OUTGOING,
                 ConnectionType.INCOMING_OUTGOING);
         }
@@ -145,22 +193,21 @@ public class EmailConnectorSettings extends AbstractEmailConnectorSettings {
     //  INCOMING SERVER SETTINGS
     @Section(title = "Incoming Mail Server (IMAP)")
     @Effect(predicate = IsIncomingServerConnection.class, type = EffectType.SHOW)
-    interface IncomingServerSection {
+    public interface IncomingServerSection {
     }
 
-    private static final class ImapServerPatternValidation extends PatternValidation {
+    public static final class ImapServerPatternValidation extends PatternValidation {
+
+        @Override
+        public String getErrorMessage() {
+            return "IMAP host must start with a letter and can only contain letters, digits, dots, and underscores.";
+        }
+
         @Override
         protected String getPattern() {
             return "[^ ]+";
         }
     }
-
-    @Layout(IncomingServerSection.class)
-    @Widget(title = "Server", description = "The address of the incoming email server (IMAP) e.g. <i>imap.web.de.</i>")
-    @TextInputWidget(patternValidation = ImapServerPatternValidation.class)
-    @Persist(configKey = "server")
-    @Migrate(loadDefaultIfAbsent = true)
-    String m_imapServer;
 
     private static final class PortMaxValidation extends MaxValidation {
         @Override
@@ -192,6 +239,12 @@ public class EmailConnectorSettings extends AbstractEmailConnectorSettings {
     }
 
     private static final class SmtpHostPatternValidation extends PatternValidation {
+
+        @Override
+        public String getErrorMessage() {
+            return "SMTP host must start with a letter and can only contain letters, digits, dots, and underscores.";
+        }
+
         @Override
         protected String getPattern() {
             return "^\\w[\\w\\.]*";
@@ -237,9 +290,9 @@ public class EmailConnectorSettings extends AbstractEmailConnectorSettings {
     @Migrate(loadDefaultIfAbsent = true)
     ConnectionSecurity m_smtpSecurity = ConnectionSecurity.NONE;
 
-    static final class AuthenticationIsRequired implements EffectPredicateProvider {
+    static final class AuthenticationIsRequired implements PredicateProvider {
         @Override
-        public EffectPredicate init(final PredicateInitializer i) {
+        public Predicate init(final PredicateInitializer i) {
             return i.getPredicate(IsIncomingServerConnection.class)
                 .or(i.getPredicate(SMTPRequiresAuthentication.class));
         }
@@ -253,8 +306,15 @@ public class EmailConnectorSettings extends AbstractEmailConnectorSettings {
 
     /** The email server login. */
     @Layout(AuthenticationSection.class)
+    @Effect(predicate = CredentialInputConnected.class, type = EffectType.HIDE)
     @Widget(title = "Login", description = "The optional email server login.")
     Credentials m_login = new Credentials(); //set to empty credentials to prevent "No login set message"
+
+    @Layout(AuthenticationSection.class)
+    @Effect(predicate = CredentialInputConnected.class, type = EffectType.SHOW)
+    @Widget(title = "OAuth2 user", description = "The optional user name to use with the given OAuth2 access token.")
+    @Migrate(loadDefaultIfAbsent = true)
+    String m_oauthUser = "";
 
     //  CONNECTION PROPERTIES
     @Section(title = "Connection Properties")
@@ -287,7 +347,7 @@ public class EmailConnectorSettings extends AbstractEmailConnectorSettings {
     @ArrayWidget(elementLayout = ElementLayout.HORIZONTAL_SINGLE_LINE, addButtonText = "Add custom property")
     ConnectionProperties[] m_properties = new ConnectionProperties[0];
 
-    static final class ConnectionProperties implements NodeParameters {
+    static final class ConnectionProperties implements DefaultNodeSettings {
         @HorizontalLayout
         interface ConnectionPropertiesLayout {
         }
@@ -310,20 +370,24 @@ public class EmailConnectorSettings extends AbstractEmailConnectorSettings {
         public String m_value;
     }
 
-    //  HELPER SECTION
-    enum ConnectionType {
-            @Label("Incoming")
-            INCOMING, @Label("Outgoing")
-            OUTGOING, @Label("Incoming & Outgoing")
-            INCOMING_OUTGOING
+//  HELPER SECTION
+    public enum ConnectionType {
+        @Label("Incoming")
+        INCOMING,
+        @Label("Outgoing")
+        OUTGOING,
+        @Label("Incoming & Outgoing")
+        INCOMING_OUTGOING
     }
 
     // OUTGOING SERVER SETTINGS
-    enum ConnectionSecurity {
-            @Label("None")
-            NONE(SmtpConnectionSecurity.NONE), @Label("SSL")
-            SSL(SmtpConnectionSecurity.SSL), @Label("STARTTLS")
-            STARTTLS(SmtpConnectionSecurity.STARTTLS);
+    public enum ConnectionSecurity {
+        @Label("None")
+        NONE(SmtpConnectionSecurity.NONE),
+        @Label("SSL")
+        SSL(SmtpConnectionSecurity.SSL),
+        @Label("STARTTLS")
+        STARTTLS(SmtpConnectionSecurity.STARTTLS);
 
         private final SmtpConnectionSecurity m_smtpConnectionSecurity;
 
@@ -331,7 +395,7 @@ public class EmailConnectorSettings extends AbstractEmailConnectorSettings {
             m_smtpConnectionSecurity = sec;
         }
 
-        SmtpConnectionSecurity toSmtpConnectionSecurity() {
+        public SmtpConnectionSecurity toSmtpConnectionSecurity() {
             return m_smtpConnectionSecurity;
         }
 
@@ -360,17 +424,4 @@ public class EmailConnectorSettings extends AbstractEmailConnectorSettings {
     private void validateOutgoing() throws InvalidSettingsException {
         CheckUtils.checkSetting(StringUtils.isNoneBlank(m_smtpHost), "No outgoing mail server set");
     }
-=======
-//    @Layout(IncomingServerSection.class)
-//    @Widget(title = "Server", description = "The address of the incoming email server (IMAP) e.g. <i>imap.web.de.</i>")
-//    @TextInputWidget(patternValidation = ImapServerPatternValidation.class)
-//    @Persist(configKey = "server")
-//    @Migrate(loadDefaultIfAbsent = true)
-//    String m_imapServer;
-//
-//    @Override
-//    public String getImapServer() {
-//        return m_imapServer;
-//    }
->>>>>>> 7f30dcf AP-21007: Gmail connector and support for OAuth in Generic
 }

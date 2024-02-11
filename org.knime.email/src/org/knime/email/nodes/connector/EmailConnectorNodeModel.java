@@ -57,12 +57,18 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.context.ports.PortsConfiguration;
 import org.knime.core.node.message.Message;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.webui.node.impl.WebUINodeConfiguration;
-import org.knime.core.webui.node.impl.WebUINodeModel;
-import org.knime.email.nodes.connector.EmailConnectorSettings.ConnectionProperties;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.credentials.base.CredentialPortObject;
+import org.knime.credentials.base.NoSuchCredentialException;
+import org.knime.credentials.base.oauth.api.AccessTokenAccessor;
+import org.knime.email.nodes.connector.AbstractEmailConnectorSettings.ConnectionProperties;
 import org.knime.email.port.EmailSessionPortObject;
 import org.knime.email.port.EmailSessionPortObjectSpec;
 import org.knime.email.session.EmailSessionCache;
@@ -74,31 +80,53 @@ import org.knime.email.session.EmailSessionKey.OptionalBuilder;
  * connection details e.g. host and port.
  *
  * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
+ * @param <S> {@link AbstractEmailConnectorSettings} implementation
  */
 @SuppressWarnings("restriction")
-public class EmailConnectorNodeModel extends WebUINodeModel<EmailConnectorSettings> {
+public class EmailConnectorNodeModel<S extends AbstractEmailConnectorSettings> extends NodeModel {
 
     private UUID m_cacheId;
+    private AbstractEmailConnectorSettings m_settings;
+    private final Class<S> m_settingsClass;
 
     /**
      * Constructor.
-     * @param configuration
+     * @param portsConfiguration the ports configuration
+     * @param settings the email settings to use
+     * @param settingsClass the class of the settings to use
      */
-    protected EmailConnectorNodeModel(final WebUINodeConfiguration configuration) {
-        super(configuration, EmailConnectorSettings.class);
+    public EmailConnectorNodeModel(final PortsConfiguration portsConfiguration,
+        final AbstractEmailConnectorSettings settings, final Class<S> settingsClass) {
+        super(portsConfiguration.getInputPorts(), portsConfiguration.getOutputPorts());
+        m_settings = settings;
+        m_settingsClass = settingsClass;
+
     }
 
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs, final EmailConnectorSettings modelSettings)
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        DefaultNodeSettings.loadSettings(settings, m_settingsClass).validate();
+    }
+
+    @Override
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+        m_settings = DefaultNodeSettings.loadSettings(settings, m_settingsClass);
+    }
+
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
+        DefaultNodeSettings.saveSettings(m_settings.getClass(), m_settings, settings);
+    }
+    @Override
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
         throws InvalidSettingsException {
-        modelSettings.validate();
+        m_settings.validate();
         return new PortObjectSpec[]{new EmailSessionPortObjectSpec()};
     }
 
     @Override
-    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec,
-        final EmailConnectorSettings modelSettings) throws Exception {
-        final var mailSessionKey = createKey(modelSettings);
+    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
+        final var mailSessionKey = createKey(inObjects, m_settings);
         //test incoming if set...
         if (mailSessionKey.incomingAvailable()) {
             exec.setMessage("Validating incoming mail server settings...");
@@ -117,27 +145,23 @@ public class EmailConnectorNodeModel extends WebUINodeModel<EmailConnectorSettin
         return new PortObject[]{new EmailSessionPortObject(m_cacheId)};
     }
 
-    @Override
-    protected void validateSettings(final EmailConnectorSettings settings) throws InvalidSettingsException {
-        settings.validate();
-    }
-
-    private static final EmailSessionKey createKey(final EmailConnectorSettings settings) {
-        final OptionalBuilder optinalBuilder;
+    private static final EmailSessionKey createKey(final PortObject[] inObjects,
+        final AbstractEmailConnectorSettings settings) throws NoSuchCredentialException {
+        final OptionalBuilder optionalBuilder;
         switch (settings.m_type) {
             case INCOMING:
-                optinalBuilder = EmailSessionKey.builder().withImap(b -> b //
+                optionalBuilder = EmailSessionKey.builder().withImap(b -> b //
                     .imapHost(settings.m_imapServer, settings.m_imapPort) //
                     .imapSecureConnection(settings.m_imapUseSecureProtocol)); //
                 break;
             case OUTGOING:
-                optinalBuilder = EmailSessionKey.builder().withSmtp(b -> b //
+                optionalBuilder = EmailSessionKey.builder().withSmtp(b -> b //
                     .smtpHost(settings.m_smtpHost, settings.m_smtpPort) //
                     .smtpEmailAddress(settings.m_smtpEmailAddress) //
                     .security(settings.m_smtpSecurity.toSmtpConnectionSecurity()));
                 break;
             case INCOMING_OUTGOING:
-                optinalBuilder = EmailSessionKey.builder().withImap(b -> b //
+                optionalBuilder = EmailSessionKey.builder().withImap(b -> b //
                     .imapHost(settings.m_imapServer, settings.m_imapPort) //
                     .imapSecureConnection(settings.m_imapUseSecureProtocol)).withSmtp(b -> b //
                         .smtpHost(settings.m_smtpHost, settings.m_smtpPort) //
@@ -148,8 +172,13 @@ public class EmailConnectorNodeModel extends WebUINodeModel<EmailConnectorSettin
                 throw new IllegalStateException("Unknown email connection type");
         }
 
-        return optinalBuilder.withAuth(settings.m_login.getUsername(), settings.m_login.getPassword()) //
-            .withTimeouts(settings.m_connectTimeout, settings.m_readTimeout) //
+        if (inObjects.length == 1) {
+            final CredentialPortObject in = (CredentialPortObject) inObjects[0];
+            optionalBuilder.withOAuth(settings.m_oauthUser, in.getSpec().toAccessor(AccessTokenAccessor.class));
+        } else {
+            optionalBuilder.withAuth(settings.m_login.getUsername(), settings.m_login.getPassword());
+        }
+        return optionalBuilder.withTimeouts(settings.m_connectTimeout, settings.m_readTimeout) //
             .withProperties(extractProperties(settings.m_properties)) //
             .build();
     }
@@ -170,6 +199,12 @@ public class EmailConnectorNodeModel extends WebUINodeModel<EmailConnectorSettin
     }
 
     @Override
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
+        // nothing to save
+    }
+
+    @Override
     protected void onDispose() {
         removeFromCache();
     }
@@ -185,4 +220,5 @@ public class EmailConnectorNodeModel extends WebUINodeModel<EmailConnectorSettin
             m_cacheId = null;
         }
     }
+
 }

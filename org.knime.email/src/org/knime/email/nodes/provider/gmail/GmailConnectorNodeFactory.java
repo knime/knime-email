@@ -46,7 +46,7 @@
  * History
  *   27 Sep 2023 (Tobias): created
  */
-package org.knime.email.nodes.connector;
+package org.knime.email.nodes.provider.gmail;
 
 import java.util.Optional;
 
@@ -63,48 +63,47 @@ import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeDialog;
 import org.knime.core.webui.node.impl.WebUINodeConfiguration;
 import org.knime.core.webui.node.impl.WebUINodeFactory;
 import org.knime.credentials.base.CredentialPortObject;
+import org.knime.email.nodes.connector.EmailConnectorNodeModel;
 import org.knime.email.port.EmailSessionPortObject;
 
 /**
+ * Gmail Connector node factory implementation.
  *
  * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction")
-public class EmailConnectorNodeFactory extends ConfigurableNodeFactory<EmailConnectorNodeModel>
+public class GmailConnectorNodeFactory extends ConfigurableNodeFactory<EmailConnectorNodeModel>
 implements NodeDialogFactory {
 
     private static final String CREDENTIAL_INPUT_PORT = "Credentials";
 
     private static final WebUINodeConfiguration CONFIG = WebUINodeConfiguration.builder()//
-            .name("Email Connector (Labs)")//
-            .icon("./emailConnector.png")//
-            .shortDescription("Connects to an email server using the IMAP and/or SMPT protocol.")//
+            .name("GMail Connector")//
+            .icon("./gmailConnector.png")//
+            .shortDescription(//
+                "Connects to <a href='https://mail.google.com/mail/'>Gmail</a> using the IMAP and/or SMPT protocol.")//
             .fullDescription(
                 """
                 <p>
-                Connects to an email server using the entered account. Once connected you can use various nodes to
-                work with your email such as the
+                Connects to <a href='https://mail.google.com/mail/'>GMail</a> using the entered account.
+                Once connected you can use various nodes to work with your email such as the
                 <a href="https://hub.knime.com/knime/extensions/org.knime.features.email/latest/org.knime.email.nodes.reader.EmailReaderNodeFactory/">Email Reader</a> node
                 to read email or the
                 <a href="https://hub.knime.com/knime/extensions/org.knime.features.email/latest/org.knime.email.nodes.sender.EmailSenderNodeFactory/">Email Sender</a> node
                 to send email.
                 </p>
                 <p>
-                The Email Connector node uses the <a href="https://jakartaee.github.io/mail-api/">Jakarta Mail API</a>
+                The GMail Connector node uses the <a href="https://jakartaee.github.io/mail-api/">Jakarta Mail API</a>
                 and the <a href="https://eclipse-ee4j.github.io/angus-mail/">Angus Mail implementation</a> to interact
                 with compatible email servers.
                 </p>
-                <p>
-                <b>Please notice that the node only supports email server that support the IMAP protocol for
-                reading email and the SMTP protocol for sending email.</b>
-                </p>
                 """)//
-            .modelSettingsClass(EmailConnectorSettings.class)//
+            .modelSettingsClass(GmailConnectorSettings.class)//
             .nodeType(NodeType.Source)//
-            .addInputPort(CREDENTIAL_INPUT_PORT, CredentialPortObject.TYPE, "OAuth2 credentials", true) //
+            .addInputPort(CREDENTIAL_INPUT_PORT, CredentialPortObject.TYPE, "Google credentials", true) //
             .addOutputPort("Email Session", EmailSessionPortObject.TYPE, "The email session to use in subsequent nodes.")//
-            .keywords("Email", "IMAP", "SMPT")//
-            .sinceVersion(5, 2, 0).build();
+            .keywords("Gmail", "Email", "IMAP", "SMPT")//
+            .sinceVersion(5, 6, 0).build();
 
     @Override
     protected NodeDescription createNodeDescription() {
@@ -120,10 +119,16 @@ implements NodeDialogFactory {
     protected NodeDialogPane createNodeDialogPane(final NodeCreationConfiguration creationConfig) {
         return NodeDialogManager.createLegacyFlowVariableNodeDialog(createNodeDialog());
     }
+
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
+
     @Override
     public EmailConnectorNodeModel createNodeModel(final NodeCreationConfiguration creationConfig) {
         return new EmailConnectorNodeModel(creationConfig.getPortConfig().orElseThrow(),
-            new EmailConnectorSettings(), EmailConnectorSettings.class);
+            new GmailConnectorSettings(), GmailConnectorSettings.class);
     }
 
     @Override
@@ -136,16 +141,13 @@ implements NodeDialogFactory {
 
     @Override
     public NodeDialog createNodeDialog() {
-        return new DefaultNodeDialog(SettingsType.MODEL, EmailConnectorSettings.class);
+        return new DefaultNodeDialog(SettingsType.MODEL, GmailConnectorSettings.class);
     }
 
     @Override
-    public NodeView<EmailConnectorNodeModel> createNodeView(final int viewIndex, final EmailConnectorNodeModel nodeModel) {
+    public NodeView<EmailConnectorNodeModel> createNodeView(final int viewIndex,
+        final EmailConnectorNodeModel nodeModel) {
         return null; // no view
     }
 
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
 }
