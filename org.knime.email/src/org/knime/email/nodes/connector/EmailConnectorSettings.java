@@ -260,20 +260,42 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
         public String m_value;
     }
 
+<<<<<<< Upstream, based on master
     //  HELPER SECTION
     enum ConnectionType {
             @Label("Incoming")
             INCOMING, @Label("Outgoing")
             OUTGOING, @Label("Incoming & Outgoing")
             INCOMING_OUTGOING
+=======
+
+//  HELPER SECTION
+    public enum ConnectionType {
+        @Label("Incoming")
+        INCOMING,
+        @Label("Outgoing")
+        OUTGOING,
+        @Label("Incoming & Outgoing")
+        INCOMING_OUTGOING
+>>>>>>> 0844e92 AP-21007: Initial version
     }
 
     // OUTGOING SERVER SETTINGS
+<<<<<<< Upstream, based on master
     enum ConnectionSecurity {
             @Label("None")
             NONE(SmtpConnectionSecurity.NONE), @Label("SSL")
             SSL(SmtpConnectionSecurity.SSL), @Label("STARTTLS")
             STARTTLS(SmtpConnectionSecurity.STARTTLS);
+=======
+    public enum ConnectionSecurity {
+        @Label("None")
+        NONE(SmtpConnectionSecurity.NONE),
+        @Label("SSL")
+        SSL(SmtpConnectionSecurity.SSL),
+        @Label("STARTTLS")
+        STARTTLS(SmtpConnectionSecurity.STARTTLS);
+>>>>>>> 0844e92 AP-21007: Initial version
 
         private final SmtpConnectionSecurity m_smtpConnectionSecurity;
 
@@ -281,7 +303,7 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
             m_smtpConnectionSecurity = sec;
         }
 
-        SmtpConnectionSecurity toSmtpConnectionSecurity() {
+        public SmtpConnectionSecurity toSmtpConnectionSecurity() {
             return m_smtpConnectionSecurity;
         }
 

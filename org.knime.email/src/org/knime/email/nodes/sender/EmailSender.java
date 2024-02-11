@@ -141,7 +141,11 @@ final class EmailSender {
             .allowStandardUrlProtocols()
             .allowCommonBlockElements()
             .allowStyling()
+<<<<<<< Upstream, based on master
             .allowElements("a", "hr", "pre", "code")
+=======
+            .allowElements("a")
+>>>>>>> 0844e92 AP-21007: Initial version
             .allowAttributes("href").onElements("a")
             .toFactory();
 
