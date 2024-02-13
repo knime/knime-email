@@ -17,7 +17,8 @@ Require-Bundle: org.knime.base;bundle-version="[5.3.0,6.0.0)",
  jakarta.validation.jakarta.validation-api;bundle-version="[3.0.2,4.0.0)",
  com.fasterxml.jackson.core.jackson-annotations;bundle-version="[2.13.2,3.0.0)",
  org.jsoup;bundle-version="[1.14.3,2.0.0)",
- org.apache.commons.lang3;bundle-version="[3.9.0,4.0.0)"
+ org.apache.commons.lang3;bundle-version="[3.9.0,4.0.0)",
+ com.googlecode.owasp-java-html-sanitizer;bundle-version="[20200713.1.0,20200714.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-ActivationPolicy: lazy
 Eclipse-BundleShape: jar

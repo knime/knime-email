@@ -96,6 +96,8 @@ import org.knime.filehandling.core.defaultnodesettings.filechooser.reader.ReadPa
 import org.knime.filehandling.core.defaultnodesettings.status.StatusMessage;
 import org.knime.reporting2.nodes.htmlwriter.ReportHtmlImageHandler;
 import org.knime.reporting2.nodes.htmlwriter.ReportHtmlWriterUtils;
+import org.owasp.html.HtmlPolicyBuilder;
+import org.owasp.html.PolicyFactory;
 
 import com.google.common.base.Strings;
 
@@ -129,6 +131,19 @@ final class EmailSender {
      * property is not specified or empty all domains are allowed.
      */
     public static final String PROPERTY_ALLOWED_RECIPIENT_DOMAINS = "knime.sendmail.allowed_domains";
+
+    /**
+     * Message body is sanitized, currently a copy of the policy defined in
+     * {@link org.knime.core.data.html.HTMLValueRenderer}, see also UIEXT-1672.
+     */
+    private static final PolicyFactory POLICY = new HtmlPolicyBuilder()
+            .allowCommonInlineFormattingElements()
+            .allowStandardUrlProtocols()
+            .allowCommonBlockElements()
+            .allowStyling()
+            .allowElements("a")
+            .allowAttributes("href").onElements("a")
+            .toFactory();
 
     private final EmailSenderNodeSettings m_settings;
 
@@ -268,7 +283,7 @@ final class EmailSender {
             throw new InvalidSettingsException(
                 "A flow variable could not be resolved due to \"" + nse.getMessage() + "\".", nse);
         }
-        final Document messageDoc = Jsoup.parse(messageHtml);
+        final Document messageDoc = Jsoup.parse(POLICY.sanitize(messageHtml));
         return new DocumentAndContentType(messageDoc, m_settings.m_messageSettings.m_format);
     }
 
@@ -341,7 +356,7 @@ final class EmailSender {
         }
         final boolean useHtmlFormat = report != null || messageRecord.format() == EMailFormat.HTML;
         final String content = useHtmlFormat ? document.html() : MessageUtil.documentToPlainText(document);
-        contentBody.setContent(content, messageRecord.contentType());
+        contentBody.setContent(content, MessageUtil.contentType(useHtmlFormat));
         return mp;
     }
 
