@@ -141,10 +141,21 @@ final class MessageSettings implements DefaultNodeSettings {
 
     @Widget(title = "Message", description =
             """
+            <p>
             The email's message body. Formatting options can be selected in the menu bar on the top of the editor.
             The contents of flow variables can be inserted by using the replacement syntax
             "$${<i>&lt;TYPE&gt;&lt;flow-variable-name&gt;</i>}$$". The leading &lt;TYPE&gt; is one of
             <i>I</i> (integer), <i>D</i> (double) or <i>S</i> (string), depending on the type of variable.
+            </p>
+            <p>
+            If this entire message is controlled via flow variable assignment, e.g. via the
+            control button on the top right of the editor, the value is interpreted as HTML. Specifically any
+            occurrence of HTML tags is interpreted unless it is escaped. For instance, a value such as
+            <code>&lt;b&gt; Message &lt;/b&gt;</code> will mark <i>Message</i> in bold. If that is not desired,
+            reformat the variable value and escape it, i.e. as <code>&amp;lt;b&amp;gt;
+            Message &amp;lt;/b&amp;gt;</code>. If the message is sent as Text (see Content Type below), any HTML-like
+            tag is removed (stripped) from the value.
+            </p>
             """)
     @RichTextInputWidget
     String m_message;
@@ -152,7 +163,7 @@ final class MessageSettings implements DefaultNodeSettings {
     @Widget(title = "Content type", advanced = true,
         description = "The mail body's content encoded as plain text or html.")
     @ValueSwitchWidget
-    @Effect(signals = ReportIsConnectedInputSignal.class, type = EffectType.DISABLE)
+    @Effect(signals = ReportIsConnectedInputSignal.class, type = EffectType.HIDE)
     EMailFormat m_format = EMailFormat.HTML;
 
     @Widget(title = "Attachments", //

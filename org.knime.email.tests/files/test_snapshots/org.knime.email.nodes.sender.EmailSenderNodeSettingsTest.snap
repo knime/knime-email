@@ -68,7 +68,7 @@
               "message" : {
                 "type" : "string",
                 "title" : "Message",
-                "description" : "The email's message body. Formatting options can be selected in the menu bar on the top of the editor.\nThe contents of flow variables can be inserted by using the replacement syntax\n\"$${<i>&lt;TYPE&gt;&lt;flow-variable-name&gt;</i>}$$\". The leading &lt;TYPE&gt; is one of\n<i>I</i> (integer), <i>D</i> (double) or <i>S</i> (string), depending on the type of variable.\n"
+                "description" : "<p>\nThe email's message body. Formatting options can be selected in the menu bar on the top of the editor.\nThe contents of flow variables can be inserted by using the replacement syntax\n\"$${<i>&lt;TYPE&gt;&lt;flow-variable-name&gt;</i>}$$\". The leading &lt;TYPE&gt; is one of\n<i>I</i> (integer), <i>D</i> (double) or <i>S</i> (string), depending on the type of variable.\n</p>\n<p>\nIf this entire message is controlled via flow variable assignment, e.g. via the\ncontrol button on the top right of the editor, the value is interpreted as HTML. Specifically any\noccurrence of HTML tags is interpreted unless it is escaped. For instance, a value such as\n<code>&lt;b&gt; Message &lt;/b&gt;</code> will mark <i>Message</i> in bold. If that is not desired,\nreformat the variable value and escape it, i.e. as <code>&amp;lt;b&amp;gt;\nMessage &amp;lt;/b&amp;gt;</code>. If the message is sent as Text (see Content Type below), any HTML-like\ntag is removed (stripped) from the value.\n</p>\n"
               },
               "subject" : {
                 "type" : "string",
@@ -160,7 +160,7 @@
           "format" : "valueSwitch"
         },
         "rule" : {
-          "effect" : "DISABLE",
+          "effect" : "HIDE",
           "condition" : {
             "schema" : {
               "const" : true
