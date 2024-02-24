@@ -141,7 +141,7 @@ final class EmailSender {
             .allowStandardUrlProtocols()
             .allowCommonBlockElements()
             .allowStyling()
-            .allowElements("a")
+            .allowElements("a", "hr", "pre", "code")
             .allowAttributes("href").onElements("a")
             .toFactory();
 
@@ -229,7 +229,9 @@ final class EmailSender {
         if (m_attachmentsFromInputColumn != null) {
             attachmentLocations = m_attachmentsFromInputColumn;
         } else {
-            attachmentLocations = Stream.of(m_settings.m_messageSettings.m_attachments).map(Attachment::toFSLocation)
+            attachmentLocations = Stream.of(m_settings.m_messageSettings.m_attachments) //
+                .map(Attachment::toFSLocation) //
+                .filter(location -> StringUtils.isNotBlank(location.getPath())) //
                 .toArray(FSLocation[]::new);
         }
         try {
@@ -341,7 +343,7 @@ final class EmailSender {
             try {
                 final Document reportDocument = appendReport(mp, report);
                 if (StringUtils.isNotBlank(document.text())) {
-                    reportDocument.body().insertChildren(0, document.body().children());
+                    reportDocument.body().insertChildren(0, document.body().childNodes());
                 }
                 // 95% of the document are style definition, making very simple reports as large as 200+kB
                 // (GMail has a limitation of 120kB - mail body larger than that are clipped)
