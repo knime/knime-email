@@ -151,9 +151,9 @@ final class MessageSettings implements DefaultNodeSettings {
             If this entire message is controlled via flow variable assignment, e.g. via the
             control button on the top right of the editor, the value is interpreted as HTML. Specifically any
             occurrence of HTML tags is interpreted unless it is escaped. For instance, a value such as
-            <code>&lt;b&gt; Message &lt;/b&gt;</code> will mark <i>Message</i> in bold. If that is not desired,
-            reformat the variable value and escape it, i.e. as <code>&amp;lt;b&amp;gt;
-            Message &amp;lt;/b&amp;gt;</code>. If the message is sent as Text (see Content Type below), any HTML-like
+            <tt>&lt;b&gt; Message &lt;/b&gt;</tt> will mark <i>Message</i> in bold. If that is not desired,
+            reformat the variable value and escape it, i.e. as <tt>&amp;lt;b&amp;gt;
+            Message &amp;lt;/b&amp;gt;</tt>. If the message is sent as Text (see Content Type below), any HTML-like
             tag is removed (stripped) from the value.
             </p>
             """)
