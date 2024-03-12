@@ -120,7 +120,7 @@ final class MessageSettings implements DefaultNodeSettings {
 
     static final class Attachment implements WidgetGroup, PersistableSettings {
 
-        @Widget
+        @Widget(title = "Attachment", description = "The location of a file to be attached to the email.")
         FileChooser m_attachment = new FileChooser();
 
         FSLocation toFSLocation() {
@@ -166,13 +166,13 @@ final class MessageSettings implements DefaultNodeSettings {
     @Effect(signals = ReportIsConnectedInputSignal.class, type = EffectType.HIDE)
     EMailFormat m_format = EMailFormat.HTML;
 
-    @Widget(title = "Attachments", //
+    @Widget(title = "Attachments (Manual Selection)", //
             description = "The path to the file to be attached to the email.")
     @Effect(signals = AttachmentPortIsConnectedInputSignal.class, type = EffectType.HIDE)
     @ArrayWidget(showSortButtons = true, addButtonText = "Add attachment")
     Attachment[] m_attachments = new Attachment[] {};
 
-    @Widget(title = "Attachments",
+    @Widget(title = "Attachments (Input Column)",
         description = "The column in the attachment input table, if enabled, "
             + "containing the list of attachment locations (the column needs to be of type \"path\".")
     @Effect(signals = AttachmentPortIsConnectedInputSignal.class, type = EffectType.SHOW)

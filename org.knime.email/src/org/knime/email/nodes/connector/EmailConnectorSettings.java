@@ -159,13 +159,16 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     String m_smtpEmailAddress;
 
     @Layout(OutgoingServerSection.class)
-    @Widget(title = "Outgoing mail server requires authentication.")
+    @Widget(title = "Outgoing mail server requires authentication.", description = "If the outgoing mail server "
+        + "requires authentication, check this box and enter the credentials or use a credentials flow variable "
+        + "to control them.")
     @Persist(optional = true)
     @Signal(id=SMTPRequiresAuthentication.class, condition = TrueCondition.class)
     boolean m_smtpRequiresAuthentication = true;
 
     @Layout(OutgoingServerSection.class)
-    @Widget(title = "Connection Security", description="")
+    @Widget(title = "Connection Security",
+    description="Configures the connection security to the outgoing email server.")
     @ValueSwitchWidget
     @Persist(optional = true)
     ConnectionSecurity m_smtpSecurity = ConnectionSecurity.NONE;
