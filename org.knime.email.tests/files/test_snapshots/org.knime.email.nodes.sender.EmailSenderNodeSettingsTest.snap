@@ -19,11 +19,11 @@
             "properties" : {
               "attachmentColumn" : {
                 "type" : "string",
-                "title" : "Attachments",
+                "title" : "Attachments (Input Column)",
                 "description" : "The column in the attachment input table, if enabled, containing the list of attachment locations (the column needs to be of type \"path\"."
               },
               "attachments" : {
-                "title" : "Attachments",
+                "title" : "Attachments (Manual Selection)",
                 "description" : "The path to the file to be attached to the email.",
                 "default" : [ ],
                 "type" : "array",
@@ -42,6 +42,8 @@
                           }
                         }
                       },
+                      "title" : "Attachment",
+                      "description" : "The location of a file to be attached to the email.",
                       "default" : {
                         "path" : {
                           "fsCategory" : "LOCAL",
