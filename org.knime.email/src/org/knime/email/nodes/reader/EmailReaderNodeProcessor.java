@@ -200,18 +200,19 @@ public final class EmailReaderNodeProcessor {
             }
             final List<Message> previouslyUnreadMessages = new ArrayList<>();
             long rowKey = 0;
+            // the number of messages actually read/retrieved (e.g. 100 when only 100 are to be read)
+            final var messageCount = indexEnd - indexStart + 1;
             for (int i = indexStart; i <= indexEnd;) {
-                final var batchEnd = Math.min(i + 10, count);
-                final var paddedNumber = "%" + Long.toString(count).length() + "d";
+                final var indexOfMessage = i - indexStart + 1;
+                final var paddedNumber = "%" + Long.toString(messageCount).length() + "d";
                 final var messageTemplateBuilder = new StringBuilder();
-                messageTemplateBuilder.append("Fetching messages (");
+                // "Fetching message  12/100"
+                messageTemplateBuilder.append("Fetching message ");
                 messageTemplateBuilder.append(paddedNumber); // %d (from)
-                messageTemplateBuilder.append("-");
-                messageTemplateBuilder.append(paddedNumber); // %d (to)
-                messageTemplateBuilder.append(" of ");
+                messageTemplateBuilder.append("/");
                 messageTemplateBuilder.append(paddedNumber); // %d (total)
-                messageTemplateBuilder.append(")");
-                context.setProgress(i / (double)count, messageTemplateBuilder.toString().formatted(i, batchEnd, count));
+                context.setProgress((indexOfMessage - 1) / (double)messageCount,
+                    messageTemplateBuilder.toString().formatted(indexOfMessage, messageCount));
                 context.checkCanceled();
                 final Message message = messages[i - 1];
                 if (!message.isExpunged()) {
