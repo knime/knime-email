@@ -57,12 +57,6 @@ import org.knime.core.webui.node.dialog.defaultdialog.layout.HorizontalLayout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.OneOfEnumCondition;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Or;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Signal;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.TrueCondition;
 import org.knime.core.webui.node.dialog.defaultdialog.setting.credentials.Credentials;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
@@ -70,6 +64,13 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.NumberInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.BooleanReference;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect.EffectType;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Predicate;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.PredicateProvider;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Reference;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.ValueReference;
 import org.knime.email.session.EmailSessionKey;
 import org.knime.email.session.EmailSessionKey.SmtpConnectionSecurity;
 
@@ -80,44 +81,60 @@ import org.knime.email.session.EmailSessionKey.SmtpConnectionSecurity;
 @SuppressWarnings("restriction")
 public class EmailConnectorSettings implements DefaultNodeSettings {
 
-    @Widget(title = "Connection type", description =
-            """
-            Choose the type of connection you want to create. Depending on the selected connection type you will be
-            able to work with your email and/or send email.
-            <ul>
-            <li>
-            Select "Incoming" if you want to work with your email e.g. by using the
-            <a href="https://hub.knime.com/knime/extensions/org.knime.features.email/latest/org.knime.email.nodes.reader.EmailReaderNodeFactory/">Email Reader</a> node
-            to read your email or the
-            <a href="https://hub.knime.com/knime/extensions/org.knime.features.email/latest/org.knime.email.nodes.mover.EmailMoverNodeFactory/">Email Mover</a> node
-            to move email to different folders.
-            </li>
-            <li>
-            Select "Outgoing" if you only want to send email via the SMTP protocol by using the
-            <a href="https://hub.knime.com/knime/extensions/org.knime.features.email/latest/org.knime.email.nodes.sender.EmailSenderNodeFactory/">Email Sender</a> node.
-            </li>
-            <li>Select "Incoming &amp; Outgoing" if you want to read and send email.</li>
-            </ul>
-            """)
-    @Signal(id = IncomingServerSection.class, condition = IsIncomingSelected.class)
-    @Signal(id = OutgoingServerSection.class, condition = IsOutgoingSelected.class)
+    interface ConnectionTypeRef extends Reference<ConnectionType> {
+    }
+
+    static final class IsIncomingServerConnection implements PredicateProvider {
+        @Override
+        public Predicate init(final PredicateInitializer i) {
+            return i.getEnum(ConnectionTypeRef.class).isOneOf(ConnectionType.INCOMING,
+                ConnectionType.INCOMING_OUTGOING);
+        }
+    }
+
+    static final class IsOutgoingServerConnection implements PredicateProvider {
+        @Override
+        public Predicate init(final PredicateInitializer i) {
+            return i.getEnum(ConnectionTypeRef.class).isOneOf(ConnectionType.OUTGOING,
+                ConnectionType.INCOMING_OUTGOING);
+        }
+    }
+
+    @Widget(title = "Connection type",
+        description = """
+                Choose the type of connection you want to create. Depending on the selected connection type you will be
+                able to work with your email and/or send email.
+                <ul>
+                <li>
+                Select "Incoming" if you want to work with your email e.g. by using the
+                <a href="https://hub.knime.com/knime/extensions/org.knime.features.email/latest/org.knime.email.nodes.reader.EmailReaderNodeFactory/">Email Reader</a> node
+                to read your email or the
+                <a href="https://hub.knime.com/knime/extensions/org.knime.features.email/latest/org.knime.email.nodes.mover.EmailMoverNodeFactory/">Email Mover</a> node
+                to move email to different folders.
+                </li>
+                <li>
+                Select "Outgoing" if you only want to send email via the SMTP protocol by using the
+                <a href="https://hub.knime.com/knime/extensions/org.knime.features.email/latest/org.knime.email.nodes.sender.EmailSenderNodeFactory/">Email Sender</a> node.
+                </li>
+                <li>Select "Incoming &amp; Outgoing" if you want to read and send email.</li>
+                </ul>
+                """)
+    @ValueReference(ConnectionTypeRef.class)
     @Persist(optional = true)
     @ValueSwitchWidget()
     ConnectionType m_type = ConnectionType.INCOMING;
 
-
-//  INCOMING SERVER SETTINGS
+    //  INCOMING SERVER SETTINGS
     @Section(title = "Incoming Mail Server (IMAP)")
-    @Effect(signals = IncomingServerSection.class, type = EffectType.SHOW)
-    interface IncomingServerSection {}
-
+    @Effect(predicate = IsIncomingServerConnection.class, type = EffectType.SHOW)
+    interface IncomingServerSection {
+    }
 
     @Layout(IncomingServerSection.class)
     @Widget(title = "Server", description = "The address of the incoming email server (IMAP) e.g. <i>imap.web.de.</i>")
     @TextInputWidget(pattern = "[^ ]+")
     @Persist(optional = true, configKey = "server")
     String m_imapServer;
-
 
     @Layout(IncomingServerSection.class)
     @Widget(title = "Port",
@@ -128,16 +145,16 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
 
     @Layout(IncomingServerSection.class)
     @Widget(title = "Use secure protocol",
-            description = "Choose whether to use an encrypted or unencrypted connection.")
+        description = "Choose whether to use an encrypted or unencrypted connection.")
     @Persist(optional = true, configKey = "useSecureProtocol")
     boolean m_imapUseSecureProtocol = true;
 
-
-//  OUTGOING SERVER SETTINGS
+    //  OUTGOING SERVER SETTINGS
     @Section(title = "Outgoing Mail Server (SMTP)")
     @After(IncomingServerSection.class)
-    @Effect(signals = OutgoingServerSection.class, type = EffectType.SHOW)
-    interface OutgoingServerSection {}
+    @Effect(predicate = IsOutgoingServerConnection.class, type = EffectType.SHOW)
+    interface OutgoingServerSection {
+    }
 
     @Layout(OutgoingServerSection.class)
     @Widget(title = "Server", description = "The address of the outgoing email server (SMTP) e.g. <i>smtp.web.de.</i>")
@@ -153,42 +170,55 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     int m_smtpPort = 587;
 
     @Layout(OutgoingServerSection.class)
-    @Widget(title = "Email address", description = "Some SMTP servers require the sender's email address, other "
+    @Widget(title = "Email address",
+        description = "Some SMTP servers require the sender's email address, other "
             + "accept this to be not specified and will automatically derive it from the user account.")
     @Persist(optional = true)
     String m_smtpEmailAddress;
 
+    static final class SMTPRequiresAuthentication implements BooleanReference {
+    }
+
     @Layout(OutgoingServerSection.class)
-    @Widget(title = "Outgoing mail server requires authentication.", description = "If the outgoing mail server "
-        + "requires authentication, check this box and enter the credentials or use a credentials flow variable "
-        + "to control them.")
+    @Widget(title = "Outgoing mail server requires authentication.",
+        description = "If the outgoing mail server "
+            + "requires authentication, check this box and enter the credentials or use a credentials flow variable "
+            + "to control them.")
     @Persist(optional = true)
-    @Signal(id=SMTPRequiresAuthentication.class, condition = TrueCondition.class)
+    @ValueReference(SMTPRequiresAuthentication.class)
     boolean m_smtpRequiresAuthentication = true;
 
     @Layout(OutgoingServerSection.class)
     @Widget(title = "Connection Security",
-    description="Configures the connection security to the outgoing email server.")
+        description = "Configures the connection security to the outgoing email server.")
     @ValueSwitchWidget
     @Persist(optional = true)
     ConnectionSecurity m_smtpSecurity = ConnectionSecurity.NONE;
 
+    static final class AuthenticationIsRequired implements PredicateProvider {
+        @Override
+        public Predicate init(final PredicateInitializer i) {
+            return i.getPredicate(IsIncomingServerConnection.class)
+                .or(i.getPredicate(SMTPRequiresAuthentication.class));
+        }
+    }
 
     @Section(title = "Authentication")
-    @Effect(signals = {IncomingServerSection.class, SMTPRequiresAuthentication.class}, type = EffectType.SHOW,
-        operation = Or.class)
+    @Effect(predicate = AuthenticationIsRequired.class, type = EffectType.SHOW)
     @After(OutgoingServerSection.class)
-    interface AuthenticationSection {}
-    /**The email server login.*/
+    interface AuthenticationSection {
+    }
+
+    /** The email server login. */
     @Layout(AuthenticationSection.class)
     @Widget(title = "Login", description = "The optional email server login.")
     Credentials m_login = new Credentials(); //set to empty credentials to prevent "No login set message"
 
-
-//  CONNECTION PROPERTIES
+    //  CONNECTION PROPERTIES
     @Section(title = "Connection Properties", advanced = true)
     @After(AuthenticationSection.class)
-    interface ConnectionPropertySection {}
+    interface ConnectionPropertySection {
+    }
 
     @Layout(ConnectionPropertySection.class)
     @Widget(title = "Connection timeout", advanced = true,
@@ -199,16 +229,17 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
 
     @Layout(ConnectionPropertySection.class)
     @Widget(title = "Read timeout", advanced = true,
-    description = "Timeout in seconds to read a server response from a connection.")
+        description = "Timeout in seconds to read a server response from a connection.")
     @NumberInputWidget(min = 1)
     @Persist(optional = true)
     int m_readTimeout = EmailSessionKey.DEF_TIMEOUT_READ_S;
 
-    @Widget(title = "Custom properties", description =
-            "Allows to define additional connection properties. For details about the supported properties see "
-            + "<a href='https://javaee.github.io/javamail/docs/api//com/sun/mail/imap/package-summary.html#properties'>"
-            + "here.</a>",
-            advanced = true)
+    @Widget(title = "Custom properties",
+        description = """
+                Allows to define additional connection properties. For details about the supported properties see
+                <a href='https://javaee.github.io/javamail/docs/api//com/sun/mail/imap/package-summary.html#properties'>here.</a>
+                """,
+        advanced = true)
     @Layout(ConnectionPropertySection.class)
     @ArrayWidget(addButtonText = "Add custom property")
     ConnectionProperties[] m_properties = new ConnectionProperties[0];
@@ -223,32 +254,26 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
         @Layout(ConnectionPropertiesLayout.class)
         public String m_name;
 
-        @Widget(title = "Value",
-            description = "Custom property value e.g. 10 or true.")
+        @Widget(title = "Value", description = "Custom property value e.g. 10 or true.")
         @TextInputWidget(pattern = "\\S+.*")
         @Layout(ConnectionPropertiesLayout.class)
         public String m_value;
     }
 
-
-//  HELPER SECTION
+    //  HELPER SECTION
     enum ConnectionType {
-        @Label("Incoming")
-        INCOMING,
-        @Label("Outgoing")
-        OUTGOING,
-        @Label("Incoming & Outgoing")
-        INCOMING_OUTGOING
+            @Label("Incoming")
+            INCOMING, @Label("Outgoing")
+            OUTGOING, @Label("Incoming & Outgoing")
+            INCOMING_OUTGOING
     }
 
     // OUTGOING SERVER SETTINGS
     enum ConnectionSecurity {
-        @Label("None")
-        NONE(SmtpConnectionSecurity.NONE),
-        @Label("SSL")
-        SSL(SmtpConnectionSecurity.SSL),
-        @Label("STARTTLS")
-        STARTTLS(SmtpConnectionSecurity.STARTTLS);
+            @Label("None")
+            NONE(SmtpConnectionSecurity.NONE), @Label("SSL")
+            SSL(SmtpConnectionSecurity.SSL), @Label("STARTTLS")
+            STARTTLS(SmtpConnectionSecurity.STARTTLS);
 
         private final SmtpConnectionSecurity m_smtpConnectionSecurity;
 
@@ -261,22 +286,6 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
         }
 
     }
-
-    static class IsIncomingSelected extends OneOfEnumCondition<ConnectionType> {
-        @Override
-        public ConnectionType[] oneOf() {
-            return new ConnectionType[]{ConnectionType.INCOMING, ConnectionType.INCOMING_OUTGOING};
-        }
-    }
-
-    static class IsOutgoingSelected extends OneOfEnumCondition<ConnectionType> {
-        @Override
-        public ConnectionType[] oneOf() {
-            return new ConnectionType[]{ConnectionType.OUTGOING, ConnectionType.INCOMING_OUTGOING};
-        }
-    }
-
-    interface SMTPRequiresAuthentication {}
 
     void validate() throws InvalidSettingsException {
         switch (m_type) {
@@ -300,6 +309,4 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     private void validateOutgoing() throws InvalidSettingsException {
         CheckUtils.checkSetting(StringUtils.isNoneBlank(m_smtpHost), "No outgoing mail server set");
     }
-
-
 }

@@ -73,9 +73,6 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.WidgetGroup;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.PersistableSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.ConstantSignal;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
 import org.knime.core.webui.node.dialog.defaultdialog.setting.filechooser.FileChooser;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
@@ -84,6 +81,10 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.RichTextInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect.EffectType;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Predicate;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.PredicateProvider;
 import org.knime.filehandling.core.connections.FSLocation;
 import org.knime.filehandling.core.data.location.FSLocationValue;
 
@@ -95,18 +96,30 @@ import org.knime.filehandling.core.data.location.FSLocationValue;
 @SuppressWarnings("restriction")
 final class MessageSettings implements DefaultNodeSettings {
 
-    public static final class ReportIsConnectedInputSignal implements ConstantSignal {
+    public static final class ReportIsConnected implements PredicateProvider {
+
         @Override
-        public boolean applies(final DefaultNodeSettingsContext context) {
+        public Predicate init(final PredicateInitializer i) {
+            return i.getConstant(ReportIsConnected::reportIsConnected);
+        }
+
+        private static boolean reportIsConnected(final DefaultNodeSettingsContext context) {
             return Stream.of(context.getInPortTypes()).anyMatch(IReportPortObject.TYPE::equals);
         }
+
     }
 
-    public static final class AttachmentPortIsConnectedInputSignal implements ConstantSignal {
+    public static final class AttachmentPortIsConnected implements PredicateProvider {
+
         @Override
-        public boolean applies(final DefaultNodeSettingsContext context) {
+        public Predicate init(final PredicateInitializer i) {
+            return i.getConstant(AttachmentPortIsConnected::attachmentPortIsConnected);
+        }
+
+        private static boolean attachmentPortIsConnected(final DefaultNodeSettingsContext context) {
             return Stream.of(context.getInPortTypes()).anyMatch(BufferedDataTable.TYPE::equals);
         }
+
     }
 
     static final class AttachmentColumnProvider implements ColumnChoicesProvider {
@@ -114,7 +127,7 @@ final class MessageSettings implements DefaultNodeSettings {
         public DataColumnSpec[] columnChoices(final DefaultNodeSettingsContext context) {
             final PortType[] inTypes = context.getInPortTypes();
             final IntFunction<? extends Optional<PortObjectSpec>> specSupplier = context::getPortObjectSpec;
-            return getValidPathColumnNames(inTypes, specSupplier).orElse(new DataColumnSpec[] {});
+            return getValidPathColumnNames(inTypes, specSupplier).orElse(new DataColumnSpec[]{});
         }
     }
 
@@ -139,8 +152,7 @@ final class MessageSettings implements DefaultNodeSettings {
     @Widget(title = "Subject", description = "The email's subject line.")
     String m_subject;
 
-    @Widget(title = "Message", description =
-            """
+    @Widget(title = "Message", description = """
             <p>
             The email's message body. Formatting options can be selected in the menu bar on the top of the editor.
             The contents of flow variables can be inserted by using the replacement syntax
@@ -163,19 +175,19 @@ final class MessageSettings implements DefaultNodeSettings {
     @Widget(title = "Content type", advanced = true,
         description = "The mail body's content encoded as plain text or html.")
     @ValueSwitchWidget
-    @Effect(signals = ReportIsConnectedInputSignal.class, type = EffectType.HIDE)
+    @Effect(predicate = ReportIsConnected.class, type = EffectType.HIDE)
     EMailFormat m_format = EMailFormat.HTML;
 
     @Widget(title = "Attachments (Manual Selection)", //
-            description = "The path to the file to be attached to the email.")
-    @Effect(signals = AttachmentPortIsConnectedInputSignal.class, type = EffectType.HIDE)
+        description = "The path to the file to be attached to the email.")
+    @Effect(predicate = AttachmentPortIsConnected.class, type = EffectType.HIDE)
     @ArrayWidget(showSortButtons = true, addButtonText = "Add attachment")
-    Attachment[] m_attachments = new Attachment[] {};
+    Attachment[] m_attachments = new Attachment[]{};
 
     @Widget(title = "Attachments (Input Column)",
         description = "The column in the attachment input table, if enabled, "
             + "containing the list of attachment locations (the column needs to be of type \"path\".")
-    @Effect(signals = AttachmentPortIsConnectedInputSignal.class, type = EffectType.SHOW)
+    @Effect(predicate = AttachmentPortIsConnected.class, type = EffectType.SHOW)
     @ChoicesWidget(choices = AttachmentColumnProvider.class)
     String m_attachmentColumn;
 
@@ -198,14 +210,14 @@ final class MessageSettings implements DefaultNodeSettings {
     }
 
     /**
-     * Checks presence of input table. If there is a table, it contains a non-empty optional with the list
-     * of selected locations (possibly empty, e.g. when no column was selected). The result is empty if, and only if,
-     * there is no input type available (dynamic port not shown).
+     * Checks presence of input table. If there is a table, it contains a non-empty optional with the list of selected
+     * locations (possibly empty, e.g. when no column was selected). The result is empty if, and only if, there is no
+     * input type available (dynamic port not shown).
      */
     Optional<FSLocation[]> readAttachmentsFromInputTable(final PortType[] inTypes, final ExecutionContext exec,
         final PortObject[] inObjects) throws CanceledExecutionException {
         final OptionalInt attachmentPort =
-                IntStream.range(0, inTypes.length).filter(i -> BufferedDataTable.TYPE.equals(inTypes[i])).findFirst();
+            IntStream.range(0, inTypes.length).filter(i -> BufferedDataTable.TYPE.equals(inTypes[i])).findFirst();
         if (attachmentPort.isEmpty()) {
             return Optional.empty();
         }
@@ -217,7 +229,7 @@ final class MessageSettings implements DefaultNodeSettings {
             final FSLocation[] fsLocations = readAttachmentsFromColumn(exec, attachmentTable, attachmentColIndex);
             return Optional.of(fsLocations);
         }
-        return Optional.of(new FSLocation[] {});
+        return Optional.of(new FSLocation[]{});
     }
 
     private static FSLocation[] readAttachmentsFromColumn(final ExecutionContext exec,
@@ -236,20 +248,19 @@ final class MessageSettings implements DefaultNodeSettings {
     }
 
     /**
-     * Utility to extract from the inputs the attachment port (which may or may not be present) and then return
-     * the list of valid path columns.
+     * Utility to extract from the inputs the attachment port (which may or may not be present) and then return the list
+     * of valid path columns.
      */
     private static Optional<DataColumnSpec[]> getValidPathColumnNames(final PortType[] inTypes,
         final IntFunction<? extends Optional<PortObjectSpec>> specSupplier) {
         final OptionalInt attachmentPort =
-                IntStream.range(0, inTypes.length).filter(i -> BufferedDataTable.TYPE.equals(inTypes[i])).findFirst();
+            IntStream.range(0, inTypes.length).filter(i -> BufferedDataTable.TYPE.equals(inTypes[i])).findFirst();
         if (attachmentPort.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(
-            attachmentPort.stream().mapToObj(specSupplier).flatMap(Optional::stream).map(DataTableSpec.class::cast)
-            .flatMap(DataTableSpec::stream).filter(col -> col.getType().isCompatible(FSLocationValue.class))
-            .toArray(DataColumnSpec[]::new));
+        return Optional.of(attachmentPort.stream().mapToObj(specSupplier).flatMap(Optional::stream)
+            .map(DataTableSpec.class::cast).flatMap(DataTableSpec::stream)
+            .filter(col -> col.getType().isCompatible(FSLocationValue.class)).toArray(DataColumnSpec[]::new));
     }
 
 }

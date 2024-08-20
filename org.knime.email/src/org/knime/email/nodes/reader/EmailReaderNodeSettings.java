@@ -54,15 +54,17 @@ import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.OneOfEnumCondition;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Signal;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.NumberInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect.EffectType;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Predicate;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.PredicateProvider;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Reference;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.ValueReference;
 import org.knime.email.util.UIChoices.FolderProvider;
 
 /**
@@ -100,11 +102,16 @@ public final class EmailReaderNodeSettings implements DefaultNodeSettings {
             All
     }
 
-    static class IsLimitMessageCount extends OneOfEnumCondition<MessageSelector> {
+    static class MessageSelectorRef implements Reference<MessageSelector> {
+
+    }
+
+    static class IsLimitMessageCount implements PredicateProvider {
+
 
         @Override
-        public MessageSelector[] oneOf() {
-            return new MessageSelector[]{MessageSelector.Newest, MessageSelector.Oldest};
+        public Predicate init(final PredicateInitializer i) {
+            return i.getEnum(MessageSelectorRef.class).isOneOf(MessageSelector.Newest, MessageSelector.Oldest);
         }
 
     }
@@ -136,13 +143,13 @@ public final class EmailReaderNodeSettings implements DefaultNodeSettings {
     @Widget(title = "Limit number of emails",
             description = "Select if the oldest, newest or all emails should be retrieved.")
     @Layout(FilteringSection.class)
-    @Signal(id = FilteringSection.class, condition = IsLimitMessageCount.class)
+    @ValueReference(MessageSelectorRef.class)
     @ValueSwitchWidget
     MessageSelector m_messageSelector = MessageSelector.Newest;
 
     @Widget(title = "Maximum number of emails", description = "The number of messages to retrieve at most.")
     @Layout(value = FilteringSection.class)
-    @Effect(signals = FilteringSection.class, type = EffectType.SHOW)
+    @Effect(predicate = IsLimitMessageCount.class, type = EffectType.SHOW)
     @NumberInputWidget(min = 1, max = Integer.MAX_VALUE)
     int m_limitMessagesCount = 100;
 
