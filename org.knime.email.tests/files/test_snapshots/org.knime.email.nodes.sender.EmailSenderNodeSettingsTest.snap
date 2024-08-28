@@ -38,7 +38,10 @@
                           "default" : {
                             "fsCategory" : "LOCAL",
                             "path" : "",
-                            "timeout" : 10000
+                            "timeout" : 10000,
+                            "context" : {
+                              "fsToString" : "(LOCAL, )"
+                            }
                           }
                         }
                       },
@@ -48,7 +51,10 @@
                         "path" : {
                           "fsCategory" : "LOCAL",
                           "path" : "",
-                          "timeout" : 10000
+                          "timeout" : 10000,
+                          "context" : {
+                            "fsToString" : "(LOCAL, )"
+                          }
                         }
                       }
                     }
