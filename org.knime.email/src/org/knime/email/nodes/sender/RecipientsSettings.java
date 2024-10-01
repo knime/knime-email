@@ -52,7 +52,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.WidgetGroup;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.PersistableSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 
@@ -81,12 +80,10 @@ final class RecipientsSettings implements WidgetGroup, PersistableSettings {
 
     @Widget(title = "CC", description = //
             "CC (Carbon Copy) - secondary recipients (use comma to list multiple addresses).")
-    @ArrayWidget
     String m_cc;
 
     @Widget(title = "BCC", advanced = true, description = "BCC (Blind Carbon Copy) - additional recipients to "
         + "receive the message (the primary recipients will not see who is copied in BCC).")
-    @ArrayWidget
     String m_bcc;
 
     @Widget(title = "Reply To", advanced = true, description = "ReplyTo field. By default, a reply to an email "
