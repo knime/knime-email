@@ -73,7 +73,7 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.WidgetGroup;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.PersistableSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.setting.filechooser.FileChooser;
+import org.knime.core.webui.node.dialog.defaultdialog.setting.fileselection.FileSelection;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ColumnChoicesProvider;
@@ -134,7 +134,7 @@ final class MessageSettings implements DefaultNodeSettings {
     static final class Attachment implements WidgetGroup, PersistableSettings {
 
         @Widget(title = "Attachment", description = "The location of a file to be attached to the email.")
-        FileChooser m_attachment = new FileChooser();
+        FileSelection m_attachment = new FileSelection();
 
         FSLocation toFSLocation() {
             return m_attachment.getFSLocation();
