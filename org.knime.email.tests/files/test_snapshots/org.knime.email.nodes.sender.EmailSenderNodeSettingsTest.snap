@@ -23,9 +23,6 @@
                 "description" : "The column in the attachment input table, if enabled, containing the list of attachment locations (the column needs to be of type \"path\"."
               },
               "attachments" : {
-                "title" : "Attachments (Manual Selection)",
-                "description" : "The path to the file to be attached to the email.",
-                "default" : [ ],
                 "type" : "array",
                 "items" : {
                   "type" : "object",
@@ -59,7 +56,10 @@
                       }
                     }
                   }
-                }
+                },
+                "title" : "Attachments (Manual Selection)",
+                "description" : "The path to the file to be attached to the email.",
+                "default" : [ ]
               },
               "format" : {
                 "oneOf" : [ {
@@ -87,8 +87,7 @@
             "default" : {
               "format" : "HTML",
               "attachments" : [ ]
-            },
-            "configKeys" : [ "message" ]
+            }
           },
           "recipientsSettings" : {
             "type" : "object",
@@ -115,8 +114,7 @@
                 "pattern" : "^(.+)@(.+)$"
               }
             },
-            "default" : { },
-            "configKeys" : [ "recipients" ]
+            "default" : { }
           }
         }
       }
@@ -218,5 +216,49 @@
         }
       } ]
     } ]
+  },
+  "persist" : {
+    "type" : "object",
+    "properties" : {
+      "model" : {
+        "type" : "object",
+        "properties" : {
+          "recipientsSettings" : {
+            "configKey" : "recipients",
+            "type" : "object",
+            "properties" : {
+              "to" : { },
+              "cc" : { },
+              "bcc" : { },
+              "replyTo" : { }
+            }
+          },
+          "messageSettings" : {
+            "configKey" : "message",
+            "type" : "object",
+            "properties" : {
+              "subject" : { },
+              "message" : { },
+              "format" : { },
+              "attachments" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "object",
+                  "properties" : {
+                    "attachment" : {
+                      "type" : "object",
+                      "properties" : {
+                        "path" : { }
+                      }
+                    }
+                  }
+                }
+              },
+              "attachmentColumn" : { }
+            }
+          }
+        }
+      }
+    }
   }
 }

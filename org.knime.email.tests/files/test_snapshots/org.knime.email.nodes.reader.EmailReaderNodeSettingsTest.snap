@@ -183,5 +183,23 @@
         }
       } ]
     } ]
+  },
+  "persist" : {
+    "type" : "object",
+    "properties" : {
+      "model" : {
+        "type" : "object",
+        "properties" : {
+          "folder" : { },
+          "messageSeenStatus" : { },
+          "messageAnsweredStatus" : { },
+          "messageSelector" : { },
+          "limitMessagesCount" : { },
+          "outputAttachments" : { },
+          "outputHeaders" : { },
+          "markAsRead" : { }
+        }
+      }
+    }
   }
 }
