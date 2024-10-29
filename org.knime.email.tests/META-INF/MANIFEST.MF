@@ -7,7 +7,7 @@ Bundle-ClassPath: .,
  lib/greenmail-2.1.0-alpha-2.jar,
  lib/greenmail-junit5-2.1.0-alpha-2.jar
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
-Fragment-Host: org.knime.email;bundle-version="5.2.0"
+Fragment-Host: org.knime.email;bundle-version="5.3.0"
 Require-Bundle: junit-jupiter-api;bundle-version="[5.9.2,6.0.0)",
  org.knime.testing;bundle-version="[5.3.0,6.0.0)",
  slf4j.api;bundle-version="[2.0.12,3.0.0)",
