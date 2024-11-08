@@ -62,10 +62,12 @@ import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.knime.core.webui.node.port.PortView;
 import org.knime.email.session.EmailSessionCache;
 import org.knime.email.session.EmailSessionKey;
 import org.knime.email.session.EmailSessionKey.SmtpConnectionSecurity;
+import org.knime.testing.core.ExecutionContextExtension;
 
 import jakarta.mail.MessagingException;
 
@@ -76,12 +78,14 @@ import jakarta.mail.MessagingException;
  * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings({"java:S5960", "java:S112"}) // sonar believes this is production code
+@ExtendWith({ExecutionContextExtension.class}) // requires NodeContext in port view = NodeModel#execute
 class EmailSessionPortViewFactoriesTest {
     
     private UUID m_sessionCacheID;
     
     @BeforeEach
     final void before() {
+        
         final var props = new Properties();
         props.put("a", "b");
         props.put("<script>alert('Injected!');</script>", "ignored");

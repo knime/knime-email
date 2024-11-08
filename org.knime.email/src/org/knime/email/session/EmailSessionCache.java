@@ -53,19 +53,23 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.WorkflowResourceCache;
+import org.knime.core.node.workflow.WorkflowResourceCache.WorkflowResource;
+
 /**
  * Allows retrieving {@link EmailIncomingSession}s via unique id.
  *
  * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
  */
-public class EmailSessionCache {
+public final class EmailSessionCache implements WorkflowResource {
 
-    private final Map<UUID, EmailSessionKey> m_session;
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(EmailSessionCache.class);
 
-    private static final EmailSessionCache INSTANCE = new EmailSessionCache();
+    private final Map<UUID, EmailSessionKey> m_sessionsMap;
 
     private EmailSessionCache() {
-        m_session = new HashMap<>();
+        m_sessionsMap = new HashMap<>();
     }
 
     /**
@@ -77,8 +81,9 @@ public class EmailSessionCache {
      *         from the cache.
      */
     public static synchronized UUID store(final EmailSessionKey session) {
+        final var cache = WorkflowResourceCache.computeIfAbsent(EmailSessionCache.class, EmailSessionCache::new);
         final var uuid = UUID.randomUUID();
-        INSTANCE.m_session.put(uuid, session);
+        cache.m_sessionsMap.put(uuid, session);
         return uuid;
     }
 
@@ -90,7 +95,7 @@ public class EmailSessionCache {
      *         {@link UUID}.
      */
     public static synchronized Optional<EmailSessionKey> get(final UUID cacheId) {
-        return Optional.ofNullable(INSTANCE.m_session.get(cacheId));
+        return WorkflowResourceCache.get(EmailSessionCache.class).map(cache -> cache.m_sessionsMap.get(cacheId));
     }
 
     /**
@@ -99,8 +104,15 @@ public class EmailSessionCache {
      * @param cacheId The cache id.
      */
     public static synchronized void delete(final UUID cacheId) {
-        INSTANCE.m_session.remove(cacheId);
+        WorkflowResourceCache.get(EmailSessionCache.class).ifPresent(cache -> cache.m_sessionsMap.remove(cacheId));
     }
 
+    @Override
+    public void dispose() {
+        if (!m_sessionsMap.isEmpty()) {
+            LOGGER.warnWithFormat("Disposing resource with non-empty cache (%d element(s)).", m_sessionsMap.size());
+            m_sessionsMap.clear();
+        }
+    }
 
 }
