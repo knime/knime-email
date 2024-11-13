@@ -68,6 +68,7 @@ import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.html.HTMLCellFactory;
 import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
+import org.knime.core.data.v2.RowBuffer;
 import org.knime.core.data.v2.RowWrite;
 import org.knime.core.data.v2.RowWriteCursor;
 import org.knime.core.data.v2.WriteValue;
@@ -172,10 +173,13 @@ public final class EmailReaderNodeProcessor {
                 final var msgRowContainer = context.createRowContainer(getMsgSpec(false), false); //
                 var msgWriteCursor = msgRowContainer.createCursor(); //
                 final var attachRowContainer = context.createRowContainer(ATTACH_TABLE_SPEC, false); //
-                var attachWriteCursor = attachRowContainer.createCursor();
+                var attachWriteCursor = attachRowContainer.createCursor(); //
                 final var headerRowContainer = context.createRowContainer(HEADER_TABLE_SPEC, false); //
                 var headerWriteCursor = headerRowContainer.createCursor(); //
                 var classLoaderCloseable = EmailUtil.runWithContextClassloader(Session.class)) {
+            final var msgRowBuffer = msgRowContainer.createRowBuffer();
+            final var attachRowBuffer = attachRowContainer.createRowBuffer();
+            final var headerRowBuffer = headerRowContainer.createRowBuffer();
             final BinaryObjectCellFactory factory = new BinaryObjectCellFactory(context);
             final SearchTerm searchTerm = buildSearchTerm();
             var messages = folder.search(searchTerm);
@@ -220,12 +224,12 @@ public final class EmailReaderNodeProcessor {
                         //Store only the previously unread messages if they need to be reset later
                         previouslyUnreadMessages.add(message);
                     }
-                    final var msgRowWrite = msgWriteCursor.forward();
-                    msgRowWrite.setRowKey(RowKey.createRowKey(rowKey++));
+                    msgRowBuffer.setRowKey(RowKey.createRowKey(rowKey++));
                     // message ID
                     final var messageId = EmailUtil.getMessageId(message);
-                    writeMessageAndAttachments(context, factory, messageId, message, msgRowWrite, attachWriteCursor);
-                    writeHeader(messageId, message, headerWriteCursor);
+                    writeMessageAndAttachments(context, factory, messageId, message, msgRowBuffer, attachWriteCursor, attachRowBuffer);
+                    writeHeader(messageId, message, headerWriteCursor, headerRowBuffer);
+                    msgWriteCursor.commit(msgRowBuffer);
                 }
                 i++;
             }
@@ -269,17 +273,17 @@ public final class EmailReaderNodeProcessor {
         return new AndTerm(terms);
     }
 
-    private void writeHeader(final String messageId, final Message message, final RowWriteCursor headerWriteCursor)
+    private void writeHeader(final String messageId, final Message message, final RowWriteCursor headerWriteCursor, final RowBuffer headerRowBuffer)
         throws MessagingException {
         if (m_settings.m_outputHeaders) {
             final Enumeration<Header> allHeaders = message.getAllHeaders();
             while (allHeaders.hasMoreElements()) {
-                final RowWrite rowWrite = headerWriteCursor.forward();
                 final Header header = allHeaders.nextElement();
-                rowWrite.setRowKey(RowKey.createRowKey(m_headerCounter++));
-                rowWrite.<StringWriteValue> getWriteValue(0).setStringValue(messageId);
-                rowWrite.<StringWriteValue> getWriteValue(1).setStringValue(header.getName());
-                rowWrite.<StringWriteValue> getWriteValue(2).setStringValue(header.getValue());
+                headerRowBuffer.setRowKey(RowKey.createRowKey(m_headerCounter++));
+                headerRowBuffer.<StringWriteValue> getWriteValue(0).setStringValue(messageId);
+                headerRowBuffer.<StringWriteValue> getWriteValue(1).setStringValue(header.getName());
+                headerRowBuffer.<StringWriteValue> getWriteValue(2).setStringValue(header.getValue());
+                headerWriteCursor.commit(headerRowBuffer);
             }
         }
     }
@@ -306,8 +310,8 @@ public final class EmailReaderNodeProcessor {
     }
 
     private void writeMessageAndAttachments(final ExecutionContext context, final BinaryObjectCellFactory factory,
-        final String messageId, final Message message, final RowWrite rowWrite, final RowWriteCursor attachWriteCurser)
-        throws MessagingException, IOException, CanceledExecutionException {
+        final String messageId, final Message message, final RowWrite rowWrite, final RowWriteCursor attachWriteCurser,
+        final RowBuffer attachRowBuffer) throws MessagingException, IOException, CanceledExecutionException {
         var index = 0;
 
         // message id
@@ -328,7 +332,7 @@ public final class EmailReaderNodeProcessor {
         // part
         final StringBuilder textBuf = new StringBuilder();
         final StringBuilder htmlBuf = new StringBuilder();
-        writePart(context, factory, messageId, textBuf, htmlBuf, message, attachWriteCurser);
+        writePart(context, factory, messageId, textBuf, htmlBuf, message, attachWriteCurser, attachRowBuffer);
         if (textBuf.isEmpty()) {
             rowWrite.setMissing(index++);
         } else {
@@ -363,21 +367,22 @@ public final class EmailReaderNodeProcessor {
         }
     }
 
-    private void writePart(final ExecutionContext context, final BinaryObjectCellFactory factory, final String messageId,
-        final StringBuilder textBuf, final StringBuilder htmlBuf, final Part p, final RowWriteCursor attachWriteCurser)
+    private void writePart(final ExecutionContext context, final BinaryObjectCellFactory factory,
+        final String messageId, final StringBuilder textBuf, final StringBuilder htmlBuf, final Part p,
+        final RowWriteCursor attachWriteCurser, final RowBuffer attachRowBuffer)
         throws MessagingException, IOException, CanceledExecutionException {
         context.checkCanceled();
         //check if the content is plain text
         if (p.isMimeType("text/plain")) {
             if (isAttachment(p)) {
-                writeAttachment(factory, messageId, attachWriteCurser, p);
+                writeAttachment(factory, messageId, attachWriteCurser, attachRowBuffer, p);
             } else { //and no attachment
                 textBuf.append((String)p.getContent());
             }
         //check if the content is plain text
         } else if (p.isMimeType("text/html")) {
             if (isAttachment(p)) {
-                writeAttachment(factory, messageId, attachWriteCurser, p);
+                writeAttachment(factory, messageId, attachWriteCurser, attachRowBuffer, p);
             } else { //and no attachment
                 htmlBuf.append((String)p.getContent());
             }
@@ -386,14 +391,14 @@ public final class EmailReaderNodeProcessor {
             Multipart mp = (Multipart)p.getContent();
             int count = mp.getCount();
             for (int i = 0; i < count; i++) {
-                writePart(context, factory, messageId, textBuf, htmlBuf, mp.getBodyPart(i), attachWriteCurser);
+                writePart(context, factory, messageId, textBuf, htmlBuf, mp.getBodyPart(i), attachWriteCurser, attachRowBuffer);
             }
         //check if the content is a nested message
         } else if (p.isMimeType("message/rfc822")) {
-            writePart(context, factory, messageId, textBuf, htmlBuf, (Part)p.getContent(), attachWriteCurser);
+            writePart(context, factory, messageId, textBuf, htmlBuf, (Part)p.getContent(), attachWriteCurser, attachRowBuffer);
         //check if the content is a attached file
         } else if (isAttachment(p)) {
-            writeAttachment(factory, messageId, attachWriteCurser, p);
+            writeAttachment(factory, messageId, attachWriteCurser, attachRowBuffer, p);
         //fallback for all other message parts we do not know
         } else {
             final Object o = p.getContent();
@@ -419,15 +424,15 @@ public final class EmailReaderNodeProcessor {
     }
 
     private void writeAttachment(final BinaryObjectCellFactory factory, final String messageId,
-        final RowWriteCursor attachWriteCurser, final Part p) throws MessagingException, IOException {
+        final RowWriteCursor attachWriteCurser, final RowBuffer attachRowBuffer, final Part p) throws MessagingException, IOException {
         if (m_settings.m_outputAttachments) {
             if (p instanceof MimeBodyPart mp) {
                 try (var is = mp.getInputStream()) {
-                    final RowWrite writer = attachWriteCurser.forward();
-                    writer.setRowKey(RowKey.createRowKey(m_attachmentCounter++));
-                    writer.<StringWriteValue> getWriteValue(0).setStringValue(messageId);
-                    writer.<StringWriteValue> getWriteValue(1).setStringValue(mp.getFileName());
-                    writer.<WriteValue<DataCell>> getWriteValue(2).setValue(factory.create(is));
+                    attachRowBuffer.setRowKey(RowKey.createRowKey(m_attachmentCounter++));
+                    attachRowBuffer.<StringWriteValue> getWriteValue(0).setStringValue(messageId);
+                    attachRowBuffer.<StringWriteValue> getWriteValue(1).setStringValue(mp.getFileName());
+                    attachRowBuffer.<WriteValue<DataCell>> getWriteValue(2).setValue(factory.create(is));
+                    attachWriteCurser.commit(attachRowBuffer);;
                 }
             }
         }

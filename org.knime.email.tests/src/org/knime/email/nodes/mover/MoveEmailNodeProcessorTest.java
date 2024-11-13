@@ -145,10 +145,11 @@ public class MoveEmailNodeProcessorTest {
         try (final RowContainer rc = exec.createRowContainer(spec, false);
                 final RowWriteCursor cursor = rc.createCursor();) {
             long idx = 0;
+            var row = rc.createRowBuffer();
             for (final Message message : testMails) {
-                final RowWrite write = cursor.forward();
-                write.setRowKey(RowKey.createRowKey(idx++));
-                write.<StringWriteValue> getWriteValue(0).setStringValue(message.id());
+                row.setRowKey(RowKey.createRowKey(idx++));
+                row.<StringWriteValue> getWriteValue(0).setStringValue(message.id());
+                cursor.commit(row);
             }
             return rc.finish();
         }
