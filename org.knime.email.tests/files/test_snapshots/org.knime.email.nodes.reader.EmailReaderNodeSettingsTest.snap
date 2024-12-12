@@ -26,9 +26,7 @@
             "format" : "int32",
             "title" : "Maximum number of emails",
             "description" : "The number of messages to retrieve at most.",
-            "default" : 100,
-            "minimum" : 1.0,
-            "maximum" : 2147483647
+            "default" : 100
           },
           "markAsRead" : {
             "type" : "boolean",
@@ -133,6 +131,10 @@
       }, {
         "type" : "Control",
         "scope" : "#/properties/model/properties/limitMessagesCount",
+        "options" : {
+          "min" : 1.0,
+          "max" : 2147483647
+        },
         "rule" : {
           "effect" : "SHOW",
           "condition" : {
