@@ -58,7 +58,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Persist;
 import org.knime.email.nodes.sender.EmailSenderNodeSettings.Sections.MessageSection;
 import org.knime.email.nodes.sender.EmailSenderNodeSettings.Sections.RecipientsSection;
 

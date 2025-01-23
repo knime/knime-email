@@ -56,7 +56,8 @@ import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.HorizontalLayout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Migrate;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Persist;
 import org.knime.core.webui.node.dialog.defaultdialog.setting.credentials.Credentials;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
@@ -120,7 +121,7 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
                 </ul>
                 """)
     @ValueReference(ConnectionTypeRef.class)
-    @Persist(optional = true)
+    @Migrate(loadDefaultIfAbsent = true)
     @ValueSwitchWidget()
     ConnectionType m_type = ConnectionType.INCOMING;
 
@@ -133,20 +134,24 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     @Layout(IncomingServerSection.class)
     @Widget(title = "Server", description = "The address of the incoming email server (IMAP) e.g. <i>imap.web.de.</i>")
     @TextInputWidget(pattern = "[^ ]+")
-    @Persist(optional = true, configKey = "server")
+
+    @Persist(configKey = "server")
+    @Migrate(loadDefaultIfAbsent = true)
     String m_imapServer;
 
     @Layout(IncomingServerSection.class)
     @Widget(title = "Port",
         description = "The port of the incoming email server (e.g. 143 (non-secure) or 993 (secure)).") //
     @NumberInputWidget(min = 1, max = 0xFFFF) // 65635
-    @Persist(optional = true, configKey = "port")
+    @Migrate(loadDefaultIfAbsent = true)
+    @Persist(configKey = "port")
     int m_imapPort = 993;
 
     @Layout(IncomingServerSection.class)
     @Widget(title = "Use secure protocol",
         description = "Choose whether to use an encrypted or unencrypted connection.")
-    @Persist(optional = true, configKey = "useSecureProtocol")
+    @Migrate(loadDefaultIfAbsent = true)
+    @Persist(configKey = "useSecureProtocol")
     boolean m_imapUseSecureProtocol = true;
 
     //  OUTGOING SERVER SETTINGS
@@ -159,21 +164,21 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     @Layout(OutgoingServerSection.class)
     @Widget(title = "Server", description = "The address of the outgoing email server (SMTP) e.g. <i>smtp.web.de.</i>")
     @TextInputWidget(pattern = "^\\w[\\w\\.]*")
-    @Persist(optional = true)
+    @Migrate(loadDefaultIfAbsent = true)
     String m_smtpHost;
 
     @Layout(OutgoingServerSection.class)
     @Widget(title = "Port",
         description = "The port of the outgoing email server (e.g. 25 (non-secure), 465 (secure) or 587 (secure)).")
     @NumberInputWidget(min = 1, max = 0xFFFF) // 65635
-    @Persist(optional = true)
+    @Migrate(loadDefaultIfAbsent = true)
     int m_smtpPort = 587;
 
     @Layout(OutgoingServerSection.class)
     @Widget(title = "Email address",
         description = "Some SMTP servers require the sender's email address, other "
             + "accept this to be not specified and will automatically derive it from the user account.")
-    @Persist(optional = true)
+    @Migrate(loadDefaultIfAbsent = true)
     String m_smtpEmailAddress;
 
     static final class SMTPRequiresAuthentication implements BooleanReference {
@@ -184,7 +189,7 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
         description = "If the outgoing mail server "
             + "requires authentication, check this box and enter the credentials or use a credentials flow variable "
             + "to control them.")
-    @Persist(optional = true)
+    @Migrate(loadDefaultIfAbsent = true)
     @ValueReference(SMTPRequiresAuthentication.class)
     boolean m_smtpRequiresAuthentication = true;
 
@@ -192,7 +197,7 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     @Widget(title = "Connection Security",
         description = "Configures the connection security to the outgoing email server.")
     @ValueSwitchWidget
-    @Persist(optional = true)
+    @Migrate(loadDefaultIfAbsent = true)
     ConnectionSecurity m_smtpSecurity = ConnectionSecurity.NONE;
 
     static final class AuthenticationIsRequired implements PredicateProvider {
@@ -224,14 +229,14 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     @Widget(title = "Connection timeout", advanced = true,
         description = "Timeout in seconds to establish a connection.")
     @NumberInputWidget(min = 1)
-    @Persist(optional = true)
+    @Migrate(loadDefaultIfAbsent = true)
     int m_connectTimeout = EmailSessionKey.DEF_TIMEOUT_CONNECT_S;
 
     @Layout(ConnectionPropertySection.class)
     @Widget(title = "Read timeout", advanced = true,
         description = "Timeout in seconds to read a server response from a connection.")
     @NumberInputWidget(min = 1)
-    @Persist(optional = true)
+    @Migrate(loadDefaultIfAbsent = true)
     int m_readTimeout = EmailSessionKey.DEF_TIMEOUT_READ_S;
 
     @Widget(title = "Custom properties",

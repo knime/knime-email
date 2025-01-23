@@ -181,7 +181,9 @@
             "type" : "Control",
             "scope" : "#/properties/attachment",
             "options" : {
-              "format" : "fileChooser"
+              "format" : "fileChooser",
+              "mountId" : "Local space",
+              "isLocal" : true
             }
           } ],
           "addButtonText" : "Add attachment",
@@ -224,17 +226,16 @@
         "type" : "object",
         "properties" : {
           "recipientsSettings" : {
-            "configKey" : "recipients",
             "type" : "object",
             "properties" : {
               "to" : { },
               "cc" : { },
               "bcc" : { },
               "replyTo" : { }
-            }
+            },
+            "configKey" : "recipients"
           },
           "messageSettings" : {
-            "configKey" : "message",
             "type" : "object",
             "properties" : {
               "subject" : { },
@@ -255,7 +256,8 @@
                 }
               },
               "attachmentColumn" : { }
-            }
+            },
+            "configKey" : "message"
           }
         }
       }

@@ -72,7 +72,7 @@ import org.knime.core.node.port.report.IReportPortObject;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.WidgetGroup;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.PersistableSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.PersistableSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.setting.fileselection.FileSelection;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
