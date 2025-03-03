@@ -56,6 +56,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.webui.data.InitialDataService;
 import org.knime.core.webui.data.RpcDataService;
 import org.knime.core.webui.node.port.PortSpecViewFactory;
@@ -93,10 +95,19 @@ public final class EmailSessionPortViewFactories {
      * @param pos The port object spec.
      */
     private static PortView createPortSpecView(final EmailSessionPortObjectSpec pos) {
+        final var nodeCtx = CheckUtils.checkNotNull(NodeContext.getContext(), "No `NodeContext` present for port view");
         return new PortView() {
             @Override
             public Page getPage() {
-                return Page.builder(() -> createHtmlContent(pos), "index.html").build();
+                return Page.builder(() -> {
+                    // the port view needs the node context to access the session key in the WFM (see NXT-3266)
+                    NodeContext.pushContext(nodeCtx);
+                    try {
+                        return createHtmlContent(pos);
+                    } finally {
+                        NodeContext.removeLastContext();
+                    }
+                }, "index.html").build();
             }
 
             @SuppressWarnings("unchecked")
