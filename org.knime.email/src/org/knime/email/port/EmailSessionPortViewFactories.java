@@ -52,6 +52,7 @@ import static com.google.common.html.HtmlEscapers.htmlEscaper;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -63,7 +64,9 @@ import org.knime.core.webui.data.RpcDataService;
 import org.knime.core.webui.node.port.PortSpecViewFactory;
 import org.knime.core.webui.node.port.PortView;
 import org.knime.core.webui.node.port.PortViewFactory;
+import org.knime.core.webui.node.port.PortViewManager;
 import org.knime.core.webui.page.Page;
+import org.knime.core.webui.page.Page.StringSupplier;
 import org.knime.email.session.EmailSessionKey.ViewContentSection;
 
 /**
@@ -78,8 +81,7 @@ public final class EmailSessionPortViewFactories {
     /**
      * {@link PortViewFactory} for the credential port object view.
      */
-    static final PortViewFactory<EmailSessionPortObject> PORT_VIEW_FACTORY = //
-        EmailSessionPortViewFactories::createPortView;
+    static final PortViewFactory<EmailSessionPortObject> PORT_VIEW_FACTORY = obj -> createPortSpecView(obj.getSpec());
 
     /**
      * {@link PortSpecViewFactory} for the credential port object spec view.
@@ -87,32 +89,42 @@ public final class EmailSessionPortViewFactories {
     static final PortSpecViewFactory<EmailSessionPortObjectSpec> PORT_SPEC_VIEW_FACTORY = //
         EmailSessionPortViewFactories::createPortSpecView;
 
-    private static PortView createPortView(final EmailSessionPortObject portObject) {
-        return createPortSpecView(portObject.getSpec());
+    /**
+     * Registers the views with the {@link PortViewManager}.
+     */
+    public static void register() {
+        final var portName = "Email Connection";
+        PortViewManager.registerPortViews(EmailSessionPortObject.TYPE, //
+            List.of(
+                new PortViewManager.PortViewDescriptor(portName, PORT_SPEC_VIEW_FACTORY),
+                new PortViewManager.PortViewDescriptor(portName, PORT_VIEW_FACTORY)),
+            List.of(0), //
+            List.of(1));
     }
 
     /**
      * @param pos The port object spec.
      */
     private static PortView createPortSpecView(final EmailSessionPortObjectSpec pos) {
+        // the port view needs the node context to access the session key in the WFM (see NXT-3266)
         final var nodeCtx = CheckUtils.checkNotNull(NodeContext.getContext(), "No `NodeContext` present for port view");
+        final StringSupplier supplierWithContext = () -> {
+            NodeContext.pushContext(nodeCtx);
+            try {
+                return createHtmlContent(pos);
+            } finally {
+                NodeContext.removeLastContext();
+            }
+        };
+
         return new PortView() {
             @Override
             public Page getPage() {
-                return Page.builder(() -> {
-                    // the port view needs the node context to access the session key in the WFM (see NXT-3266)
-                    NodeContext.pushContext(nodeCtx);
-                    try {
-                        return createHtmlContent(pos);
-                    } finally {
-                        NodeContext.removeLastContext();
-                    }
-                }, "index.html").build();
+                return Page.builder(supplierWithContext, "index.html").build();
             }
 
-            @SuppressWarnings("unchecked")
             @Override
-            public Optional<InitialDataService<?>> createInitialDataService() {
+            public Optional<InitialDataService<Object>> createInitialDataService() {
                 return Optional.empty();
             }
 
