@@ -22,5 +22,6 @@ Require-Bundle: org.knime.base;bundle-version="[5.5.0,6.0.0)",
  org.apache.commons.commons-io;bundle-version="[2.15.1,3.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-ActivationPolicy: lazy
+Bundle-Activator: org.knime.email.EmailPlugin
 Eclipse-BundleShape: jar
 Automatic-Module-Name: org.knime.email
