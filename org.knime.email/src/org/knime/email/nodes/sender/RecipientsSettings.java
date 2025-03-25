@@ -54,6 +54,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.layout.WidgetGroup;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.PersistableSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.TextInputWidgetValidation.PatternValidation;
 
 import com.google.common.base.Strings;
 
@@ -73,9 +74,16 @@ final class RecipientsSettings implements WidgetGroup, PersistableSettings {
      */
     private static final String EMAIL_ADDRESS_PATTERN = "^(.+)@(.+)$";
 
+    private static final class EmailPatternValidation extends PatternValidation {
+        @Override
+        protected String getPattern() {
+            return EMAIL_ADDRESS_PATTERN;
+        }
+    }
+
     @Widget(title = "To", description = //
             "Email address of the intended recipient (To). Use a comma separator to specify multiple recipients.")
-    @TextInputWidget(pattern = EMAIL_ADDRESS_PATTERN)
+    @TextInputWidget(validation = EmailPatternValidation.class)
     String m_to;
 
     @Widget(title = "CC", description = //

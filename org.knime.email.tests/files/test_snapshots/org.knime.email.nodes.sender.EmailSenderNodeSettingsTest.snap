@@ -110,8 +110,7 @@
               "to" : {
                 "type" : "string",
                 "title" : "To",
-                "description" : "Email address of the intended recipient (To). Use a comma separator to specify multiple recipients.",
-                "pattern" : "^(.+)@(.+)$"
+                "description" : "Email address of the intended recipient (To). Use a comma separator to specify multiple recipients."
               }
             },
             "default" : { }
@@ -128,7 +127,14 @@
         "type" : "Control",
         "scope" : "#/properties/model/properties/recipientsSettings/properties/to",
         "options" : {
-          "hideOnNull" : false
+          "hideOnNull" : false,
+          "validations" : [ {
+            "errorMessage" : "The string must match the pattern: ^(.+)@(.+)$",
+            "id" : "pattern",
+            "parameters" : {
+              "pattern" : "^(.+)@(.+)$"
+            }
+          } ]
         }
       }, {
         "type" : "Control",
@@ -182,8 +188,8 @@
             "scope" : "#/properties/attachment",
             "options" : {
               "format" : "fileChooser",
-              "mountId" : "Local space",
-              "isLocal" : true
+              "isLocal" : true,
+              "mountId" : "Local space"
             }
           } ],
           "addButtonText" : "Add attachment",

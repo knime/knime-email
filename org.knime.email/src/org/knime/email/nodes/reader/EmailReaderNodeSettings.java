@@ -65,6 +65,8 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Predicate;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.PredicateProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Reference;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.ValueReference;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.NumberInputWidgetValidation.MaxValidation;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.NumberInputWidgetValidation.MinValidation.IsPositiveIntegerValidation;
 import org.knime.email.util.UIChoices.FolderProvider;
 
 /**
@@ -141,16 +143,24 @@ public final class EmailReaderNodeSettings implements DefaultNodeSettings {
     MessageAnswerStatus m_messageAnsweredStatus = MessageAnswerStatus.Unanswered;
 
     @Widget(title = "Limit number of emails",
-            description = "Select if the oldest, newest or all emails should be retrieved.")
+        description = "Select if the oldest, newest or all emails should be retrieved.")
     @Layout(FilteringSection.class)
     @ValueReference(MessageSelectorRef.class)
     @ValueSwitchWidget
     MessageSelector m_messageSelector = MessageSelector.Newest;
 
+    // TODO(UIEXT-2654): Remove when it is part of the framework
+    private static final class MaxIntegerMaxValidation extends MaxValidation {
+        @Override
+        protected double getMax() {
+            return Integer.MAX_VALUE;
+        }
+    }
+
     @Widget(title = "Maximum number of emails", description = "The number of messages to retrieve at most.")
     @Layout(value = FilteringSection.class)
     @Effect(predicate = IsLimitMessageCount.class, type = EffectType.SHOW)
-    @NumberInputWidget(min = 1, max = Integer.MAX_VALUE)
+    @NumberInputWidget(validation = {IsPositiveIntegerValidation.class, MaxIntegerMaxValidation.class})
     int m_limitMessagesCount = 100;
 
 
