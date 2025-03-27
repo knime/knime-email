@@ -94,7 +94,9 @@ public final class EmailSessionPortViewFactories {
      */
     public static void register() {
         final var portName = "Email Connection";
-        PortViewManager.registerPortViews(EmailSessionPortObject.TYPE, //
+        // AP-24150: Accessing `EmailSessionPortObject.class` does not trigger static initializers, which is important
+        //           here because we don't want to load `PortType`s in the plugin activator.
+        PortViewManager.registerPortViews(EmailSessionPortObject.class, //
             List.of(
                 new PortViewManager.PortViewDescriptor(portName, PORT_SPEC_VIEW_FACTORY),
                 new PortViewManager.PortViewDescriptor(portName, PORT_VIEW_FACTORY)),
