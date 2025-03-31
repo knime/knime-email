@@ -49,7 +49,7 @@
 package org.knime.email.nodes.mover;
 
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.ChoicesProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 import org.knime.email.nodes.reader.EmailReaderNodeProcessor;
 import org.knime.email.util.UIChoices.FolderProvider;
@@ -65,16 +65,16 @@ public final class EmailMoverNodeSettings implements DefaultNodeSettings {
 
     @Widget(title = "Source folder", description =
             "The full path of the email source folder to search for the email ids e.g. 'INBOX' or Folder.Subfolder.")
-    @ChoicesWidget(choices = FolderProvider.class)
+    @ChoicesProvider(FolderProvider.class)
     String m_sourceFolder;
 
     @Widget(title = "Email-ID column", description = "Column containing the id of the emails. "
         + "This is mostlikely the '" + EmailReaderNodeProcessor.COL_EMAIL_ID + "' from the Read Email table.")
-    @ChoicesWidget(choices = MessageIDColumnChoicesProvider.class)
+    @ChoicesProvider(MessageIDColumnChoicesProvider.class)
     String m_messageIds = EmailReaderNodeProcessor.COL_EMAIL_ID;
 
     @Widget(title = "Target folder", description =
             "The full path of the email target folder to move the emails to e.g. 'TRASH' or Folder.Subfolder.")
-    @ChoicesWidget(choices = FolderProvider.class)
+    @ChoicesProvider(FolderProvider.class)
     String m_targetFolder;
 }

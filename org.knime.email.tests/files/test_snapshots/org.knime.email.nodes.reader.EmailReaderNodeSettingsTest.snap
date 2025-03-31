@@ -100,12 +100,8 @@
       "type" : "Control",
       "scope" : "#/properties/model/properties/folder",
       "options" : {
-        "choicesProviderClass" : "org.knime.email.util.UIChoices$FolderProvider",
-        "format" : "dropDown",
-        "showNoneColumn" : false,
-        "showRowKeys" : false,
-        "showSearch" : true,
-        "showMode" : true
+        "choicesProvider" : "org.knime.email.util.UIChoices$FolderProvider",
+        "format" : "dropDown"
       }
     }, {
       "label" : "Filtering",
@@ -216,5 +212,12 @@
         }
       }
     }
-  }
+  },
+  "globalUpdates" : [ {
+    "trigger" : {
+      "id" : "after-open-dialog",
+      "triggerInitially" : true
+    },
+    "dependencies" : [ ]
+  } ]
 }

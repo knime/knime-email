@@ -49,17 +49,14 @@
 package org.knime.email.util;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.StringValue;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings.DefaultNodeSettingsContext;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.AsyncChoicesProvider;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesProvider;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ColumnChoicesProvider;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.IdAndText;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.StringChoicesProvider;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.column.CompatibleColumnsProvider.StringColumnsProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.handler.WidgetHandlerException;
 import org.knime.email.port.EmailSessionPortObjectSpec;
 import org.knime.email.session.EmailSessionKey;
@@ -80,13 +77,16 @@ public final class UIChoices {
      * A choices provider to select a string column containing a message ID. The table with the column is expected to be
      * connected to the second port (1).
      */
-    public static final class MessageIDColumnChoicesProvider implements ColumnChoicesProvider, AsyncChoicesProvider {
+    public static final class MessageIDColumnChoicesProvider extends StringColumnsProvider {
+
         @Override
-        public DataColumnSpec[] columnChoices(final DefaultNodeSettingsContext context) {
-            return context.getDataTableSpec(1)
-                .map(spec -> spec.stream().filter(s -> s.getType().isCompatible(StringValue.class))//
-                    .toArray(DataColumnSpec[]::new))
-                .orElse(new DataColumnSpec[]{});
+        public void init(final StateProviderInitializer initializer) {
+            initializer.computeAfterOpenDialog();
+        }
+
+        @Override
+        public int getInputTableIndex() {
+            return 1;
         }
     }
 
@@ -94,14 +94,19 @@ public final class UIChoices {
      * A choices provider to select folders from an email session. The email session port is expected to be connected to
      * the first port (1).
      */
-    public static final class FolderProvider implements ChoicesProvider, AsyncChoicesProvider {
+    public static final class FolderProvider implements StringChoicesProvider {
 
         private static final NodeLogger LOGGER = NodeLogger.getLogger(UIChoices.FolderProvider.class);
 
         private static final String MISSING_SESSION_MSG = "Rexecute the connector node to restore the email session.";
 
         @Override
-        public IdAndText[] choicesWithIdAndText(final DefaultNodeSettingsContext context) {
+        public void init(final StateProviderInitializer initializer) {
+            initializer.computeAfterOpenDialog();
+        }
+
+        @Override
+        public List<String> choices(final DefaultNodeSettingsContext context) {
             try {
                 Optional<PortObjectSpec> optional = context.getPortObjectSpec(0);
                 final EmailSessionPortObjectSpec in = (EmailSessionPortObjectSpec)optional.orElseThrow(() -> {
@@ -112,8 +117,7 @@ public final class UIChoices {
                 try (final var mailSession = sessionKey.connectIncoming()) {
                     final String[] folders = mailSession.listFolders();
                     Arrays.sort(folders);
-                    return Arrays.asList(folders).stream().map(s -> new IdAndText(s, s)).toList()
-                        .toArray(new IdAndText[0]);
+                    return Arrays.asList(folders);
                 }
             } catch (final Exception e) { // NOSONAR catch all exceptions here
                 LOGGER.debug("Error fetching email folders", e);

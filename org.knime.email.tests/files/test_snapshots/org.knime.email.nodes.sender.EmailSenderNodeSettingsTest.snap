@@ -127,7 +127,6 @@
         "type" : "Control",
         "scope" : "#/properties/model/properties/recipientsSettings/properties/to",
         "options" : {
-          "hideOnNull" : false,
           "validations" : [ {
             "errorMessage" : "The string must match the pattern: ^(.+)@(.+)$",
             "id" : "pattern",
@@ -207,12 +206,8 @@
         "type" : "Control",
         "scope" : "#/properties/model/properties/messageSettings/properties/attachmentColumn",
         "options" : {
-          "possibleValues" : [ ],
-          "format" : "dropDown",
-          "showNoneColumn" : false,
-          "showRowKeys" : false,
-          "showSearch" : true,
-          "showMode" : true
+          "choicesProvider" : "org.knime.email.nodes.sender.MessageSettings$AttachmentColumnProvider",
+          "format" : "dropDown"
         },
         "rule" : {
           "effect" : "SHOW",
@@ -268,5 +263,13 @@
         }
       }
     }
-  }
+  },
+  "initialUpdates" : [ {
+    "scopes" : null,
+    "id" : "org.knime.email.nodes.sender.MessageSettings$AttachmentColumnProvider",
+    "values" : [ {
+      "indices" : [ ],
+      "value" : [ ]
+    } ]
+  } ]
 }

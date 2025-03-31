@@ -49,6 +49,7 @@
 package org.knime.email.nodes.sender;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -75,12 +76,12 @@ import org.knime.core.webui.node.dialog.defaultdialog.layout.WidgetGroup;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.PersistableSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.setting.fileselection.FileSelection;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ColumnChoicesProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.RichTextInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.ChoicesProvider;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.column.ColumnChoicesProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect.EffectType;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Predicate;
@@ -124,10 +125,10 @@ final class MessageSettings implements DefaultNodeSettings {
 
     static final class AttachmentColumnProvider implements ColumnChoicesProvider {
         @Override
-        public DataColumnSpec[] columnChoices(final DefaultNodeSettingsContext context) {
+        public List<DataColumnSpec> columnChoices(final DefaultNodeSettingsContext context) {
             final PortType[] inTypes = context.getInPortTypes();
             final IntFunction<? extends Optional<PortObjectSpec>> specSupplier = context::getPortObjectSpec;
-            return getValidPathColumnNames(inTypes, specSupplier).orElse(new DataColumnSpec[]{});
+            return getValidPathColumnNames(inTypes, specSupplier).stream().flatMap(Arrays::stream).toList();
         }
     }
 
@@ -188,7 +189,7 @@ final class MessageSettings implements DefaultNodeSettings {
         description = "The column in the attachment input table, if enabled, "
             + "containing the list of attachment locations (the column needs to be of type \"path\".")
     @Effect(predicate = AttachmentPortIsConnected.class, type = EffectType.SHOW)
-    @ChoicesWidget(choices = AttachmentColumnProvider.class)
+    @ChoicesProvider(AttachmentColumnProvider.class)
     String m_attachmentColumn;
 
     void validate() throws InvalidSettingsException {
