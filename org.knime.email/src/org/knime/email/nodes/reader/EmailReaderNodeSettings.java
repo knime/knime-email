@@ -65,7 +65,6 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Predicate;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.PredicateProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Reference;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.ValueReference;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.NumberInputWidgetValidation.MaxValidation;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.NumberInputWidgetValidation.MinValidation.IsPositiveIntegerValidation;
 import org.knime.email.util.UIChoices.FolderProvider;
 
@@ -149,18 +148,10 @@ public final class EmailReaderNodeSettings implements DefaultNodeSettings {
     @ValueSwitchWidget
     MessageSelector m_messageSelector = MessageSelector.Newest;
 
-    // TODO(UIEXT-2654): Remove when it is part of the framework
-    private static final class MaxIntegerMaxValidation extends MaxValidation {
-        @Override
-        protected double getMax() {
-            return Integer.MAX_VALUE;
-        }
-    }
-
     @Widget(title = "Maximum number of emails", description = "The number of messages to retrieve at most.")
     @Layout(value = FilteringSection.class)
     @Effect(predicate = IsLimitMessageCount.class, type = EffectType.SHOW)
-    @NumberInputWidget(validation = {IsPositiveIntegerValidation.class, MaxIntegerMaxValidation.class})
+    @NumberInputWidget(validation = IsPositiveIntegerValidation.class)
     int m_limitMessagesCount = 100;
 
 
