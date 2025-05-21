@@ -100,9 +100,9 @@
       "type" : "Control",
       "scope" : "#/properties/model/properties/folder",
       "options" : {
-        "choicesProvider" : "org.knime.email.util.UIChoices$FolderProvider",
         "format" : "dropDown"
-      }
+      },
+      "providedOptions" : [ "possibleValues" ]
     }, {
       "label" : "Filtering",
       "type" : "Section",
@@ -128,21 +128,22 @@
         "type" : "Control",
         "scope" : "#/properties/model/properties/limitMessagesCount",
         "options" : {
-          "validations" : [ {
-            "errorMessage" : "The value must be at least 1.",
-            "id" : "min",
-            "parameters" : {
-              "min" : 1.0,
-              "isExclusive" : false
+          "validation" : {
+            "max" : {
+              "parameters" : {
+                "max" : 2.147483647E9,
+                "isExclusive" : false
+              },
+              "errorMessage" : "The value must not exceed 2147483647."
+            },
+            "min" : {
+              "parameters" : {
+                "min" : 1.0,
+                "isExclusive" : false
+              },
+              "errorMessage" : "The value must be at least 1."
             }
-          }, {
-            "errorMessage" : "The value must not exceed 2147483647.",
-            "id" : "max",
-            "parameters" : {
-              "max" : 2.147483647E9,
-              "isExclusive" : false
-            }
-          } ]
+          }
         },
         "rule" : {
           "effect" : "SHOW",
@@ -215,9 +216,9 @@
   },
   "globalUpdates" : [ {
     "trigger" : {
-      "id" : "after-open-dialog",
-      "triggerInitially" : true
+      "id" : "after-open-dialog"
     },
+    "triggerInitially" : true,
     "dependencies" : [ ]
   } ]
 }

@@ -151,7 +151,7 @@ public final class EmailReaderNodeSettings implements DefaultNodeSettings {
     @Widget(title = "Maximum number of emails", description = "The number of messages to retrieve at most.")
     @Layout(value = FilteringSection.class)
     @Effect(predicate = IsLimitMessageCount.class, type = EffectType.SHOW)
-    @NumberInputWidget(validation = IsPositiveIntegerValidation.class)
+    @NumberInputWidget(minValidation = IsPositiveIntegerValidation.class)
     int m_limitMessagesCount = 100;
 
 

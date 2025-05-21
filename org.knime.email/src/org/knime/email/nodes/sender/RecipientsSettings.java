@@ -83,7 +83,7 @@ final class RecipientsSettings implements WidgetGroup, PersistableSettings {
 
     @Widget(title = "To", description = //
             "Email address of the intended recipient (To). Use a comma separator to specify multiple recipients.")
-    @TextInputWidget(validation = EmailPatternValidation.class)
+    @TextInputWidget(patternValidation = EmailPatternValidation.class)
     String m_to;
 
     @Widget(title = "CC", description = //

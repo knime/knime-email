@@ -80,6 +80,7 @@ import org.knime.email.session.EmailSessionKey.SmtpConnectionSecurity;
 
 /**
  * Settings class.
+ *
  * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction")
@@ -143,8 +144,7 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
 
     @Layout(IncomingServerSection.class)
     @Widget(title = "Server", description = "The address of the incoming email server (IMAP) e.g. <i>imap.web.de.</i>")
-    @TextInputWidget(validation = ImapServerPatternValidation.class)
-
+    @TextInputWidget(patternValidation = ImapServerPatternValidation.class)
     @Persist(configKey = "server")
     @Migrate(loadDefaultIfAbsent = true)
     String m_imapServer;
@@ -159,7 +159,7 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     @Layout(IncomingServerSection.class)
     @Widget(title = "Port",
         description = "The port of the incoming email server (e.g. 143 (non-secure) or 993 (secure)).") //
-    @NumberInputWidget(validation = {IsPositiveIntegerValidation.class, PortMaxValidation.class})
+    @NumberInputWidget(minValidation = IsPositiveIntegerValidation.class, maxValidation = PortMaxValidation.class)
     @Migrate(loadDefaultIfAbsent = true)
     @Persist(configKey = "port")
     int m_imapPort = 993;
@@ -187,14 +187,14 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
 
     @Layout(OutgoingServerSection.class)
     @Widget(title = "Server", description = "The address of the outgoing email server (SMTP) e.g. <i>smtp.web.de.</i>")
-    @TextInputWidget(validation = SmtpHostPatternValidation.class)
+    @TextInputWidget(patternValidation = SmtpHostPatternValidation.class)
     @Migrate(loadDefaultIfAbsent = true)
     String m_smtpHost;
 
     @Layout(OutgoingServerSection.class)
     @Widget(title = "Port",
         description = "The port of the outgoing email server (e.g. 25 (non-secure), 465 (secure) or 587 (secure)).")
-    @NumberInputWidget(validation = {IsPositiveIntegerValidation.class, PortMaxValidation.class})
+    @NumberInputWidget(minValidation = IsPositiveIntegerValidation.class, maxValidation = PortMaxValidation.class)
     @Migrate(loadDefaultIfAbsent = true)
     int m_smtpPort = 587;
 
@@ -252,14 +252,14 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     @Layout(ConnectionPropertySection.class)
     @Widget(title = "Connection timeout", advanced = true,
         description = "Timeout in seconds to establish a connection.")
-    @NumberInputWidget(validation = IsPositiveIntegerValidation.class)
+    @NumberInputWidget(minValidation = IsPositiveIntegerValidation.class)
     @Migrate(loadDefaultIfAbsent = true)
     int m_connectTimeout = EmailSessionKey.DEF_TIMEOUT_CONNECT_S;
 
     @Layout(ConnectionPropertySection.class)
     @Widget(title = "Read timeout", advanced = true,
         description = "Timeout in seconds to read a server response from a connection.")
-    @NumberInputWidget(validation = IsPositiveIntegerValidation.class)
+    @NumberInputWidget(minValidation = IsPositiveIntegerValidation.class)
     @Migrate(loadDefaultIfAbsent = true)
     int m_readTimeout = EmailSessionKey.DEF_TIMEOUT_READ_S;
 
@@ -286,12 +286,12 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
         }
 
         @Widget(title = "Name", description = "Custom property name e.g. mail.smtp.timeout.")
-        @TextInputWidget(validation = StartsWithNonWhiteSpaceValidation.class)
+        @TextInputWidget(patternValidation = StartsWithNonWhiteSpaceValidation.class)
         @Layout(ConnectionPropertiesLayout.class)
         public String m_name;
 
         @Widget(title = "Value", description = "Custom property value e.g. 10 or true.")
-        @TextInputWidget(validation = StartsWithNonWhiteSpaceValidation.class)
+        @TextInputWidget(patternValidation = StartsWithNonWhiteSpaceValidation.class)
         @Layout(ConnectionPropertiesLayout.class)
         public String m_value;
     }

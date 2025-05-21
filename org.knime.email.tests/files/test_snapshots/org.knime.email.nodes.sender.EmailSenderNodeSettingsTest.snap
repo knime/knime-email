@@ -127,13 +127,14 @@
         "type" : "Control",
         "scope" : "#/properties/model/properties/recipientsSettings/properties/to",
         "options" : {
-          "validations" : [ {
-            "errorMessage" : "The string must match the pattern: ^(.+)@(.+)$",
-            "id" : "pattern",
-            "parameters" : {
-              "pattern" : "^(.+)@(.+)$"
+          "validation" : {
+            "pattern" : {
+              "parameters" : {
+                "pattern" : "^(.+)@(.+)$"
+              },
+              "errorMessage" : "The string must match the pattern: ^(.+)@(.+)$"
             }
-          } ]
+          }
         }
       }, {
         "type" : "Control",
@@ -206,9 +207,9 @@
         "type" : "Control",
         "scope" : "#/properties/model/properties/messageSettings/properties/attachmentColumn",
         "options" : {
-          "choicesProvider" : "org.knime.email.nodes.sender.MessageSettings$AttachmentColumnProvider",
           "format" : "dropDown"
         },
+        "providedOptions" : [ "possibleValues" ],
         "rule" : {
           "effect" : "SHOW",
           "condition" : {
@@ -265,8 +266,8 @@
     }
   },
   "initialUpdates" : [ {
-    "scopes" : null,
-    "id" : "org.knime.email.nodes.sender.MessageSettings$AttachmentColumnProvider",
+    "scope" : "#/properties/model/properties/messageSettings/properties/attachmentColumn",
+    "providedOptionName" : "possibleValues",
     "values" : [ {
       "indices" : [ ],
       "value" : [ ]

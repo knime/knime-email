@@ -35,23 +35,23 @@
       "type" : "Control",
       "scope" : "#/properties/model/properties/sourceFolder",
       "options" : {
-        "choicesProvider" : "org.knime.email.util.UIChoices$FolderProvider",
         "format" : "dropDown"
-      }
+      },
+      "providedOptions" : [ "possibleValues" ]
     }, {
       "type" : "Control",
       "scope" : "#/properties/model/properties/messageIds",
       "options" : {
-        "choicesProvider" : "org.knime.email.util.UIChoices$MessageIDColumnChoicesProvider",
         "format" : "dropDown"
-      }
+      },
+      "providedOptions" : [ "possibleValues" ]
     }, {
       "type" : "Control",
       "scope" : "#/properties/model/properties/targetFolder",
       "options" : {
-        "choicesProvider" : "org.knime.email.util.UIChoices$FolderProvider",
         "format" : "dropDown"
-      }
+      },
+      "providedOptions" : [ "possibleValues" ]
     } ]
   },
   "persist" : {
@@ -69,9 +69,9 @@
   },
   "globalUpdates" : [ {
     "trigger" : {
-      "id" : "after-open-dialog",
-      "triggerInitially" : true
+      "id" : "after-open-dialog"
     },
+    "triggerInitially" : true,
     "dependencies" : [ ]
   } ]
 }
