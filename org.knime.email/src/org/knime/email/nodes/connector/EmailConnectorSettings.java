@@ -59,6 +59,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Migrate;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Persist;
 import org.knime.core.webui.node.dialog.defaultdialog.setting.credentials.Credentials;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.Advanced;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.NumberInputWidget;
@@ -244,7 +245,8 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     Credentials m_login = new Credentials(); //set to empty credentials to prevent "No login set message"
 
     //  CONNECTION PROPERTIES
-    @Section(title = "Connection Properties", advanced = true)
+    @Section(title = "Connection Properties")
+    @Advanced
     @After(AuthenticationSection.class)
     interface ConnectionPropertySection {
     }

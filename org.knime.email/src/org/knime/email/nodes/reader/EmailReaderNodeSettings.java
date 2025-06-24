@@ -54,6 +54,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.Advanced;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.NumberInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
@@ -156,7 +157,8 @@ public final class EmailReaderNodeSettings implements DefaultNodeSettings {
 
 
 
-    @Section(title = "Output", advanced = true)
+    @Section(title = "Output")
+    @Advanced
     @After(FilteringSection.class)
     interface OutputSection {
     }
@@ -186,7 +188,8 @@ public final class EmailReaderNodeSettings implements DefaultNodeSettings {
 
 
 
-    @Section(title = "Advanced", advanced = true)
+    @Section(title = "Advanced")
+    @Advanced
     @After(OutputSection.class)
     interface AdvancedSection {
     }
