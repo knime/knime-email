@@ -61,6 +61,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Persist;
 import org.knime.core.webui.node.dialog.defaultdialog.setting.credentials.Credentials;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Advanced;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget.ElementLayout;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.NumberInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
@@ -272,7 +273,7 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
                 """,
         advanced = true)
     @Layout(ConnectionPropertySection.class)
-    @ArrayWidget(addButtonText = "Add custom property")
+    @ArrayWidget(elementLayout = ElementLayout.HORIZONTAL_SINGLE_LINE, addButtonText = "Add custom property")
     ConnectionProperties[] m_properties = new ConnectionProperties[0];
 
     static final class ConnectionProperties implements DefaultNodeSettings {

@@ -76,6 +76,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.layout.WidgetGroup;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.PersistableSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.setting.fileselection.FileSelection;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget.ElementLayout;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.RichTextInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
@@ -182,7 +183,8 @@ final class MessageSettings implements DefaultNodeSettings {
     @Widget(title = "Attachments (Manual Selection)", //
         description = "The path to the file to be attached to the email.")
     @Effect(predicate = AttachmentPortIsConnected.class, type = EffectType.HIDE)
-    @ArrayWidget(showSortButtons = true, addButtonText = "Add attachment")
+    @ArrayWidget(elementLayout = ElementLayout.HORIZONTAL_SINGLE_LINE, showSortButtons = true,
+        addButtonText = "Add attachment")
     Attachment[] m_attachments = new Attachment[]{};
 
     @Widget(title = "Attachments (Input Column)",

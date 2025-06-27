@@ -192,6 +192,7 @@
               "mountId" : "Local space"
             }
           } ],
+          "elementLayout": "HORIZONTAL_SINGLE_LINE",
           "addButtonText" : "Add attachment",
           "showSortButtons" : true
         },
