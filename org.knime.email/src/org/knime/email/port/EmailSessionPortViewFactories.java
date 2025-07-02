@@ -122,7 +122,7 @@ public final class EmailSessionPortViewFactories {
         return new PortView() {
             @Override
             public Page getPage() {
-                return Page.builder(supplierWithContext, "index.html").build();
+                return Page.create().fromString(supplierWithContext).relativePath("index.html");
             }
 
             @Override
