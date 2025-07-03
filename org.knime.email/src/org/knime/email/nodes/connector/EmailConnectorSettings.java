@@ -326,7 +326,8 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
 
     }
 
-    void validate() throws InvalidSettingsException {
+    @Override
+    public void validate() throws InvalidSettingsException {
         switch (m_type) {
             case INCOMING:
                 validateIncoming();

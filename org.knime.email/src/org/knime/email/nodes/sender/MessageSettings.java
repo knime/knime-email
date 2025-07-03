@@ -194,7 +194,8 @@ final class MessageSettings implements DefaultNodeSettings {
     @ChoicesProvider(AttachmentColumnProvider.class)
     String m_attachmentColumn;
 
-    void validate() throws InvalidSettingsException {
+    @Override
+    public void validate() throws InvalidSettingsException {
         CheckUtils.checkSettingNotNull(m_subject, "Subject must not be null");
         CheckUtils.checkSettingNotNull(m_message, "Message must not be null");
         CheckUtils.checkSettingNotNull(m_format, "Format must not be null");

@@ -88,7 +88,8 @@ final class EmailSenderNodeSettings implements DefaultNodeSettings {
     @Persist(configKey = "message")
     MessageSettings m_messageSettings = new MessageSettings();
 
-    void validate() throws InvalidSettingsException {
+    @Override
+    public void validate() throws InvalidSettingsException {
         m_messageSettings.validate();
         m_recipientsSettings.validate();
     }
