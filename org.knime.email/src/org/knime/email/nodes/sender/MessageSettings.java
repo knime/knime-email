@@ -71,24 +71,25 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.report.IReportPortObject;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.internal.file.FileSelection;
-import org.knime.core.webui.node.dialog.defaultdialog.layout.WidgetGroup;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.PersistableSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget.ElementLayout;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.RichTextInputWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.ChoicesProvider;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.column.ColumnChoicesProvider;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect.EffectType;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Predicate;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.PredicateProvider;
 import org.knime.filehandling.core.connections.FSLocation;
 import org.knime.filehandling.core.data.location.FSLocationValue;
+import org.knime.node.parameters.NodeParameters;
+import org.knime.node.parameters.NodeParametersInput;
+import org.knime.node.parameters.PersistableSettings;
+import org.knime.node.parameters.layout.WidgetGroup;
+import org.knime.node.parameters.widget.Widget;
+import org.knime.node.parameters.widget.array.ArrayWidget;
+import org.knime.node.parameters.widget.array.ArrayWidget.ElementLayout;
+import org.knime.node.parameters.widget.choices.ChoicesProvider;
+import org.knime.node.parameters.widget.choices.column.ColumnChoicesProvider;
+import org.knime.node.parameters.widget.singleselection.Label;
+import org.knime.node.parameters.widget.singleselection.ValueSwitchWidget;
+import org.knime.node.parameters.widget.text.RichTextInputWidget;
+import org.knime.node.parameters.widget.updates.Effect;
+import org.knime.node.parameters.widget.updates.Predicate;
+import org.knime.node.parameters.widget.updates.PredicateProvider;
+import org.knime.node.parameters.widget.updates.Effect.EffectType;
 
 /**
  * Settings around email sender messages (format, message, prios).
@@ -96,7 +97,7 @@ import org.knime.filehandling.core.data.location.FSLocationValue;
  * @author wiswedel
  */
 @SuppressWarnings("restriction")
-final class MessageSettings implements DefaultNodeSettings {
+final class MessageSettings implements NodeParameters {
 
     public static final class ReportIsConnected implements PredicateProvider {
 
@@ -105,7 +106,7 @@ final class MessageSettings implements DefaultNodeSettings {
             return i.getConstant(ReportIsConnected::reportIsConnected);
         }
 
-        private static boolean reportIsConnected(final DefaultNodeSettingsContext context) {
+        private static boolean reportIsConnected(final NodeParametersInput context) {
             return Stream.of(context.getInPortTypes()).anyMatch(IReportPortObject.TYPE::equals);
         }
 
@@ -118,7 +119,7 @@ final class MessageSettings implements DefaultNodeSettings {
             return i.getConstant(AttachmentPortIsConnected::attachmentPortIsConnected);
         }
 
-        private static boolean attachmentPortIsConnected(final DefaultNodeSettingsContext context) {
+        private static boolean attachmentPortIsConnected(final NodeParametersInput context) {
             return Stream.of(context.getInPortTypes()).anyMatch(BufferedDataTable.TYPE::equals);
         }
 
@@ -126,7 +127,7 @@ final class MessageSettings implements DefaultNodeSettings {
 
     static final class AttachmentColumnProvider implements ColumnChoicesProvider {
         @Override
-        public List<DataColumnSpec> columnChoices(final DefaultNodeSettingsContext context) {
+        public List<DataColumnSpec> columnChoices(final NodeParametersInput context) {
             final PortType[] inTypes = context.getInPortTypes();
             final IntFunction<? extends Optional<PortObjectSpec>> specSupplier = context::getPortObjectSpec;
             return getValidPathColumnNames(inTypes, specSupplier).stream().flatMap(Arrays::stream).toList();
