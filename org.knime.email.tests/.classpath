@@ -7,7 +7,7 @@
 			<attribute name="test" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry exported="true" kind="lib" path="lib/greenmail-junit5-2.1.0-alpha-2.jar" sourcepath="lib/greenmail-junit5-2.1.0-alpha-2-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/greenmail-2.1.0-alpha-2.jar" sourcepath="lib/greenmail-2.1.0-alpha-2-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/greenmail-junit5-2.1.3.jar" sourcepath="lib/greenmail-junit5-2.1.3-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/greenmail-2.1.3.jar" sourcepath="lib/greenmail-2.1.3-sources.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
