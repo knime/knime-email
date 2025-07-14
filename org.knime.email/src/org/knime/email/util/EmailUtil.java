@@ -229,23 +229,4 @@ public final class EmailUtil {
         return cc;
     }
 
-    /** An {@link AutoCloseable} whose {@link #close()} method does not throw an exception. */
-    public interface ResetContextClassloaderCloseable extends AutoCloseable {
-        @Override
-        void close();
-    }
-
-    /**
-     * Sets the current's thread context class loader to the one of the argument. Returns a closeable that can be used
-     * in try-with-resource.
-     *
-     * @param classForClassloader The non-null class whose class loader is used as context class loader
-     * @return A closeable resetting the context class loader.
-     */
-    public static ResetContextClassloaderCloseable runWithContextClassloader(final Class<?> classForClassloader) {
-        final var oldContextClassLoader = Thread.currentThread().getContextClassLoader();
-        Thread.currentThread().setContextClassLoader(classForClassloader.getClassLoader());
-        return () -> Thread.currentThread().setContextClassLoader(oldContextClassLoader);
-    }
-
 }

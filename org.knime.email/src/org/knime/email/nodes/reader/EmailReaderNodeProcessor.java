@@ -90,7 +90,6 @@ import jakarta.mail.Message.RecipientType;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Multipart;
 import jakarta.mail.Part;
-import jakarta.mail.Session;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.search.AndTerm;
 import jakarta.mail.search.FlagTerm;
@@ -175,8 +174,7 @@ public final class EmailReaderNodeProcessor {
                 final var attachRowContainer = context.createRowContainer(ATTACH_TABLE_SPEC, false); //
                 var attachWriteCursor = attachRowContainer.createCursor(); //
                 final var headerRowContainer = context.createRowContainer(HEADER_TABLE_SPEC, false); //
-                var headerWriteCursor = headerRowContainer.createCursor(); //
-                var classLoaderCloseable = EmailUtil.runWithContextClassloader(Session.class)) {
+                var headerWriteCursor = headerRowContainer.createCursor()) {
             final var msgRowBuffer = msgRowContainer.createRowBuffer();
             final var attachRowBuffer = attachRowContainer.createRowBuffer();
             final var headerRowBuffer = headerRowContainer.createRowBuffer();
@@ -432,7 +430,7 @@ public final class EmailReaderNodeProcessor {
                     attachRowBuffer.<StringWriteValue> getWriteValue(0).setStringValue(messageId);
                     attachRowBuffer.<StringWriteValue> getWriteValue(1).setStringValue(mp.getFileName());
                     attachRowBuffer.<WriteValue<DataCell>> getWriteValue(2).setValue(factory.create(is));
-                    attachWriteCurser.commit(attachRowBuffer);;
+                    attachWriteCurser.commit(attachRowBuffer);
                 }
             }
         }

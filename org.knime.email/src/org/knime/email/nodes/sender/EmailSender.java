@@ -83,7 +83,6 @@ import org.knime.email.nodes.sender.MessageSettings.EMailFormat;
 import org.knime.email.nodes.sender.MessageUtil.DocumentAndContentType;
 import org.knime.email.session.EmailOutgoingSession;
 import org.knime.email.session.EmailSessionKey;
-import org.knime.email.util.EmailUtil;
 import org.knime.filehandling.core.connections.FSConnection;
 import org.knime.filehandling.core.connections.FSFileSystem;
 import org.knime.filehandling.core.connections.FSLocation;
@@ -106,7 +105,6 @@ import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Multipart;
 import jakarta.mail.Part;
-import jakarta.mail.Session;
 import jakarta.mail.Transport;
 import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
@@ -211,8 +209,7 @@ final class EmailSender {
         final var messageAndContentType = readMessage(flowVarResolver);
 
         // make sure to set class loader to jakarta.mail - this has caused problems in the past, see bug 5316
-        try (final var closeable = EmailUtil.runWithContextClassloader(Session.class);
-                final var outgoingSession = m_emailSessionKey.connectOutgoing();
+        try (final var outgoingSession = m_emailSessionKey.connectOutgoing();
                 final var transport = outgoingSession.getEmailTransport()) {
             final var mimeMessage = initMessage(outgoingSession);
 

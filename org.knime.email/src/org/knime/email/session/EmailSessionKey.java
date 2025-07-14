@@ -61,7 +61,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.email.util.EmailUtil;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -168,21 +167,19 @@ public final class EmailSessionKey {
             "Connecting email client to %s:%d via %s using following properties %s", m_imapHost, m_imapPort, protocol,
             m_properties);
 
-        try (final var closeable = EmailUtil.runWithContextClassloader(Session.class)) {
-            final var emailSession = Session.getInstance(props);
-            final var emailStore = emailSession.getStore();
-            try {
-                final boolean isRequireAuth = StringUtils.isNotBlank(m_user);
-                if (isRequireAuth) {
-                    emailStore.connect(m_user, m_password);
-                } else {
-                    emailStore.connect();
-                }
-                return new EmailIncomingSession(emailStore);
-            } catch (MessagingException me) {
-                emailStore.close();
-                throw me;
+        final var emailSession = Session.getInstance(props);
+        final var emailStore = emailSession.getStore();
+        try {
+            final boolean isRequireAuth = StringUtils.isNotBlank(m_user);
+            if (isRequireAuth) {
+                emailStore.connect(m_user, m_password);
+            } else {
+                emailStore.connect();
             }
+            return new EmailIncomingSession(emailStore);
+        } catch (MessagingException me) {
+            emailStore.close();
+            throw me;
         }
     }
 
@@ -206,61 +203,55 @@ public final class EmailSessionKey {
         if (!outgoingAvailable()) {
             throw new MessagingException("No outgoing server settings available");
         }
-        final var oldContextClassloader = Thread.currentThread().getContextClassLoader();
-        Thread.currentThread().setContextClassLoader(Session.class.getClassLoader());
-        try {
-            CheckUtils.checkState(StringUtils.isNotBlank(m_smtpHost), "No outgoing server (smtp) specified");
-            final var properties = new Properties(m_properties);
-            var protocol = "smtp";
-            switch (m_smtpConnectionSecurity) {
-                case NONE:
-                    break;
-                case STARTTLS:
-                    properties.setProperty("mail.smtp.starttls.enable", "true");
-                    // we need to require STARTTLS as well to enforce a TLS connection -- fixes AP-19571
-                    properties.setProperty("mail.smtp.starttls.required", "true");
-                    break;
-                case SSL:
-                    // this is the way to do it in javax.mail 1.4.5+ (default is currently (Aug '13) 1.4.0):
-                    // www.oracle.com/technetwork/java/javamail145sslnotes-1562622.html
-                    // 'First, and perhaps the simplest, is to set a property to enable use
-                    // of SSL.  For example, to enable use of SSL for SMTP connections, set
-                    // the property "mail.smtp.ssl.enable" to "true".'
-                    properties.setProperty("mail.smtp.ssl.enable", "true");
-                    // this is an alternative/backup, which works also:
-                    // http://javakiss.blogspot.ch/2010/10/smtp-in-java-with-javaxmail.html
-                    // I verify it's actually using SSL:
-                    //  - it hid a breakpoint in sun.security.ssl.SSLSocketFactoryImpl
-                    //  - Hostpoint (knime.com mail server) is rejecting any smtp request on their ssl port (465)
-                    //    without this property
-                    properties.setProperty("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-                    // a third (and most transparent) option would be to use a different protocol:
-                    protocol = "smtps";
-                    break;
-                default:
-                    throw new IllegalStateException("unsupported connection security: " + m_smtpConnectionSecurity);
-            }
-            final boolean isRequireAuth = StringUtils.isNotBlank(m_user);
-
-            properties.setProperty("mail.transport.protocol", protocol);
-            // only support secure versions of TLS -- changed with AP-19572
-            properties.setProperty("mail.smtp.ssl.protocols", "TLSv1.2 TLSv1.3");
-            properties.setProperty("mail." + protocol + ".host", m_smtpHost);
-            properties.setProperty("mail." + protocol + ".port", Integer.toString(m_smtpPort));
-            properties.setProperty("mail." + protocol + ".auth", Boolean.toString(isRequireAuth));
-            properties.setProperty("mail." + protocol + ".connectiontimeout", String.valueOf(1000 * m_connectTimeoutS));
-            properties.setProperty("mail." + protocol + ".timeout", String.valueOf(1000 * m_readTimeoutS));
-            final var session = Session.getInstance(properties);
-            final var transport = session.getTransport();
-            if (isRequireAuth) {
-                transport.connect(m_user, m_password);
-            } else {
-                transport.connect();
-            }
-            return new EmailOutgoingSession(session, transport, m_smtpEmailAddress);
-        } finally {
-            Thread.currentThread().setContextClassLoader(oldContextClassloader);
+        CheckUtils.checkState(StringUtils.isNotBlank(m_smtpHost), "No outgoing server (smtp) specified");
+        final var properties = new Properties(m_properties);
+        var protocol = "smtp";
+        switch (m_smtpConnectionSecurity) {
+            case NONE:
+                break;
+            case STARTTLS:
+                properties.setProperty("mail.smtp.starttls.enable", "true");
+                // we need to require STARTTLS as well to enforce a TLS connection -- fixes AP-19571
+                properties.setProperty("mail.smtp.starttls.required", "true");
+                break;
+            case SSL:
+                // this is the way to do it in javax.mail 1.4.5+ (default is currently (Aug '13) 1.4.0):
+                // www.oracle.com/technetwork/java/javamail145sslnotes-1562622.html
+                // 'First, and perhaps the simplest, is to set a property to enable use
+                // of SSL.  For example, to enable use of SSL for SMTP connections, set
+                // the property "mail.smtp.ssl.enable" to "true".'
+                properties.setProperty("mail.smtp.ssl.enable", "true");
+                // this is an alternative/backup, which works also:
+                // http://javakiss.blogspot.ch/2010/10/smtp-in-java-with-javaxmail.html
+                // I verify it's actually using SSL:
+                //  - it hid a breakpoint in sun.security.ssl.SSLSocketFactoryImpl
+                //  - Hostpoint (knime.com mail server) is rejecting any smtp request on their ssl port (465)
+                //    without this property
+                properties.setProperty("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+                // a third (and most transparent) option would be to use a different protocol:
+                protocol = "smtps";
+                break;
+            default:
+                throw new IllegalStateException("unsupported connection security: " + m_smtpConnectionSecurity);
         }
+        final boolean isRequireAuth = StringUtils.isNotBlank(m_user);
+
+        properties.setProperty("mail.transport.protocol", protocol);
+        // only support secure versions of TLS -- changed with AP-19572
+        properties.setProperty("mail.smtp.ssl.protocols", "TLSv1.2 TLSv1.3");
+        properties.setProperty("mail." + protocol + ".host", m_smtpHost);
+        properties.setProperty("mail." + protocol + ".port", Integer.toString(m_smtpPort));
+        properties.setProperty("mail." + protocol + ".auth", Boolean.toString(isRequireAuth));
+        properties.setProperty("mail." + protocol + ".connectiontimeout", String.valueOf(1000 * m_connectTimeoutS));
+        properties.setProperty("mail." + protocol + ".timeout", String.valueOf(1000 * m_readTimeoutS));
+        final var session = Session.getInstance(properties);
+        final var transport = session.getTransport();
+        if (isRequireAuth) {
+            transport.connect(m_user, m_password);
+        } else {
+            transport.connect();
+        }
+        return new EmailOutgoingSession(session, transport, m_smtpEmailAddress);
     }
 
     /** An optional titled map, return type of {@link EmailSessionKey#toViewContent()}. */

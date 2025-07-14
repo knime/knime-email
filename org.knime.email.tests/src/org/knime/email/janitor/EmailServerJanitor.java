@@ -52,15 +52,12 @@ import java.util.List;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.workflow.CredentialsStore;
 import org.knime.core.node.workflow.FlowVariable;
-import org.knime.email.util.EmailUtil;
 import org.knime.testing.core.TestrunJanitor;
 
 import com.icegreen.greenmail.configuration.GreenMailConfiguration;
 import com.icegreen.greenmail.imap.ImapServer;
 import com.icegreen.greenmail.util.GreenMail;
 import com.icegreen.greenmail.util.ServerSetup;
-
-import jakarta.mail.Session;
 
 /**
  * Email server janitor.
@@ -116,17 +113,15 @@ public class EmailServerJanitor extends TestrunJanitor {
 
     @Override
     public void before() throws Exception {
-        try (final var closeable = EmailUtil.runWithContextClassloader(Session.class)) {
-            m_mail = new GreenMail(SETUP);
-            m_mail.withConfiguration(CONFIG);
-            m_mail.start();
-            final ImapServer imap = m_mail.getImap();
-            final ServerSetup serverSetup = imap.getServerSetup();
-            m_bindAddress = serverSetup.getBindAddress();
-            m_imapPort = serverSetup.getPort();
-            final var smtp = m_mail.getSmtp();
-            m_smtpPort = smtp.getPort();
-        }
+        m_mail = new GreenMail(SETUP);
+        m_mail.withConfiguration(CONFIG);
+        m_mail.start();
+        final ImapServer imap = m_mail.getImap();
+        final ServerSetup serverSetup = imap.getServerSetup();
+        m_bindAddress = serverSetup.getBindAddress();
+        m_imapPort = serverSetup.getPort();
+        final var smtp = m_mail.getSmtp();
+        m_smtpPort = smtp.getPort();
     }
 
     @Override
