@@ -54,7 +54,7 @@ import java.util.Optional;
 
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings.DefaultNodeSettingsContext;
+import org.knime.node.parameters.NodeParametersInput;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.handler.WidgetHandlerException;
 import org.knime.email.port.EmailSessionPortObjectSpec;
 import org.knime.email.session.EmailSessionKey;
@@ -106,7 +106,7 @@ public final class UIChoices {
         }
 
         @Override
-        public List<String> choices(final DefaultNodeSettingsContext context) {
+        public List<String> choices(final NodeParametersInput context) {
             try {
                 Optional<PortObjectSpec> optional = context.getPortObjectSpec(0);
                 final EmailSessionPortObjectSpec in = (EmailSessionPortObjectSpec)optional.orElseThrow(() -> {

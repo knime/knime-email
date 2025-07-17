@@ -50,7 +50,7 @@ package org.knime.email.nodes.reader;
 
 import static org.knime.email.nodes.reader.EmailReaderNodeProcessor.COL_EMAIL_ID;
 
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.node.parameters.NodeParameters;
 import org.knime.email.util.UIChoices.FolderProvider;
 import org.knime.node.parameters.Advanced;
 import org.knime.node.parameters.Widget;
@@ -75,7 +75,7 @@ import org.knime.node.parameters.widget.number.NumberInputWidgetValidation.MinVa
  * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction") // New Node UI is not yet API
-public final class EmailReaderNodeSettings implements DefaultNodeSettings {
+public final class EmailReaderNodeSettings implements NodeParameters {
 
     public enum MessageSeenStatus {
             @Label(value = "Unread") //

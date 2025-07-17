@@ -71,7 +71,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.report.IReportPortObject;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.node.parameters.NodeParameters;
 import org.knime.core.webui.node.dialog.defaultdialog.internal.file.FileSelection;
 import org.knime.filehandling.core.connections.FSLocation;
 import org.knime.filehandling.core.data.location.FSLocationValue;
@@ -96,7 +96,7 @@ import org.knime.node.parameters.widget.text.RichTextInputWidget;
  * @author wiswedel
  */
 @SuppressWarnings("restriction")
-final class MessageSettings implements DefaultNodeSettings {
+final class MessageSettings implements NodeParameters {
 
     public static final class ReportIsConnected implements PredicateProvider {
 
@@ -105,7 +105,7 @@ final class MessageSettings implements DefaultNodeSettings {
             return i.getConstant(ReportIsConnected::reportIsConnected);
         }
 
-        private static boolean reportIsConnected(final DefaultNodeSettingsContext context) {
+        private static boolean reportIsConnected(final NodeParametersInput context) {
             return Stream.of(context.getInPortTypes()).anyMatch(IReportPortObject.TYPE::equals);
         }
 
@@ -118,7 +118,7 @@ final class MessageSettings implements DefaultNodeSettings {
             return i.getConstant(AttachmentPortIsConnected::attachmentPortIsConnected);
         }
 
-        private static boolean attachmentPortIsConnected(final DefaultNodeSettingsContext context) {
+        private static boolean attachmentPortIsConnected(final NodeParametersInput context) {
             return Stream.of(context.getInPortTypes()).anyMatch(BufferedDataTable.TYPE::equals);
         }
 
@@ -126,7 +126,7 @@ final class MessageSettings implements DefaultNodeSettings {
 
     static final class AttachmentColumnProvider implements ColumnChoicesProvider {
         @Override
-        public List<DataColumnSpec> columnChoices(final DefaultNodeSettingsContext context) {
+        public List<DataColumnSpec> columnChoices(final NodeParametersInput context) {
             final PortType[] inTypes = context.getInPortTypes();
             final IntFunction<? extends Optional<PortObjectSpec>> specSupplier = context::getPortObjectSpec;
             return getValidPathColumnNames(inTypes, specSupplier).stream().flatMap(Arrays::stream).toList();

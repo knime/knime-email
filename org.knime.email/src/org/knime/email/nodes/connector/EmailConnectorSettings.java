@@ -51,7 +51,7 @@ package org.knime.email.nodes.connector;
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.node.parameters.NodeParameters;
 import org.knime.core.webui.node.dialog.defaultdialog.setting.credentials.Credentials;
 import org.knime.email.session.EmailSessionKey;
 import org.knime.email.session.EmailSessionKey.SmtpConnectionSecurity;
@@ -86,7 +86,7 @@ import org.knime.node.parameters.widget.text.TextInputWidgetValidation.PatternVa
  * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction")
-public class EmailConnectorSettings implements DefaultNodeSettings {
+public class EmailConnectorSettings implements NodeParameters {
 
     interface ConnectionTypeRef extends Reference<ConnectionType> {
     }
@@ -276,7 +276,7 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     @ArrayWidget(elementLayout = ElementLayout.HORIZONTAL_SINGLE_LINE, addButtonText = "Add custom property")
     ConnectionProperties[] m_properties = new ConnectionProperties[0];
 
-    static final class ConnectionProperties implements DefaultNodeSettings {
+    static final class ConnectionProperties implements NodeParameters {
         @HorizontalLayout
         interface ConnectionPropertiesLayout {
         }
