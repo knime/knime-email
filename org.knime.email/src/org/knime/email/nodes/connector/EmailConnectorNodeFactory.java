@@ -78,7 +78,7 @@ implements NodeDialogFactory {
     private static final WebUINodeConfiguration CONFIG = WebUINodeConfiguration.builder()//
             .name("Email Connector (Labs)")//
             .icon("./emailConnector.png")//
-            .shortDescription("Connects to an email server using the IMAP and/or SMPT protocol.")//
+            .shortDescription("Connects to an email server using the IMAP and/or SMTP protocol.")//
             .fullDescription(
                 """
                 <p>
@@ -103,7 +103,7 @@ implements NodeDialogFactory {
             .nodeType(NodeType.Source)//
             .addInputPort(CREDENTIAL_INPUT_PORT, CredentialPortObject.TYPE, "OAuth2 credentials", true) //
             .addOutputPort("Email Session", EmailSessionPortObject.TYPE, "The email session to use in subsequent nodes.")//
-            .keywords("Email", "IMAP", "SMPT")//
+            .keywords("Email", "IMAP", "SMTP")//
             .sinceVersion(5, 2, 0).build();
 
     @Override

@@ -24,6 +24,7 @@ try {
                 "knime-base", 
                 "knime-base-views",
                 "knime-cef",
+                "knime-cloud",
                 "knime-core",
                 "knime-core-ui",
                 "knime-distance",

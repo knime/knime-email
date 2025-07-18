@@ -280,7 +280,7 @@ public final class EmailSessionKey {
         properties.setProperty("mail.smtp.ssl.protocols", "TLSv1.2 TLSv1.3");
         properties.setProperty("mail." + protocol + ".host", m_smtpHost);
         properties.setProperty("mail." + protocol + ".port", Integer.toString(m_smtpPort));
-        properties.setProperty("mail." + protocol + ".auth", Boolean.toString(AuthType.NONE == m_authType));
+        properties.setProperty("mail." + protocol + ".auth", Boolean.toString(AuthType.NONE != m_authType));
         properties.setProperty("mail." + protocol + ".connectiontimeout", String.valueOf(1000 * m_connectTimeoutS));
         properties.setProperty("mail." + protocol + ".timeout", String.valueOf(1000 * m_readTimeoutS));
 

@@ -46,7 +46,7 @@
  * History
  *   27 Sep 2023 (Tobias): created
  */
-package org.knime.email.nodes.provider.gmail;
+package org.knime.email.nodes.provider.microsoft;
 
 import java.util.Optional;
 
@@ -67,26 +67,30 @@ import org.knime.email.nodes.connector.EmailConnectorNodeModel;
 import org.knime.email.port.EmailSessionPortObject;
 
 /**
- * Gmail Connector node factory implementation.
+ * Microsoft Exchange Connector node factory implementation.
  *
  * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction")
-public class GmailConnectorNodeFactory extends ConfigurableNodeFactory<EmailConnectorNodeModel<GmailConnectorSettings>>
+public class MicrosoftExchangeConnectorNodeFactory
+extends ConfigurableNodeFactory<EmailConnectorNodeModel<MicrosoftExchangeConnectorSettings>>
 implements NodeDialogFactory {
 
     private static final String CREDENTIAL_INPUT_PORT = "Credentials";
 
     private static final WebUINodeConfiguration CONFIG = WebUINodeConfiguration.builder()//
-            .name("GMail Connector (Labs)")//
-            .icon("./gmailConnector.png")//
+            .name("Microsoft Exchange Online Connector (Labs)")//
+            .icon("./microsoftConnector.png")//
             .shortDescription(//
-                "Connects to <a href='https://mail.google.com/mail/'>Gmail</a> using the IMAP and/or SMTP protocol.")//
+                "Connects to "
+                + "<a href='https://www.microsoft.com/en-us/microsoft-365/exchange/email'>Microsoft Exchange Online</a> "
+                + "using the IMAP and/or SMTP protocol.")//
             .fullDescription(
                 """
                 <p>
-                Connects to <a href='https://mail.google.com/mail/'>GMail</a> using the entered account.
-                Once connected you can use various nodes to work with your email such as the
+                Connects to
+                <a href='https://www.microsoft.com/en-us/microsoft-365/exchange/email'>Microsoft Exchange Online</a>
+                using the entered account. Once connected you can use various nodes to work with your email such as the
                 <a href="https://hub.knime.com/knime/extensions/org.knime.features.email/latest/org.knime.email.nodes.reader.EmailReaderNodeFactory/">Email Reader</a> node
                 to read email or the
                 <a href="https://hub.knime.com/knime/extensions/org.knime.features.email/latest/org.knime.email.nodes.sender.EmailSenderNodeFactory/">Email Sender</a> node
@@ -95,14 +99,14 @@ implements NodeDialogFactory {
                 <p>
                 This node uses the <a href="https://jakartaee.github.io/mail-api/">Jakarta Mail API</a>
                 and the <a href="https://eclipse-ee4j.github.io/angus-mail/">Angus Mail implementation</a> to interact
-                with the GMail servers.
+                with the Microsoft Exchange Online servers.
                 </p>
                 """)//
-            .modelSettingsClass(GmailConnectorSettings.class)//
+            .modelSettingsClass(MicrosoftExchangeConnectorSettings.class)//
             .nodeType(NodeType.Source)//
-            .addInputPort(CREDENTIAL_INPUT_PORT, CredentialPortObject.TYPE, "Google credentials", true) //
+            .addInputPort(CREDENTIAL_INPUT_PORT, CredentialPortObject.TYPE, "Microsoft credentials", true) //
             .addOutputPort("Email Session", EmailSessionPortObject.TYPE, "The email session to use in subsequent nodes.")//
-            .keywords("Gmail", "Email", "IMAP", "SMTP")//
+            .keywords("Microsoft", "Exchange","Office365", "Outlook", "Email", "IMAP", "SMTP")//
             .sinceVersion(5, 6, 0).build();
 
     @Override
@@ -126,9 +130,11 @@ implements NodeDialogFactory {
     }
 
     @Override
-    public EmailConnectorNodeModel<GmailConnectorSettings> createNodeModel(final NodeCreationConfiguration creationConfig) {
-        return new EmailConnectorNodeModel<GmailConnectorSettings>(creationConfig.getPortConfig().orElseThrow(),
-            new GmailConnectorSettings(), GmailConnectorSettings.class);
+    public EmailConnectorNodeModel<MicrosoftExchangeConnectorSettings> createNodeModel(
+        final NodeCreationConfiguration creationConfig) {
+        return new EmailConnectorNodeModel<MicrosoftExchangeConnectorSettings>(
+                creationConfig.getPortConfig().orElseThrow(),
+            new MicrosoftExchangeConnectorSettings(), MicrosoftExchangeConnectorSettings.class);
     }
 
     @Override
@@ -142,12 +148,12 @@ implements NodeDialogFactory {
 
     @Override
     public NodeDialog createNodeDialog() {
-        return new DefaultNodeDialog(SettingsType.MODEL, GmailConnectorSettings.class);
+        return new DefaultNodeDialog(SettingsType.MODEL, MicrosoftExchangeConnectorSettings.class);
     }
 
     @Override
-    public NodeView<EmailConnectorNodeModel<GmailConnectorSettings>> createNodeView(final int viewIndex,
-        final EmailConnectorNodeModel<GmailConnectorSettings> nodeModel) {
+    public NodeView<EmailConnectorNodeModel<MicrosoftExchangeConnectorSettings>> createNodeView(final int viewIndex,
+        final EmailConnectorNodeModel<MicrosoftExchangeConnectorSettings> nodeModel) {
         return null;
     }
 
