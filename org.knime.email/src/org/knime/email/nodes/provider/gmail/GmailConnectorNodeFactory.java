@@ -63,6 +63,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeDialog;
 import org.knime.core.webui.node.impl.WebUINodeConfiguration;
 import org.knime.core.webui.node.impl.WebUINodeFactory;
 import org.knime.credentials.base.CredentialPortObject;
+import org.knime.email.nodes.connector.EmailConnectorNodeModel;
 import org.knime.email.port.EmailSessionPortObject;
 
 /**
@@ -71,20 +72,20 @@ import org.knime.email.port.EmailSessionPortObject;
  * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction")
-public class GmailConnectorNodeFactory extends ConfigurableNodeFactory<GmailConnectorNodeModel>
+public class GmailConnectorNodeFactory extends ConfigurableNodeFactory<EmailConnectorNodeModel>
 implements NodeDialogFactory {
 
     private static final String CREDENTIAL_INPUT_PORT = "Credentials";
 
     private static final WebUINodeConfiguration CONFIG = WebUINodeConfiguration.builder()//
-            .name("Gmail Connector (Labs)")//
+            .name("GMail Connector")//
             .icon("./gmailConnector.png")//
             .shortDescription(//
                 "Connects to <a href='https://mail.google.com/mail/'>Gmail</a> using the IMAP and/or SMPT protocol.")//
             .fullDescription(
                 """
                 <p>
-                Connects to <a href='https://mail.google.com/mail/'>Gmail</a> using the entered account.
+                Connects to <a href='https://mail.google.com/mail/'>GMail</a> using the entered account.
                 Once connected you can use various nodes to work with your email such as the
                 <a href="https://hub.knime.com/knime/extensions/org.knime.features.email/latest/org.knime.email.nodes.reader.EmailReaderNodeFactory/">Email Reader</a> node
                 to read email or the
@@ -92,7 +93,7 @@ implements NodeDialogFactory {
                 to send email.
                 </p>
                 <p>
-                The Gmail Connector node uses the <a href="https://jakartaee.github.io/mail-api/">Jakarta Mail API</a>
+                The GMail Connector node uses the <a href="https://jakartaee.github.io/mail-api/">Jakarta Mail API</a>
                 and the <a href="https://eclipse-ee4j.github.io/angus-mail/">Angus Mail implementation</a> to interact
                 with compatible email servers.
                 </p>
@@ -125,8 +126,9 @@ implements NodeDialogFactory {
     }
 
     @Override
-    public GmailConnectorNodeModel createNodeModel(final NodeCreationConfiguration creationConfig) {
-        return new GmailConnectorNodeModel(creationConfig.getPortConfig().orElseThrow());
+    public EmailConnectorNodeModel createNodeModel(final NodeCreationConfiguration creationConfig) {
+        return new EmailConnectorNodeModel(creationConfig.getPortConfig().orElseThrow(),
+            new GmailConnectorSettings(), GmailConnectorSettings.class);
     }
 
     @Override
@@ -143,7 +145,8 @@ implements NodeDialogFactory {
     }
 
     @Override
-    public NodeView<GmailConnectorNodeModel> createNodeView(final int viewIndex, final GmailConnectorNodeModel nodeModel) {
+    public NodeView<EmailConnectorNodeModel> createNodeView(final int viewIndex,
+        final EmailConnectorNodeModel nodeModel) {
         return null; // no view
     }
 

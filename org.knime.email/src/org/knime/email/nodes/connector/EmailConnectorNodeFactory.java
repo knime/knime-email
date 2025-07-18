@@ -122,7 +122,8 @@ implements NodeDialogFactory {
     }
     @Override
     public EmailConnectorNodeModel createNodeModel(final NodeCreationConfiguration creationConfig) {
-        return new EmailConnectorNodeModel(creationConfig.getPortConfig().orElseThrow());
+        return new EmailConnectorNodeModel(creationConfig.getPortConfig().orElseThrow(),
+            new EmailConnectorSettings(), EmailConnectorSettings.class);
     }
 
     @Override

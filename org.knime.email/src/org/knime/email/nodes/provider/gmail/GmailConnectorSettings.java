@@ -48,131 +48,23 @@
  */
 package org.knime.email.nodes.provider.gmail;
 
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
-import org.knime.core.webui.node.dialog.defaultdialog.layout.HorizontalLayout;
-import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
-import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
-import org.knime.core.webui.node.dialog.defaultdialog.setting.credentials.Credentials;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.Advanced;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.NumberInputWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.NumberInputWidgetValidation.MinValidation.IsPositiveIntegerValidation;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.TextInputWidgetValidation.PatternValidation;
-import org.knime.email.nodes.connector.EmailConnectorSettings.ConnectionSecurity;
-import org.knime.email.nodes.connector.EmailConnectorSettings.ConnectionType;
-import org.knime.email.session.EmailSessionKey;
+import org.knime.email.nodes.connector.AbstractEmailConnectorSettings;
 
 /**
- * Settings class.
+ * GMail Connector settings class.
  * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
  */
-@SuppressWarnings("restriction")
-public class GmailConnectorSettings implements DefaultNodeSettings {
+public class GmailConnectorSettings extends AbstractEmailConnectorSettings {
 
-    @Widget(title = "Connection type", description =
-            """
-            Choose the type of connection you want to create. Depending on the selected connection type you will be
-            able to work with your email and/or send email.
-            <ul>
-            <li>
-            Select "Incoming" if you want to work with your email e.g. by using the
-            <a href="https://hub.knime.com/knime/extensions/org.knime.features.email/latest/org.knime.email.nodes.reader.EmailReaderNodeFactory/">Email Reader</a> node
-            to read your email or the
-            <a href="https://hub.knime.com/knime/extensions/org.knime.features.email/latest/org.knime.email.nodes.mover.EmailMoverNodeFactory/">Email Mover</a> node
-            to move email to different folders.
-            </li>
-            <li>
-            Select "Outgoing" if you only want to send email via the SMTP protocol by using the
-            <a href="https://hub.knime.com/knime/extensions/org.knime.features.email/latest/org.knime.email.nodes.sender.EmailSenderNodeFactory/">Email Sender</a> node.
-            </li>
-            <li>Select "Incoming &amp; Outgoing" if you want to read and send email.</li>
-            </ul>
-            """)
-    @ValueSwitchWidget()
-    ConnectionType m_type = ConnectionType.INCOMING;
-
-//  INCOMING SERVER SETTINGS
-    String m_imapServer = "imap.gmail.com";
-    int m_imapPort = 993;
-    boolean m_imapUseSecureProtocol = true;
-
-
-//  OUTGOING SERVER SETTINGS
-    @Widget(title = "Email address", description = "Some SMTP servers require the sender's email address, other "
-            + "accept this to be not specified and will automatically derive it from the user account.")
-
-    String m_smtpEmailAddress;
-    String m_smtpHost = "smtp.gmail.com";
-    int m_smtpPort = 587;
-    boolean m_smtpRequiresAuthentication = true;
-    ConnectionSecurity m_smtpSecurity = ConnectionSecurity.STARTTLS;
-
-
-    interface AuthenticationSection {}
-    /**The email server login.*/
-    @Layout(AuthenticationSection.class)
-    @Widget(title = "Login", description = "The optional email server login.")
-    Credentials m_login = new Credentials(); //set to empty credentials to prevent "No login set message"
-
-
-//  CONNECTION PROPERTIES
-    @Section(title = "Connection Properties")
-    @Advanced
-    @After(AuthenticationSection.class)
-    interface ConnectionPropertySection {}
-
-    @Layout(ConnectionPropertySection.class)
-    @Widget(title = "Connection timeout", advanced = true,
-        description = "Timeout in seconds to establish a connection.")
-    @NumberInputWidget(minValidation = IsPositiveIntegerValidation.class)
-    int m_connectTimeout = EmailSessionKey.DEF_TIMEOUT_CONNECT_S;
-
-    @Layout(ConnectionPropertySection.class)
-    @Widget(title = "Read timeout", advanced = true,
-    description = "Timeout in seconds to read a server response from a connection.")
-    @NumberInputWidget(minValidation = IsPositiveIntegerValidation.class)
-    int m_readTimeout = EmailSessionKey.DEF_TIMEOUT_READ_S;
-
-    @Widget(title = "Custom properties", description =
-            "Allows to define additional connection properties. For details about the supported properties see "
-            + "<a href='https://javaee.github.io/javamail/docs/api//com/sun/mail/imap/package-summary.html#properties'>"
-            + "here.</a>",
-            advanced = true)
-    @Layout(ConnectionPropertySection.class)
-    @ArrayWidget(addButtonText = "Add custom property")
-    ConnectionProperties[] m_properties = new ConnectionProperties[0];
-
-    static final class ConnectionProperties implements DefaultNodeSettings {
-        @HorizontalLayout
-        interface ConnectionPropertiesLayout {
-        }
-
-        static final class StartsWithNonWhiteSpaceValidation extends PatternValidation {
-
-            @Override
-            public String getErrorMessage() {
-                return "The property name and value must not start with a whitespace character. "
-                    + "It must contain at least one non-whitespace character.";
-            }
-            @Override
-            protected String getPattern() {
-                return "\\S+.*";
-            }
-        }
-
-        @Widget(title = "Name", description = "Custom property name e.g. mail.smtp.timeout.")
-        @TextInputWidget(patternValidation = StartsWithNonWhiteSpaceValidation.class)
-        @Layout(ConnectionPropertiesLayout.class)
-        public String m_name;
-
-        @Widget(title = "Value",
-            description = "Custom property value e.g. 10 or true.")
-        @TextInputWidget(patternValidation = StartsWithNonWhiteSpaceValidation.class)
-        @Layout(ConnectionPropertiesLayout.class)
-        public String m_value;
+    /**
+     *
+     */
+    public GmailConnectorSettings() {
+        super("imap.gmail.com", 993, true, "smtp.gmail.com", 587, true, ConnectionSecurity.STARTTLS);
     }
+
+    static final class HideAdvancedSettingsModification extends AbstractEmailConnectorSettings.ChangeAdvancedAnnotation {
+
+    }
+
 }

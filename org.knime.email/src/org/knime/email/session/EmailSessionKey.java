@@ -48,6 +48,7 @@
  */
 package org.knime.email.session;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -206,13 +207,16 @@ public final class EmailSessionKey {
                     throw new IllegalStateException(m_authType + " not implemented");
             }
             return new EmailIncomingSession(emailStore);
-        } catch (Exception me) {
+        } catch (MessagingException | IOException me) {
             if (emailStore != null) {
                 try {
                     emailStore.close();
                 } catch (final Exception e) {
                     EmailIncomingSession.LOGGER.warn("Failed to close email store", e);
                 }
+            }
+            if (me instanceof MessagingException) {
+                throw (MessagingException)me;
             }
             throw new MessagingException(
                 "Failed to connect to Email server " + m_imapHost + ":" + m_imapPort, me);
@@ -307,11 +311,14 @@ public final class EmailSessionKey {
                     throw new IllegalStateException(m_authType + " not implemented");
             }
             return new EmailOutgoingSession(session, transport, m_smtpEmailAddress);
-        } catch (Exception me) {
+        } catch (MessagingException | IOException me) {
             if (transport != null) {
                 transport.close();
             }
-            throw new MessagingException("Failed to connect to Email server " + m_imapHost + ":" + m_imapPort, me);
+            if (me instanceof MessagingException) {
+                throw (MessagingException)me;
+            }
+            throw new MessagingException("Failed to connect to Email server " + m_smtpHost + ":" + m_smtpPort, me);
         }
     }
 

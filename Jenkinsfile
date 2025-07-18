@@ -30,6 +30,7 @@ try {
                 "knime-ensembles",
                 "knime-filehandling",
                 "knime-gateway",
+                'knime-google',
                 "knime-js-base",
                 "knime-json",
                 "knime-kerberos",

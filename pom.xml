@@ -35,6 +35,16 @@
     <!-- List all required repositories here. The variables are defined in knime-maven-parent/pom.xml. -->
     <repositories>
         <repository>
+            <id>p2-knime-base</id>
+            <layout>p2</layout>
+            <url>${knime.base.p2}</url>
+        </repository>
+        <repository>
+            <id>p2-knime-cloud</id>
+            <layout>p2</layout>
+            <url>${knime.cloud.p2}</url>
+        </repository>
+        <repository>
             <id>p2-knime-core</id>
             <layout>p2</layout>
             <url>${knime.core.p2}</url>
@@ -45,9 +55,9 @@
             <url>${knime.core.ui.p2}</url>
         </repository>
         <repository>
-            <id>p2-knime-base</id>
+            <id>p2-knime-filehandling</id>
             <layout>p2</layout>
-            <url>${knime.base.p2}</url>
+            <url>${knime.filehandling.p2}</url>
         </repository>
         <repository>
             <id>p2-knime-filehandling-core</id>
@@ -78,6 +88,11 @@
             <id>p2-knime-gateway</id>
             <layout>p2</layout>
             <url>${knime.gateway.p2}</url>
+        </repository>
+        <repository>
+            <id>p2-knime-google</id>
+            <layout>p2</layout>
+            <url>${knime.google.p2}</url>
         </repository>
         <repository>
             <id>p2-knime-javasnippet</id>
