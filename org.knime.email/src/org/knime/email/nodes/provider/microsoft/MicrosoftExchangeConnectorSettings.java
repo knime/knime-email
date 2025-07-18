@@ -46,21 +46,23 @@
  * History
  *   27 Sep 2023 (Tobias): created
  */
-package org.knime.email.nodes.provider.gmail;
+package org.knime.email.nodes.provider.microsoft;
 
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Modification;
 import org.knime.email.nodes.connector.EmailConnectorSettings;
 
 /**
- * GMail Connector settings class.
+ * Settings class.
  * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
  */
-@SuppressWarnings("restriction")
 @Modification(EmailConnectorSettings.ChangeAdvancedAnnotation.class)
-public class GmailConnectorSettings extends EmailConnectorSettings {
+public class MicrosoftExchangeConnectorSettings extends EmailConnectorSettings {
 
-    GmailConnectorSettings() {
-        super("imap.gmail.com", 993, true, "smtp.gmail.com", 587, true, ConnectionSecurity.STARTTLS);
+    /**
+     *
+     */
+    public MicrosoftExchangeConnectorSettings() {
+        super("outlook.office365.com", 993, true, "smtp.office365.com", 587, true, ConnectionSecurity.STARTTLS);
     }
 
 }

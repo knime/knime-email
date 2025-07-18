@@ -64,11 +64,11 @@ import org.knime.core.node.context.ports.PortsConfiguration;
 import org.knime.core.node.message.Message;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.NodeParametersUtil;
 import org.knime.credentials.base.CredentialPortObject;
 import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.credentials.base.oauth.api.AccessTokenAccessor;
-import org.knime.email.nodes.connector.AbstractEmailConnectorSettings.ConnectionProperties;
+import org.knime.email.nodes.connector.EmailConnectorSettings.ConnectionProperties;
 import org.knime.email.port.EmailSessionPortObject;
 import org.knime.email.port.EmailSessionPortObjectSpec;
 import org.knime.email.session.EmailSessionCache;
@@ -80,13 +80,13 @@ import org.knime.email.session.EmailSessionKey.OptionalBuilder;
  * connection details e.g. host and port.
  *
  * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
- * @param <S> {@link AbstractEmailConnectorSettings} implementation
+ * @param <S> {@link EmailConnectorSettings} implementation
  */
 @SuppressWarnings("restriction")
-public class EmailConnectorNodeModel<S extends AbstractEmailConnectorSettings> extends NodeModel {
+public class EmailConnectorNodeModel<S extends EmailConnectorSettings> extends NodeModel {
 
     private UUID m_cacheId;
-    private AbstractEmailConnectorSettings m_settings;
+    private EmailConnectorSettings m_settings;
     private final Class<S> m_settingsClass;
 
     /**
@@ -96,7 +96,7 @@ public class EmailConnectorNodeModel<S extends AbstractEmailConnectorSettings> e
      * @param settingsClass the class of the settings to use
      */
     public EmailConnectorNodeModel(final PortsConfiguration portsConfiguration,
-        final AbstractEmailConnectorSettings settings, final Class<S> settingsClass) {
+        final S settings, final Class<S> settingsClass) {
         super(portsConfiguration.getInputPorts(), portsConfiguration.getOutputPorts());
         m_settings = settings;
         m_settingsClass = settingsClass;
@@ -105,17 +105,17 @@ public class EmailConnectorNodeModel<S extends AbstractEmailConnectorSettings> e
 
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        DefaultNodeSettings.loadSettings(settings, m_settingsClass).validate();
+        NodeParametersUtil.loadSettings(settings, m_settingsClass).validate();
     }
 
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_settings = DefaultNodeSettings.loadSettings(settings, m_settingsClass);
+        m_settings = NodeParametersUtil.loadSettings(settings, m_settingsClass);
     }
 
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        DefaultNodeSettings.saveSettings(m_settings.getClass(), m_settings, settings);
+        NodeParametersUtil.saveSettings(m_settings.getClass(), m_settings, settings);
     }
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
@@ -146,7 +146,7 @@ public class EmailConnectorNodeModel<S extends AbstractEmailConnectorSettings> e
     }
 
     private static final EmailSessionKey createKey(final PortObject[] inObjects,
-        final AbstractEmailConnectorSettings settings) throws NoSuchCredentialException {
+        final EmailConnectorSettings settings) throws NoSuchCredentialException {
         final OptionalBuilder optionalBuilder;
         switch (settings.m_type) {
             case INCOMING:
