@@ -44,6 +44,7 @@ try {
                 "org.knime.email.tests",
                 "org.knime.features.reporting2.feature.group", 
                 "org.knime.features.browser.cef.feature.group",
+                "org.knime.features.google.api.feature.group",
             ]
         ]
     )
