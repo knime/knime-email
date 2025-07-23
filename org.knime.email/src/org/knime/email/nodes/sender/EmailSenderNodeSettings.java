@@ -54,13 +54,13 @@ import java.util.function.IntFunction;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
-import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
-import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Persist;
+import org.knime.node.parameters.NodeParameters;
 import org.knime.email.nodes.sender.EmailSenderNodeSettings.Sections.MessageSection;
 import org.knime.email.nodes.sender.EmailSenderNodeSettings.Sections.RecipientsSection;
+import org.knime.node.parameters.layout.After;
+import org.knime.node.parameters.layout.Layout;
+import org.knime.node.parameters.layout.Section;
+import org.knime.node.parameters.persistence.Persist;
 
 /**
  * Node settings of the node.
@@ -68,7 +68,7 @@ import org.knime.email.nodes.sender.EmailSenderNodeSettings.Sections.RecipientsS
  * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction")
-final class EmailSenderNodeSettings implements DefaultNodeSettings {
+final class EmailSenderNodeSettings implements NodeParameters {
 
     interface Sections {
         @Section(title = "Recipients")

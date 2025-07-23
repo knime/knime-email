@@ -48,12 +48,12 @@
  */
 package org.knime.email.nodes.mover;
 
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.ChoicesProvider;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.node.parameters.NodeParameters;
 import org.knime.email.nodes.reader.EmailReaderNodeProcessor;
 import org.knime.email.util.UIChoices.FolderProvider;
 import org.knime.email.util.UIChoices.MessageIDColumnChoicesProvider;
+import org.knime.node.parameters.Widget;
+import org.knime.node.parameters.widget.choices.ChoicesProvider;
 
 /**
  * Node Settings for the Value Lookup Node
@@ -61,7 +61,7 @@ import org.knime.email.util.UIChoices.MessageIDColumnChoicesProvider;
  * @author Jasper Krauter, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction") // New Node UI is not yet API
-public final class EmailMoverNodeSettings implements DefaultNodeSettings {
+public final class EmailMoverNodeSettings implements NodeParameters {
 
     @Widget(title = "Source folder", description =
             "The full path of the email source folder to search for the email ids e.g. 'INBOX' or Folder.Subfolder.")

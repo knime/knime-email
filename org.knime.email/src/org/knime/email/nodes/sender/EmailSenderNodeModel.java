@@ -67,7 +67,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.report.IReportPortObject;
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.NodeParametersUtil;
 import org.knime.email.port.EmailSessionPortObject;
 import org.knime.email.util.EmailNodeUtil;
 
@@ -91,17 +91,17 @@ final class EmailSenderNodeModel extends NodeModel implements FlowVariableProvid
 
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        DefaultNodeSettings.loadSettings(settings, EmailSenderNodeSettings.class).validate();
+        NodeParametersUtil.loadSettings(settings, EmailSenderNodeSettings.class).validate();
     }
 
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_settings = DefaultNodeSettings.loadSettings(settings, EmailSenderNodeSettings.class);
+        m_settings = NodeParametersUtil.loadSettings(settings, EmailSenderNodeSettings.class);
     }
 
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        DefaultNodeSettings.saveSettings(EmailSenderNodeSettings.class, m_settings, settings);
+        NodeParametersUtil.saveSettings(EmailSenderNodeSettings.class, m_settings, settings);
     }
 
     @Override

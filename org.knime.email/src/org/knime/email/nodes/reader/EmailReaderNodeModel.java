@@ -66,7 +66,7 @@ import org.knime.core.node.context.ports.PortsConfiguration;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.NodeParametersUtil;
 import org.knime.core.webui.node.impl.WebUINodeConfiguration;
 import org.knime.email.port.EmailSessionPortObject;
 import org.knime.email.session.EmailSessionKey;
@@ -124,12 +124,12 @@ public class EmailReaderNodeModel extends NodeModel {
 
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_settings = DefaultNodeSettings.loadSettings(settings, EmailReaderNodeSettings.class);
+        m_settings = NodeParametersUtil.loadSettings(settings, EmailReaderNodeSettings.class);
     }
 
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        DefaultNodeSettings.saveSettings(EmailReaderNodeSettings.class, m_settings, settings);
+        NodeParametersUtil.saveSettings(EmailReaderNodeSettings.class, m_settings, settings);
     }
 
     @Override

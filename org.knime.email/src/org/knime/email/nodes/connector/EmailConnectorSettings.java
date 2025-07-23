@@ -51,34 +51,34 @@ package org.knime.email.nodes.connector;
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
-import org.knime.core.webui.node.dialog.defaultdialog.layout.HorizontalLayout;
-import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
-import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Migrate;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Persist;
-import org.knime.core.webui.node.dialog.defaultdialog.setting.credentials.Credentials;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.Advanced;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget.ElementLayout;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.NumberInputWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.BooleanReference;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect.EffectType;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Predicate;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.PredicateProvider;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Reference;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.ValueReference;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.NumberInputWidgetValidation.MaxValidation;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.NumberInputWidgetValidation.MinValidation.IsPositiveIntegerValidation;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.TextInputWidgetValidation.PatternValidation;
+import org.knime.node.parameters.NodeParameters;
 import org.knime.email.session.EmailSessionKey;
 import org.knime.email.session.EmailSessionKey.SmtpConnectionSecurity;
+import org.knime.node.parameters.Advanced;
+import org.knime.node.parameters.Widget;
+import org.knime.node.parameters.array.ArrayWidget;
+import org.knime.node.parameters.array.ArrayWidget.ElementLayout;
+import org.knime.node.parameters.layout.After;
+import org.knime.node.parameters.layout.HorizontalLayout;
+import org.knime.node.parameters.layout.Layout;
+import org.knime.node.parameters.layout.Section;
+import org.knime.node.parameters.migration.Migrate;
+import org.knime.node.parameters.persistence.Persist;
+import org.knime.node.parameters.updates.Effect;
+import org.knime.node.parameters.updates.EffectPredicate;
+import org.knime.node.parameters.updates.EffectPredicateProvider;
+import org.knime.node.parameters.updates.ParameterReference;
+import org.knime.node.parameters.updates.ValueReference;
+import org.knime.node.parameters.updates.Effect.EffectType;
+import org.knime.node.parameters.updates.util.BooleanReference;
+import org.knime.node.parameters.widget.choices.Label;
+import org.knime.node.parameters.widget.choices.ValueSwitchWidget;
+import org.knime.node.parameters.widget.credentials.Credentials;
+import org.knime.node.parameters.widget.number.NumberInputWidget;
+import org.knime.node.parameters.widget.number.NumberInputWidgetValidation.MaxValidation;
+import org.knime.node.parameters.widget.number.NumberInputWidgetValidation.MinValidation.IsPositiveIntegerValidation;
+import org.knime.node.parameters.widget.text.TextInputWidget;
+import org.knime.node.parameters.widget.text.TextInputWidgetValidation.PatternValidation;
 
 /**
  * Settings class.
@@ -86,22 +86,22 @@ import org.knime.email.session.EmailSessionKey.SmtpConnectionSecurity;
  * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction")
-public class EmailConnectorSettings implements DefaultNodeSettings {
+public class EmailConnectorSettings implements NodeParameters {
 
-    interface ConnectionTypeRef extends Reference<ConnectionType> {
+    interface ConnectionTypeRef extends ParameterReference<ConnectionType> {
     }
 
-    static final class IsIncomingServerConnection implements PredicateProvider {
+    static final class IsIncomingServerConnection implements EffectPredicateProvider {
         @Override
-        public Predicate init(final PredicateInitializer i) {
+        public EffectPredicate init(final PredicateInitializer i) {
             return i.getEnum(ConnectionTypeRef.class).isOneOf(ConnectionType.INCOMING,
                 ConnectionType.INCOMING_OUTGOING);
         }
     }
 
-    static final class IsOutgoingServerConnection implements PredicateProvider {
+    static final class IsOutgoingServerConnection implements EffectPredicateProvider {
         @Override
-        public Predicate init(final PredicateInitializer i) {
+        public EffectPredicate init(final PredicateInitializer i) {
             return i.getEnum(ConnectionTypeRef.class).isOneOf(ConnectionType.OUTGOING,
                 ConnectionType.INCOMING_OUTGOING);
         }
@@ -226,9 +226,9 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     @Migrate(loadDefaultIfAbsent = true)
     ConnectionSecurity m_smtpSecurity = ConnectionSecurity.NONE;
 
-    static final class AuthenticationIsRequired implements PredicateProvider {
+    static final class AuthenticationIsRequired implements EffectPredicateProvider {
         @Override
-        public Predicate init(final PredicateInitializer i) {
+        public EffectPredicate init(final PredicateInitializer i) {
             return i.getPredicate(IsIncomingServerConnection.class)
                 .or(i.getPredicate(SMTPRequiresAuthentication.class));
         }
@@ -276,7 +276,7 @@ public class EmailConnectorSettings implements DefaultNodeSettings {
     @ArrayWidget(elementLayout = ElementLayout.HORIZONTAL_SINGLE_LINE, addButtonText = "Add custom property")
     ConnectionProperties[] m_properties = new ConnectionProperties[0];
 
-    static final class ConnectionProperties implements DefaultNodeSettings {
+    static final class ConnectionProperties implements NodeParameters {
         @HorizontalLayout
         interface ConnectionPropertiesLayout {
         }
