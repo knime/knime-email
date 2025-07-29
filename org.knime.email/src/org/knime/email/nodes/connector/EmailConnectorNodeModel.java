@@ -92,13 +92,10 @@ public class EmailConnectorNodeModel<S extends EmailConnectorSettings> extends N
     /**
      * Constructor.
      * @param portsConfiguration the ports configuration
-     * @param settings the email settings to use
      * @param settingsClass the class of the settings to use
      */
-    public EmailConnectorNodeModel(final PortsConfiguration portsConfiguration,
-        final S settings, final Class<S> settingsClass) {
+    public EmailConnectorNodeModel(final PortsConfiguration portsConfiguration, final Class<S> settingsClass) {
         super(portsConfiguration.getInputPorts(), portsConfiguration.getOutputPorts());
-        m_settings = settings;
         m_settingsClass = settingsClass;
 
     }
@@ -115,11 +112,16 @@ public class EmailConnectorNodeModel<S extends EmailConnectorSettings> extends N
 
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        NodeParametersUtil.saveSettings(m_settings.getClass(), m_settings, settings);
+        final var modelSettings =
+                m_settings == null ? NodeParametersUtil.createSettings(m_settingsClass) : m_settings;
+            NodeParametersUtil.saveSettings(m_settingsClass, modelSettings, settings);
     }
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
         throws InvalidSettingsException {
+        if (m_settings == null) {
+            m_settings = NodeParametersUtil.createSettings(m_settingsClass, inSpecs);
+        }
         m_settings.validate();
         return new PortObjectSpec[]{new EmailSessionPortObjectSpec()};
     }

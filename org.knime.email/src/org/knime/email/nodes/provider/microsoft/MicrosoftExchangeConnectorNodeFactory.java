@@ -133,8 +133,7 @@ implements NodeDialogFactory {
     public EmailConnectorNodeModel<MicrosoftExchangeConnectorSettings> createNodeModel(
         final NodeCreationConfiguration creationConfig) {
         return new EmailConnectorNodeModel<MicrosoftExchangeConnectorSettings>(
-                creationConfig.getPortConfig().orElseThrow(),
-            new MicrosoftExchangeConnectorSettings(), MicrosoftExchangeConnectorSettings.class);
+                creationConfig.getPortConfig().orElseThrow(), MicrosoftExchangeConnectorSettings.class);
     }
 
     @Override

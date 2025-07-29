@@ -50,6 +50,7 @@ package org.knime.email.nodes.provider.gmail;
 
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Modification;
 import org.knime.email.nodes.connector.EmailConnectorSettings;
+import org.knime.node.parameters.NodeParametersInput;
 
 /**
  * GMail Connector settings class.
@@ -60,7 +61,10 @@ import org.knime.email.nodes.connector.EmailConnectorSettings;
 public class GmailConnectorSettings extends EmailConnectorSettings {
 
     GmailConnectorSettings() {
-        super("imap.gmail.com", 993, true, "smtp.gmail.com", 587, true, ConnectionSecurity.STARTTLS);
+        this(null);
     }
 
+    GmailConnectorSettings(final NodeParametersInput context) {
+        super(context, "imap.gmail.com", 993, true, "smtp.gmail.com", 587, true, ConnectionSecurity.STARTTLS);
+    }
 }

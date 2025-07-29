@@ -50,19 +50,21 @@ package org.knime.email.nodes.provider.microsoft;
 
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Modification;
 import org.knime.email.nodes.connector.EmailConnectorSettings;
+import org.knime.node.parameters.NodeParametersInput;
 
 /**
  * Settings class.
  * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
  */
+@SuppressWarnings("restriction")
 @Modification(EmailConnectorSettings.ChangeAdvancedAnnotation.class)
 public class MicrosoftExchangeConnectorSettings extends EmailConnectorSettings {
 
-    /**
-     *
-     */
-    public MicrosoftExchangeConnectorSettings() {
-        super("outlook.office365.com", 993, true, "smtp.office365.com", 587, true, ConnectionSecurity.STARTTLS);
+    MicrosoftExchangeConnectorSettings() {
+        this(null);
     }
 
+    MicrosoftExchangeConnectorSettings(final NodeParametersInput context) {
+        super(context, "outlook.office365.com", 993, true, "smtp.office365.com", 587, true, ConnectionSecurity.STARTTLS);
+    }
 }

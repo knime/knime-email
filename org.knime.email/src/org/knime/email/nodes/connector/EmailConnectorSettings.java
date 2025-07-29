@@ -49,6 +49,7 @@
 package org.knime.email.nodes.connector;
 
 import java.util.Arrays;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
@@ -57,10 +58,13 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Modification;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Modification.WidgetGroupModifier;
 import org.knime.credentials.base.CredentialPortObject;
+import org.knime.credentials.base.oauth.api.AccessTokenAccessor;
+import org.knime.credentials.base.oauth.api.JWT;
 import org.knime.email.session.EmailSessionKey;
 import org.knime.email.session.EmailSessionKey.SmtpConnectionSecurity;
 import org.knime.node.parameters.Advanced;
 import org.knime.node.parameters.NodeParameters;
+import org.knime.node.parameters.NodeParametersInput;
 import org.knime.node.parameters.Widget;
 import org.knime.node.parameters.array.ArrayWidget;
 import org.knime.node.parameters.array.ArrayWidget.ElementLayout;
@@ -129,12 +133,38 @@ public class EmailConnectorSettings implements NodeParameters {
         }
     }
 
+    /**
+     * Default constructor for the email connector settings.
+     */
     protected EmailConnectorSettings(){
 
     }
 
+    /**
+     * Creates a new instance of the email connector settings and presets the OAuth2 user from the input
+     * credentials if possible.
+     * @param context the node parameters input context
+     */
+    protected EmailConnectorSettings(final NodeParametersInput context) {
+        this(context, null, 993, true, null, 587, true, ConnectionSecurity.NONE);
 
-    protected EmailConnectorSettings(final String imapServer, final int imapPort,
+    }
+
+    /**
+     * Creates a new instance of the email connector settings with preset values for
+     * incoming and outgoing server settings.
+     *
+     * @param context NodeParameterInput context to read the OAuth2 user from the credentials port object
+     *
+     * @param imapServer the IMAP server address
+     * @param imapPort the IMAP server port
+     * @param imapUseSecureProtocol whether to use a secure protocol for the IMAP connection
+     * @param smtpHost the SMTP server address
+     * @param smtpPort the SMTP server port
+     * @param smtpRequiresAuthentication whether the SMTP server requires authentication
+     * @param smtpSecurity the connection security to use for the SMTP connection     *
+     */
+    protected EmailConnectorSettings(final NodeParametersInput context, final String imapServer, final int imapPort,
         final boolean imapUseSecureProtocol, final String smtpHost, final int smtpPort,
         final boolean smtpRequiresAuthentication, final ConnectionSecurity smtpSecurity) {
         m_imapServer = imapServer;
@@ -144,6 +174,44 @@ public class EmailConnectorSettings implements NodeParameters {
         m_smtpPort = smtpPort;
         m_smtpRequiresAuthentication = smtpRequiresAuthentication;
         m_smtpSecurity = smtpSecurity;
+
+        //preset the OAuth2 user name and SMTP email address if credentials are available
+        if (context == null || !StringUtils.isAllBlank(m_oauthUser) || !StringUtils.isAllBlank(m_smtpEmailAddress)) {
+            return; // do not overwrite the user name if it is already set
+        }
+        final var inPortObjects = context.getInPortObjects();
+        if (inPortObjects != null && inPortObjects.length == 1) {
+            final var inPortObject = inPortObjects[0];
+            if (inPortObject instanceof CredentialPortObject credPort) {
+                final var spec = credPort.getSpec();
+                try {
+                    final var accessor = spec.toAccessor(AccessTokenAccessor.class);
+                    final String accessToken = accessor.getAccessToken();
+                    final var jwt = new JWT(accessToken);
+                    final Map<String, Object> claims = jwt.getAllClaims();
+                    if (claims != null && claims.containsKey("email")) {
+                        final var email = claims.get("email").toString();
+                        m_oauthUser = email;
+                        m_smtpEmailAddress = email;
+                        return;
+                    }
+                    if (claims != null && claims.containsKey("upn")) {
+                        final var upn = claims.get("upn").toString();
+                        m_oauthUser = upn;
+                        m_smtpEmailAddress = upn;
+                        return;
+                    }
+                    if (claims != null && claims.containsKey("sub")) {
+                        final var sub = claims.get("sub").toString();
+                        m_oauthUser = sub;
+                        m_smtpEmailAddress = sub;
+                        return;
+                    }
+                } catch (Exception ex) {
+                    // we cannot read the access token or parse it and thus cannot preset the oauth user name
+                }
+            }
+        }
     }
 
     @Layout(IncomingServerSection.class)
@@ -349,7 +417,8 @@ public class EmailConnectorSettings implements NodeParameters {
 
     @Layout(AuthenticationSection.class)
     @Effect(predicate = CredentialInputConnected.class, type = EffectType.SHOW)
-    @Widget(title = "User name", description = "The optional user name to use with the given OAuth2 access token.")
+    @Widget(title = "User name", description = "The optional user name to use for login name with the given OAuth2 "
+        + "access token. In most cases this is the email address.")
     @Migrate(loadDefaultIfAbsent = true)
     String m_oauthUser = "";
 

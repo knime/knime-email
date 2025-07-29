@@ -128,7 +128,7 @@ implements NodeDialogFactory {
     @Override
     public EmailConnectorNodeModel<GmailConnectorSettings> createNodeModel(final NodeCreationConfiguration creationConfig) {
         return new EmailConnectorNodeModel<GmailConnectorSettings>(creationConfig.getPortConfig().orElseThrow(),
-            new GmailConnectorSettings(), GmailConnectorSettings.class);
+            GmailConnectorSettings.class);
     }
 
     @Override
