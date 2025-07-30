@@ -21,7 +21,8 @@
         <node category-path="/labs/email"
             factory-class="org.knime.email.nodes.mover.EmailMoverNodeFactory" />
         <node category-path="/labs/email"
-            factory-class="org.knime.ext.google.gmail.connector.GmailConnectorNodeFactory" />
+            factory-class="org.knime.ext.google.gmail.connector.GmailConnectorNodeFactory" 
+            hidden="true"/>
         <node category-path="/labs/email"
             factory-class="org.knime.ext.exchange.connector.MicrosoftExchangeConnectorNodeFactory" />
     </extension>
@@ -37,10 +38,14 @@
             specSerializer="org.knime.email.port.EmailSessionPortObjectSpec$Serializer">
       </portType>
    </extension>
+   <!--
+   Disabled as per comment in AP-19581 - the gmail scope is currently (2025-07) not part of the knime-ap-oauth app 
+   (see google cloud console), so it will only work for the first 100 or so users.
    <extension
          point="org.knime.google.api.knimeGoogleAuthScope">
       <KnimeGoogleAuthScope
             KnimeGoogleAuthScope="org.knime.ext.google.gmail.connector.GMailAuthScope$ExecutableExtensionFactory">
       </KnimeGoogleAuthScope>
    </extension>
+   -->
 </plugin>
