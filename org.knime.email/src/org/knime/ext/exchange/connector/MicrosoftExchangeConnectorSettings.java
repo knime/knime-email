@@ -46,7 +46,7 @@
  * History
  *   27 Sep 2023 (Tobias): created
  */
-package org.knime.email.nodes.provider.microsoft;
+package org.knime.ext.exchange.connector;
 
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Modification;
 import org.knime.email.nodes.connector.EmailConnectorSettings;

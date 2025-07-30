@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -41,30 +40,73 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
- *
- * History
- *   27 Sep 2023 (Tobias): created
+ * ------------------------------------------------------------------------
  */
-package org.knime.email.nodes.provider.gmail;
+package org.knime.ext.google.gmail.connector;
 
-import org.knime.core.webui.node.dialog.defaultdialog.widget.Modification;
-import org.knime.email.nodes.connector.EmailConnectorSettings;
-import org.knime.node.parameters.NodeParametersInput;
+import static java.util.Collections.singletonList;
+
+import java.util.List;
+
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IExecutableExtensionFactory;
+import org.knime.google.api.scopes.KnimeGoogleAuthScope;
+
 
 /**
- * GMail Connector settings class.
+ * Google GMail scope.
+ *
  * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
  */
-@SuppressWarnings("restriction")
-@Modification(EmailConnectorSettings.ChangeAdvancedAnnotation.class)
-public class GmailConnectorSettings extends EmailConnectorSettings {
+public final class GMailAuthScope implements KnimeGoogleAuthScope {
 
-    GmailConnectorSettings() {
-        this(null);
+    /**
+     * Executable extension factory that prevents the creation of {@link GMailAuthScope} objects by the executable
+     * extension creation process. Although multiple factory objects are still created, those instances can be discarded
+     * after the production of the singleton result.
+     *
+     * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
+     */
+    public static class ExecutableExtensionFactory implements IExecutableExtensionFactory {
+        @Override
+        public Object create() throws CoreException {
+            return INSTANCE;
+        }
     }
 
-    GmailConnectorSettings(final NodeParametersInput context) {
-        super(context, "imap.gmail.com", 993, true, "smtp.gmail.com", 587, true, ConnectionSecurity.STARTTLS);
+    /**
+     * The singleton {@link GMailAuthScope} instance.
+     */
+    static final GMailAuthScope INSTANCE = new GMailAuthScope();
+
+    private static final List<String> SCOPES = singletonList("https://mail.google.com/");
+
+    private GMailAuthScope() {
+        // Visibility.
+    }
+
+    @Override
+    public String getScopeID() {
+        return "GMail";
+    }
+
+    @Override
+    public String getAuthScopeName() {
+        return "Google GMail";
+    }
+
+    @Override
+    public List<String> getAuthScopes() {
+        return SCOPES;
+    }
+
+    @Override
+    public String getDescription() {
+        return "Scope required by the Google GMail Connector.";
+    }
+
+    @Override
+    public boolean isCustomClientIdRequired() {
+        return true;
     }
 }

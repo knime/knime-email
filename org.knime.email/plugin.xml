@@ -21,9 +21,9 @@
         <node category-path="/labs/email"
             factory-class="org.knime.email.nodes.mover.EmailMoverNodeFactory" />
         <node category-path="/labs/email"
-            factory-class="org.knime.email.nodes.provider.gmail.GmailConnectorNodeFactory" />
+            factory-class="org.knime.ext.google.gmail.connector.GmailConnectorNodeFactory" />
         <node category-path="/labs/email"
-            factory-class="org.knime.email.nodes.provider.microsoft.MicrosoftExchangeConnectorNodeFactory" />
+            factory-class="org.knime.ext.exchange.connector.MicrosoftExchangeConnectorNodeFactory" />
     </extension>
    <extension
          point="org.knime.core.PortType">
@@ -40,7 +40,7 @@
    <extension
          point="org.knime.google.api.knimeGoogleAuthScope">
       <KnimeGoogleAuthScope
-            KnimeGoogleAuthScope="org.knime.email.nodes.provider.gmail.GMailAuthScope$ExecutableExtensionFactory">
+            KnimeGoogleAuthScope="org.knime.ext.google.gmail.connector.GMailAuthScope$ExecutableExtensionFactory">
       </KnimeGoogleAuthScope>
    </extension>
 </plugin>
