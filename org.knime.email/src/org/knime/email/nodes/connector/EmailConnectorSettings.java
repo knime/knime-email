@@ -417,8 +417,8 @@ public class EmailConnectorSettings implements NodeParameters {
 
     @Layout(AuthenticationSection.class)
     @Effect(predicate = CredentialInputConnected.class, type = EffectType.SHOW)
-    @Widget(title = "User name", description = "The optional user name to use for login name with the given OAuth2 "
-        + "access token. In most cases this is the email address.")
+    @Widget(title = "User name", description = "The optional user name to login with the given OAuth2 access token. "
+        + "In most cases this is the email address.")
     @Migrate(loadDefaultIfAbsent = true)
     String m_oauthUser = "";
 

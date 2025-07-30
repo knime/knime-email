@@ -119,6 +119,7 @@ public class EmailConnectorNodeModel<S extends EmailConnectorSettings> extends N
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
         throws InvalidSettingsException {
+        //For dedicated email connector nodes (GMail, Microsoft Exchange, etc.) the default settings are guessed
         if (m_settings == null) {
             m_settings = NodeParametersUtil.createSettings(m_settingsClass, inSpecs);
         }
