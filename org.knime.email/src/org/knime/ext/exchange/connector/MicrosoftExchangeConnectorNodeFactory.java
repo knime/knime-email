@@ -82,9 +82,7 @@ implements NodeDialogFactory {
             .name("Microsoft Exchange Online Connector (Labs)")//
             .icon("./microsoftConnector.png")//
             .shortDescription(//
-                "Connects to "
-                + "<a href='https://www.microsoft.com/en-us/microsoft-365/exchange/email'>Microsoft Exchange Online</a> "
-                + "using the IMAP and/or SMTP protocol.")//
+                "Connects to Microsoft Exchange Online using the IMAP and/or SMTP protocol.")//
             .fullDescription(
                 """
                 <p>

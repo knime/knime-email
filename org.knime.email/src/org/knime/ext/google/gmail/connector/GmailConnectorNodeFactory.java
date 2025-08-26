@@ -81,7 +81,7 @@ implements NodeDialogFactory {
             .name("GMail Connector (Labs)")//
             .icon("./gmailConnector.png")//
             .shortDescription(//
-                "Connects to <a href='https://mail.google.com/mail/'>Gmail</a> using the IMAP and/or SMTP protocol.")//
+                "Connects to Gmail using the IMAP and/or SMTP protocol.")//
             .fullDescription(
                 """
                 <p>
