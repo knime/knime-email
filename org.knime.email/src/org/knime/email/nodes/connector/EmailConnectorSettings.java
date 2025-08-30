@@ -298,12 +298,12 @@ public class EmailConnectorSettings implements NodeParameters {
 
         @Override
         public String getErrorMessage() {
-            return "IMAP host must start with a letter and can only contain letters, digits, dots, and underscores.";
+            return "IMAP host must not be empty.";
         }
 
         @Override
         protected String getPattern() {
-            return "[^ ]+";
+            return "^(?!\\s*$).+"; // at least one non-whitespace character
         }
     }
 
@@ -342,12 +342,12 @@ public class EmailConnectorSettings implements NodeParameters {
 
         @Override
         public String getErrorMessage() {
-            return "SMTP host must start with a letter and can only contain letters, digits, dots, and underscores.";
+            return "SMTP host must must not be empty.";
         }
 
         @Override
         protected String getPattern() {
-            return "^\\w[\\w\\.]*";
+            return "^(?!\\s*$).+"; // at least one non-whitespace character
         }
     }
 
