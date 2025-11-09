@@ -189,7 +189,9 @@
             "options" : {
               "format" : "fileChooser",
               "isLocal" : true,
-              "mountId" : "Local space"
+              "spaceFSOptions" : {
+	            "mountId" : "Local space"
+              }
             }
           } ],
           "elementLayout": "HORIZONTAL_SINGLE_LINE",
