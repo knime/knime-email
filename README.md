@@ -11,7 +11,7 @@ provides a new email session port type which allows to decouple the email server
 management tasks.
 
 ### Development Notes
-You can find instructions on how to work with our code or develop extensions for KNIME Analytics Platform in the _knime-sdk-setup_ repository on [BitBucket](https://bitbucket.org/KNIME/knime-sdk-setup) or [GitHub](http://github.com/knime/knime-sdk-setup).
+You can find instructions on how to work with our code or develop extensions for KNIME Analytics Platform in the _knime-sdk-setup_ repository on [GitHub](http://github.com/knime/knime-sdk-setup).
 
 ### Join the Community!
 * [KNIME Forum](https://forum.knime.com/)
